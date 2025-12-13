@@ -4200,6 +4200,9 @@
             await cleanupCall();
 
             try {
+                // Check microphone permission first
+                await requestMicrophoneAccess();
+                
                 // Initialize audio context first
                 await initializeAudioContext();
                 if (!callAudioContext) {
@@ -4249,30 +4252,35 @@
                 // Handle connection state changes
                 peerConnection.onconnectionstatechange = () => {
                     console.log('Connection state:', peerConnection.connectionState);
+                    // Only cleanup on actual failures, not on 'disconnected' which is normal during connection
                     if (peerConnection.connectionState === 'failed' || 
-                        peerConnection.connectionState === 'disconnected' ||
                         peerConnection.connectionState === 'closed') {
-                        // Auto cleanup on connection failure
+                        // Give it more time before cleanup - connection might recover
                         setTimeout(() => {
-                            if (peerConnection && (peerConnection.connectionState === 'failed' || 
-                                peerConnection.connectionState === 'disconnected')) {
+                            if (peerConnection && peerConnection.connectionState === 'failed') {
+                                console.warn('Connection failed, cleaning up');
                                 cleanupCall();
                             }
-                        }, 2000);
+                        }, 5000); // Increased timeout to allow reconnection
+                    } else if (peerConnection.connectionState === 'connected') {
+                        console.log('Connection established successfully');
                     }
                 };
                 
                 // Handle ICE connection state
                 peerConnection.oniceconnectionstatechange = () => {
                     console.log('ICE connection state:', peerConnection.iceConnectionState);
-                    if (peerConnection.iceConnectionState === 'failed' || 
-                        peerConnection.iceConnectionState === 'disconnected') {
+                    // Only cleanup on actual failures - 'disconnected' can be temporary during connection
+                    if (peerConnection.iceConnectionState === 'failed') {
                         setTimeout(() => {
-                            if (peerConnection && (peerConnection.iceConnectionState === 'failed' || 
-                                peerConnection.iceConnectionState === 'disconnected')) {
+                            if (peerConnection && peerConnection.iceConnectionState === 'failed') {
+                                console.warn('ICE connection failed, cleaning up');
                                 cleanupCall();
                             }
-                        }, 2000);
+                        }, 5000); // Increased timeout to allow reconnection
+                    } else if (peerConnection.iceConnectionState === 'connected' || 
+                               peerConnection.iceConnectionState === 'completed') {
+                        console.log('ICE connection established successfully');
                     }
                 };
                 
@@ -4353,15 +4361,32 @@
                 );
                 callId = callDocRef.id; // Use actual document ID
                 
+                // Mark call as active
+                callActive = true;
+                
                 // Listen for answer and call state changes
                 listenForAnswer();
                 
                 // Show active call interface
                 showActiveCall();
                 
+                console.log('Call initiated, waiting for answer');
+                
             } catch (error) {
                 console.error('Call initiation error:', error);
-                alert('Could not start call. Please allow microphone permissions.');
+                let errorMessage = 'Could not start call. ';
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage += 'Please allow microphone permissions in your browser settings.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage += 'Microphone is being used by another application.';
+                } else if (error.message && error.message.includes('microphone')) {
+                    errorMessage += 'Microphone access error: ' + error.message;
+                } else {
+                    errorMessage += 'Error: ' + (error.message || error.toString());
+                }
+                alert(errorMessage);
                 await cleanupCall();
             }
         }
@@ -4425,13 +4450,21 @@
                         }
                     }
                     
-                    // Handle call updates (ended calls)
+                    // Handle call updates (ended calls, status changes)
                     if (change.type === 'modified') {
                         const callData = change.doc.data();
-                        if (callData.status === 'ended' || callData.ended) {
-                            // If we're in a call that just ended, cleanup
-                            if (change.doc.id === callId && callActive) {
-                                cleanupCall();
+                        const callDocId = change.doc.id;
+                        
+                        // Only process if this is the current call
+                        if (callDocId === callId) {
+                            if (callData.status === 'ended' || callData.ended) {
+                                // If we're in a call that just ended, cleanup
+                                if (callActive) {
+                                    cleanupCall();
+                                }
+                            } else if (callData.status === 'active' && !callActive && !isCaller) {
+                                // Call was accepted by us, don't do anything - acceptCall is handling it
+                                console.log('Call status changed to active (we accepted it)');
                             }
                         }
                     }
@@ -4448,10 +4481,23 @@
                 return;
             }
             
-            // Clean up any existing call first
-            await cleanupCall();
+            // Hide incoming modal immediately
+            const incomingModal = document.getElementById('incoming-call-modal');
+            if (incomingModal) {
+                incomingModal.classList.add('hidden');
+            }
+            
+            // Don't cleanup here - we need to preserve the callId and existing listeners
+            // Only cleanup if there's actually a conflicting call
+            if (peerConnection && peerConnection.connectionState !== 'closed') {
+                console.warn('Existing peer connection found, cleaning up first');
+                await cleanupCall();
+            }
             
             try {
+                // Check microphone permission first
+                await requestMicrophoneAccess();
+                
                 // Initialize audio context first
                 await initializeAudioContext();
                 if (!callAudioContext) {
@@ -4499,30 +4545,35 @@
                 // Handle connection state changes
                 peerConnection.onconnectionstatechange = () => {
                     console.log('Connection state:', peerConnection.connectionState);
+                    // Only cleanup on actual failures, not on 'disconnected' which is normal during connection
                     if (peerConnection.connectionState === 'failed' || 
-                        peerConnection.connectionState === 'disconnected' ||
                         peerConnection.connectionState === 'closed') {
-                        // Auto cleanup on connection failure
+                        // Give it more time before cleanup - connection might recover
                         setTimeout(() => {
-                            if (peerConnection && (peerConnection.connectionState === 'failed' || 
-                                peerConnection.connectionState === 'disconnected')) {
+                            if (peerConnection && peerConnection.connectionState === 'failed') {
+                                console.warn('Connection failed, cleaning up');
                                 cleanupCall();
                             }
-                        }, 2000);
+                        }, 5000); // Increased timeout to allow reconnection
+                    } else if (peerConnection.connectionState === 'connected') {
+                        console.log('Connection established successfully');
                     }
                 };
                 
                 // Handle ICE connection state
                 peerConnection.oniceconnectionstatechange = () => {
                     console.log('ICE connection state:', peerConnection.iceConnectionState);
-                    if (peerConnection.iceConnectionState === 'failed' || 
-                        peerConnection.iceConnectionState === 'disconnected') {
+                    // Only cleanup on actual failures - 'disconnected' can be temporary during connection
+                    if (peerConnection.iceConnectionState === 'failed') {
                         setTimeout(() => {
-                            if (peerConnection && (peerConnection.iceConnectionState === 'failed' || 
-                                peerConnection.iceConnectionState === 'disconnected')) {
+                            if (peerConnection && peerConnection.iceConnectionState === 'failed') {
+                                console.warn('ICE connection failed, cleaning up');
                                 cleanupCall();
                             }
-                        }, 2000);
+                        }, 5000); // Increased timeout to allow reconnection
+                    } else if (peerConnection.iceConnectionState === 'connected' || 
+                               peerConnection.iceConnectionState === 'completed') {
+                        console.log('ICE connection established successfully');
                     }
                 };
                 
@@ -4624,16 +4675,36 @@
                     status: 'active'
                 });
                 
+                // Mark call as active BEFORE listening for candidates to prevent race conditions
+                callActive = true;
+                
                 // Listen for ICE candidates from caller
                 listenForOfferCandidates();
                 
-                // Hide incoming modal, show active call
-                document.getElementById('incoming-call-modal').classList.add('hidden');
+                // Show active call (modal already hidden above)
                 showActiveCall();
+                
+                console.log('Call accepted and connection established');
                 
             } catch (error) {
                 console.error('Accept call error:', error);
-                alert('Could not accept call. Please allow microphone permissions.');
+                let errorMessage = 'Could not accept call. ';
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage += 'Please allow microphone permissions in your browser settings.';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage += 'No microphone found. Please connect a microphone.';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage += 'Microphone is being used by another application.';
+                } else if (error.message && error.message.includes('Timeout')) {
+                    errorMessage += 'Call timed out. The caller may have hung up.';
+                } else if (error.message && error.message.includes('ended')) {
+                    errorMessage += 'This call has already ended.';
+                } else if (error.message && error.message.includes('microphone')) {
+                    errorMessage += 'Microphone access error: ' + error.message;
+                } else {
+                    errorMessage += 'Error: ' + (error.message || error.toString());
+                }
+                alert(errorMessage);
                 await cleanupCall();
             }
         }
@@ -4660,6 +4731,12 @@
         async function listenForAnswer() {
             if (!callId || !window.firebaseDB) return;
             
+            // Unsubscribe from any existing listener first
+            if (answerUnsubscribe) {
+                answerUnsubscribe();
+                answerUnsubscribe = null;
+            }
+            
             const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
             answerUnsubscribe = window.firebaseOnSnapshot(callDocRef, async (doc) => {
                 if (doc.exists()) {
@@ -4667,16 +4744,26 @@
                     
                     // Check if call was ended by other side
                     if (data.status === 'ended' || data.ended || data.status === 'rejected') {
-                        cleanupCall();
+                        if (callActive) {
+                            cleanupCall();
+                        }
                         return;
+                    }
+                    
+                    // If status is 'active', the call was accepted - don't cleanup, just continue
+                    if (data.status === 'active' && !callActive) {
+                        console.log('Call accepted by other party');
+                        // Don't cleanup - call is being established
                     }
                     
                     if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
                         try {
+                            console.log('Setting remote description from answer');
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                             listenForAnswerCandidates();
                         } catch (e) {
                             console.error('Error setting remote description:', e);
+                            // Don't cleanup on error - might be recoverable
                         }
                     }
                 }
@@ -4739,27 +4826,21 @@
 
         // Show active call interface
         function showActiveCall() {
-            callActive = true;
-            document.getElementById('active-call-interface').classList.remove('hidden');
-            document.getElementById('ghost-call-btn').classList.add('hidden');
+            // Don't set callActive here - it should be set before calling this function
+            // callActive = true; // Removed - set by caller
             
-            // Listen for call end from other side
-            if (callId && window.firebaseDB) {
-                const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
-                const endListener = window.firebaseOnSnapshot(callDocRef, (doc) => {
-                    if (doc.exists()) {
-                        const data = doc.data();
-                        if (data.status === 'ended' || data.ended) {
-                            // Other side hung up
-                            cleanupCall();
-                        }
-                    }
-                });
-                // Store this listener to cleanup later
-                if (!answerUnsubscribe) {
-                    answerUnsubscribe = endListener;
-                }
+            const activeCallUI = document.getElementById('active-call-interface');
+            const callBtn = document.getElementById('ghost-call-btn');
+            
+            if (activeCallUI) {
+                activeCallUI.classList.remove('hidden');
             }
+            if (callBtn) {
+                callBtn.classList.add('hidden');
+            }
+            
+            // Note: Call end listening is already handled by listenForAnswer() and listenForIncomingCalls()
+            // No need to create duplicate listeners here
         }
 
         // Hangup call
@@ -5022,6 +5103,54 @@
             
             return baseConstraints;
         };
+
+        // Check microphone permissions
+        async function checkMicrophonePermission() {
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    const result = await navigator.permissions.query({ name: 'microphone' });
+                    return result.state; // 'granted', 'denied', or 'prompt'
+                }
+                // Fallback: try to get media to check permission
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    return 'granted';
+                } catch (e) {
+                    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+                        return 'denied';
+                    }
+                    return 'prompt';
+                }
+            } catch (e) {
+                console.warn('Could not check microphone permission:', e);
+                return 'prompt'; // Assume we can prompt
+            }
+        }
+
+        // Request microphone permission with better error handling
+        async function requestMicrophoneAccess() {
+            try {
+                // First check current permission state
+                const permissionState = await checkMicrophonePermission();
+                
+                if (permissionState === 'denied') {
+                    throw new Error('Microphone permission was denied. Please enable it in your browser settings.');
+                }
+                
+                // Try to get media with basic constraints first
+                const basicConstraints = { audio: true };
+                const stream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+                
+                // Stop the test stream
+                stream.getTracks().forEach(track => track.stop());
+                
+                return true;
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                throw error;
+            }
+        }
 
     </script>
 </body>
