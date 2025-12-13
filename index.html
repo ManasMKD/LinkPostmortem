@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Postmortem</title>
+    <title>Link Postmortem | Ultimate Suite</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,16 +11,62 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // ============================================
+        // FIREBASE CONFIGURATION
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8Ce3i_s0sfemJ6iRZhsdUnZMNFSfwIuM",
+            authDomain: "link-postmortem.firebaseapp.com",
+            projectId: "link-postmortem",
+            storageBucket: "link-postmortem.firebasestorage.app",
+            messagingSenderId: "349174304404",
+            appId: "1:349174304404:web:b6f9d8ae5db19f926a6e81",
+            measurementId: "G-GE65L6YQ7D"
+        };
+        // ============================================
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            
+            // Make Firebase functions globally available
+            window.firebaseDB = db;
+            window.firebaseAddDoc = addDoc;
+            window.firebaseCollection = collection;
+            window.firebaseQuery = query;
+            window.firebaseOrderBy = orderBy;
+            window.firebaseOnSnapshot = onSnapshot;
+            window.firebaseServerTimestamp = serverTimestamp;
+            
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            window.firebaseDB = null;
+        }
+    </script>
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
                     colors: {
-                        zinc: { 950: '#09090b' } // Deep black/zinc
+                        zinc: { 950: '#09090b' },
+                        cyan: { 950: '#083344' }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -31,13 +77,12 @@
         body { background-color: #000000; color: #d4d4d8; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        /* Custom scrollbar for textareas */
+        
         textarea::-webkit-scrollbar { width: 8px; }
         textarea::-webkit-scrollbar-track { background: #18181b; }
         textarea::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
         textarea::-webkit-scrollbar-thumb:hover { background: #52525b; }
         
-        /* Scrollbar for buttons container */
         .btn-scroll::-webkit-scrollbar { width: 4px; }
         .btn-scroll::-webkit-scrollbar-track { background: transparent; }
         .btn-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
@@ -45,10 +90,81 @@
         .animate-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Security: Prevent selection */
         .no-select {
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        /* Sonic Visualizer Canvas */
+        #sonic-canvas {
+            width: 100%;
+            height: 100px;
+            background: #000;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        /* YouTube Result Styles */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Ghost Comms Chat Styles */
+        #ghost-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #ghost-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #ghost-messages::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 3px;
+        }
+        #ghost-messages::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
+
+        .message-bubble {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-own {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-other {
+            background: #27272a;
+            color: #e4e4e7;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Floating Button Styles */
+        #ghost-float-btn {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #ghost-modal {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 </head>
@@ -68,9 +184,13 @@
 
             <!-- Desktop Nav -->
             <div class="hidden md:flex items-center gap-1 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
-                <button type="button" onclick="switchTab('downloader')" id="btn-nav-downloader" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg">Downloader</button>
-                <button type="button" onclick="switchTab('crypter')" id="btn-nav-crypter" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300">Encrypter</button>
-                <button type="button" onclick="switchTab('stego')" id="btn-nav-stego" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300">Stego Lab</button>
+                <button type="button" onclick="switchTab('downloader')" id="btn-nav-downloader" class="px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-zinc-800 text-white shadow-lg">Downloader</button>
+                <button type="button" onclick="switchTab('crypter')" id="btn-nav-crypter" class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Encrypter</button>
+                <button type="button" onclick="switchTab('keys')" id="btn-nav-keys" class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Key Forge</button>
+                <button type="button" onclick="switchTab('stego')" id="btn-nav-stego" class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Stego Lab</button>
+                <button type="button" onclick="switchTab('sonic')" id="btn-nav-sonic" class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1">
+                    <i data-lucide="waves" class="w-3 h-3"></i> Sonic Lab
+                </button>
             </div>
 
             <!-- Mobile Menu Toggle -->
@@ -83,7 +203,9 @@
         <div id="mobile-menu" class="hidden md:hidden bg-zinc-950 border-b border-zinc-900 p-4 flex flex-col gap-4">
             <button type="button" onclick="switchTab('downloader'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Downloader</button>
             <button type="button" onclick="switchTab('crypter'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Link Crypter</button>
+            <button type="button" onclick="switchTab('keys'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Key Forge</button>
             <button type="button" onclick="switchTab('stego'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Steganography</button>
+            <button type="button" onclick="switchTab('sonic'); toggleMenu()" class="text-left text-cyan-400 font-medium p-2 hover:bg-zinc-900 rounded">Sonic Lab</button>
         </div>
     </nav>
 
@@ -105,7 +227,7 @@
                         Extract <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-600">Remote</span> Content
                     </h1>
                     <p class="text-zinc-500 max-w-xl mx-auto text-lg">
-                        Bypass restrictions and access your files directly via our secure tunnel.
+                        Download YouTube videos or bypass restrictions and access your files directly via our secure tunnel.
                     </p>
                 </div>
 
@@ -115,9 +237,8 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500">
                                 <i data-lucide="link" class="w-5 h-5"></i>
                             </div>
-                            <input type="text" id="dl-input" placeholder="Paste source link (Cloud or Direct)..." 
+                            <input type="text" id="dl-input" placeholder="Paste YouTube URL or source link (Cloud or Direct)..." 
                                 class="w-full pl-12 pr-10 py-4 rounded-xl bg-black border border-zinc-800 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none transition-all text-white placeholder:text-zinc-600">
-                            <!-- Clear Button -->
                             <button type="button" onclick="clearInput('dl-input')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-600 hover:text-zinc-300 transition-colors">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                             </button>
@@ -135,37 +256,59 @@
                     <span id="dl-error-text"></span>
                 </div>
 
-                <!-- DIRECT MEDIA RESULT -->
                 <div id="media-result" class="hidden max-w-3xl mx-auto mt-8 animate-in">
                     <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col items-center text-center">
                         <div class="w-16 h-16 bg-rose-900/20 rounded-full flex items-center justify-center text-rose-500 mb-4 animate-pulse">
                             <i data-lucide="file-video" class="w-8 h-8"></i>
                         </div>
                         <h3 class="text-xl font-bold text-white mb-2">Direct Media Detected</h3>
-                        <p class="text-zinc-400 mb-6 text-sm max-w-md">
-                            The link appears to be a direct media file. You can access it directly without the secure tunnel.
-                        </p>
-                        <div class="flex gap-3">
-                            <a id="media-download-btn" href="#" target="_blank" rel="noopener noreferrer" 
-                               class="bg-white text-black hover:bg-zinc-200 font-bold py-3 px-8 rounded-full flex items-center gap-2 transition-all shadow-lg hover:scale-105">
-                                <i data-lucide="download" class="w-4 h-4"></i> <span id="media-btn-label">Download / Play</span>
-                            </a>
+                        <p class="text-zinc-400 mb-6 text-sm max-w-md">The link appears to be a direct media file. You can access it directly.</p>
+                        <a id="media-download-btn" href="#" target="_blank" rel="noopener noreferrer" 
+                           class="bg-white text-black hover:bg-zinc-200 font-bold py-3 px-8 rounded-full flex items-center gap-2 transition-all shadow-lg hover:scale-105">
+                            <i data-lucide="download" class="w-4 h-4"></i> <span id="media-btn-label">Download / Play</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- YouTube Video Result -->
+                <div id="yt-result" class="hidden max-w-5xl mx-auto mt-8 animate-in">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+                        <!-- Video Info -->
+                        <div id="yt-video-info" class="mb-6">
+                            <div class="flex flex-col md:flex-row gap-6 items-start">
+                                <div id="yt-thumbnail" class="flex-shrink-0 w-full md:w-80 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-800">
+                                    <img id="yt-thumbnail-img" src="" alt="Video thumbnail" class="w-full h-auto" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'320\' height=\'180\'%3E%3Crect fill=\'%2318181b\' width=\'320\' height=\'180\'/%3E%3Ctext fill=\'%23666\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EThumbnail%3C/text%3E%3C/svg%3E'">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h3 id="yt-title" class="text-xl font-bold text-white mb-3 line-clamp-2">Loading video info...</h3>
+                                    <div id="yt-meta" class="flex flex-wrap gap-4 text-sm text-zinc-400 mb-4">
+                                        <span id="yt-duration" class="flex items-center gap-1"></span>
+                                        <span id="yt-channel" class="flex items-center gap-1"></span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-6 w-full">
-                            <div class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Source URL</div>
-                            <div class="text-xs text-zinc-400 font-mono bg-black px-3 py-2 rounded border border-zinc-800 break-all w-full text-center">
-                                <span id="media-url-display"></span>
+                        
+                        <!-- Download Options -->
+                        <div id="yt-download-options" class="space-y-3">
+                            <div class="bg-black/50 border border-zinc-800 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="text-sm font-bold text-zinc-300 uppercase tracking-wider">Download Options</h4>
+                                    <span id="yt-loading" class="text-xs text-zinc-500 flex items-center gap-2">
+                                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...
+                                    </span>
+                                </div>
+                                <div id="yt-formats-list" class="space-y-2"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TUNNEL RESULT -->
                 <div id="dl-result" class="hidden max-w-5xl mx-auto mt-8 animate-in">
                     <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <p class="text-sm text-zinc-300">Tunnel established successfully. Loading content...</p>
+                            <p class="text-sm text-zinc-300">Tunnel established. Loading content...</p>
                         </div>
                         <a id="dl-external-link" href="#" target="_blank" rel="noopener noreferrer"
                             class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
@@ -184,123 +327,128 @@
                     <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
                         Link <span class="text-rose-600">Obfuscator</span>
                     </h1>
-                    <p class="text-zinc-500 max-w-lg mx-auto">
-                        Encrypt multiple links into a single payload. Links can be Time-Locked to expire automatically.
-                    </p>
+                    <p class="text-zinc-500 max-w-lg mx-auto">Encrypt multiple links into a single payload with time-locks.</p>
                 </div>
 
                 <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 bg-zinc-900/30 p-2 rounded-2xl border border-zinc-800 backdrop-blur-sm">
-                    
-                    <!-- Input Section -->
                     <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
                             <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Input Payload</label>
                             <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-                                <button type="button" onclick="setCryptoMode('encrypt')" id="mode-encrypt" class="p-1.5 rounded-md transition-all bg-zinc-700 text-white" title="Encrypt Mode"><i data-lucide="lock" class="w-4 h-4"></i></button>
-                                <button type="button" onclick="setCryptoMode('decrypt')" id="mode-decrypt" class="p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400" title="Decrypt Mode"><i data-lucide="unlock" class="w-4 h-4"></i></button>
+                                <button type="button" onclick="setCryptoMode('encrypt')" id="mode-encrypt" class="p-1.5 rounded-md transition-all bg-zinc-700 text-white"><i data-lucide="lock" class="w-4 h-4"></i></button>
+                                <button type="button" onclick="setCryptoMode('decrypt')" id="mode-decrypt" class="p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400"><i data-lucide="unlock" class="w-4 h-4"></i></button>
                             </div>
                         </div>
-                        
                         <div class="relative w-full flex-grow flex flex-col">
-                            <textarea id="crypto-input" placeholder="Paste link(s) here..." class="w-full flex-grow bg-zinc-900 border border-zinc-800 rounded-lg p-4 pr-10 text-zinc-300 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none resize-none font-mono text-sm min-h-[150px]"></textarea>
-                            <!-- Input Actions -->
+                            <textarea id="crypto-input" placeholder="Paste link(s) here..." class="w-full flex-grow bg-zinc-900 border border-zinc-800 rounded-lg p-4 pr-10 text-zinc-300 focus:border-rose-600 outline-none resize-none font-mono text-sm min-h-[150px]"></textarea>
                             <div class="absolute top-2 right-2 flex flex-col gap-1">
-                                <button type="button" onclick="clearInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Clear">
-                                    <i data-lucide="x" class="w-3 h-3"></i>
-                                </button>
-                                <button type="button" onclick="pasteToInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Paste">
-                                    <i data-lucide="clipboard" class="w-3 h-3"></i>
-                                </button>
+                                <button type="button" onclick="clearInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                <button type="button" onclick="pasteToInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded"><i data-lucide="clipboard" class="w-3 h-3"></i></button>
                             </div>
                         </div>
-
-                        <!-- Settings Grid -->
                         <div id="crypto-settings" class="mt-4 grid grid-cols-2 gap-3">
                             <div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <i data-lucide="key" class="w-3 h-3 text-zinc-500"></i>
-                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Passcode</label>
-                                </div>
-                                <input type="text" id="crypto-pass" placeholder="Optional PIN" 
-                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none transition-colors">
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Passcode</label>
+                                <input type="text" id="crypto-pass" placeholder="Optional PIN" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none">
                             </div>
-                            
                             <div id="crypto-expiry-container">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <i data-lucide="clock" class="w-3 h-3 text-zinc-500"></i>
-                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Lifespan</label>
-                                </div>
-                                <select id="crypto-expiry" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-rose-600 outline-none transition-colors appearance-none">
-                                    <option value="0">Eternal (Never)</option>
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Lifespan</label>
+                                <select id="crypto-expiry" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-rose-600 outline-none">
+                                    <option value="0">Eternal</option>
                                     <option value="5">5 Minutes</option>
-                                    <option value="30">30 Minutes</option>
                                     <option value="60">1 Hour</option>
                                     <option value="1440">24 Hours</option>
-                                    <option value="10080">7 Days</option>
                                 </select>
                             </div>
                         </div>
-
-                        <button type="button" onclick="handleCryptoProcess()" id="crypto-action-btn" class="mt-4 w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
-                            <i data-lucide="lock" id="action-icon" class="w-4 h-4"></i>
-                            <span id="action-text">Encrypt Payload</span>
+                        <button type="button" onclick="handleCryptoProcess()" id="crypto-action-btn" class="mt-4 w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+                            <i data-lucide="lock" id="action-icon" class="w-4 h-4"></i> <span id="action-text">Encrypt Payload</span>
                         </button>
                     </div>
 
-                    <!-- Output Section -->
                     <div class="bg-zinc-900/80 p-6 rounded-xl border border-zinc-800 flex flex-col h-full relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-20 h-20 bg-rose-600/10 blur-xl rounded-full"></div>
-                        
                         <div class="flex justify-between items-center mb-4 relative z-10">
                             <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Result</label>
                             <div class="flex gap-2">
-                                <button type="button" id="btn-inject-quick" onclick="triggerCrypterStego()" class="hidden text-xs flex items-center gap-1 text-zinc-400 hover:text-white font-medium transition-colors" title="Inject current payload into an existing image">
-                                    <i data-lucide="image-plus" class="w-3 h-3"></i> <span>Upload</span>
-                                </button>
-                                <button type="button" id="btn-generate-quick" onclick="quickGenerateStego()" class="hidden text-xs flex items-center gap-1 text-emerald-500 hover:text-emerald-400 font-medium transition-colors" title="Auto-generate a new noise carrier">
-                                    <i data-lucide="cpu" class="w-3 h-3"></i> <span>Auto-Generate</span>
-                                </button>
-                                <button type="button" id="btn-copy" onclick="copyToClipboard()" class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium transition-colors">
-                                    <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
-                                </button>
+                                <button type="button" id="btn-copy" onclick="copyToClipboard()" class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium"><i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span></button>
                             </div>
                         </div>
-
-                        <!-- Hidden File Input for Crypter Tab Injection -->
-                        <input type="file" id="crypter-stego-input" accept="image/*" class="hidden" onchange="processCrypterStego(this)">
-
-                        <div class="flex-grow bg-black border border-zinc-800 rounded-lg p-4 relative group min-h-[150px] flex flex-col overflow-hidden">
-                            
-                            <!-- Empty State -->
+                        <div class="flex-grow bg-black border border-zinc-800 rounded-lg p-4 relative min-h-[150px] flex flex-col overflow-hidden">
                             <div id="result-empty" class="h-full flex flex-col items-center justify-center text-zinc-700">
-                                <i data-lucide="refresh-cw" class="mb-2 opacity-20 w-8 h-8"></i>
-                                <span class="text-xs">Waiting for processing...</span>
+                                <i data-lucide="refresh-cw" class="mb-2 opacity-20 w-8 h-8"></i> <span class="text-xs">Waiting...</span>
                             </div>
-
-                            <!-- Text Result (Encrypt Mode) -->
                             <div id="result-text" class="hidden break-all font-mono text-sm text-emerald-400"></div>
-
-                            <!-- Launch Button (Decrypt Mode) -->
-                            <div id="result-launch" class="hidden absolute inset-0 flex flex-col items-center justify-start bg-black/60 backdrop-blur-[1px] pt-4 pb-2">
-                                <div class="flex items-center gap-2 text-green-500 mb-3 flex-shrink-0">
-                                    <i data-lucide="eye-off" class="w-4 h-4"></i>
-                                    <span class="text-xs font-bold uppercase tracking-widest">Payload Verified</span>
-                                </div>
-                                
-                                <!-- Dynamic Buttons Container -->
-                                <div id="launch-buttons-container" class="flex flex-col gap-2 w-full px-4 overflow-y-auto btn-scroll items-center mb-2 justify-start flex-grow" style="max-height: 200px;">
-                                    <!-- Buttons will be injected here via JS -->
-                                </div>
-
-                                <!-- Illusionary Link Display -->
-                                <div id="illusion-link" class="mt-auto break-all font-mono text-xs text-zinc-600 blur-[1px] select-none text-center px-4 w-full"></div>
+                            <div id="result-launch" class="hidden absolute inset-0 flex flex-col items-center justify-start bg-black/60 backdrop-blur-[1px] pt-4">
+                                <div id="launch-buttons-container" class="flex flex-col gap-2 w-full px-4 overflow-y-auto btn-scroll items-center mb-2 justify-start flex-grow" style="max-height: 200px;"></div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- TAB: KEY FORGE -->
+            <div id="tab-keys" class="tab-content animate-in">
+                <div class="text-center mb-10">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
+                        Key <span class="text-amber-500">Forge</span>
+                    </h1>
+                    <p class="text-zinc-500 max-w-lg mx-auto">
+                        Split your secret into multiple keys. <br><span class="text-amber-500/80">ALL</span> generated keys are required to unlock the data.
+                    </p>
+                </div>
+
+                <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800 backdrop-blur-sm">
+                    
+                    <!-- KEY GENERATION -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-amber-900/30 pb-2">
+                            <i data-lucide="hammer" class="text-amber-500 w-5 h-5"></i>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Forge New Keys</h3>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Secret Message / URL</label>
+                            <textarea id="keys-input" placeholder="Enter the secret to split..." class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-amber-100 focus:border-amber-500 outline-none resize-none font-mono text-xs h-24 placeholder:text-zinc-700"></textarea>
                         </div>
 
-                        <div id="mode-hint" class="mt-4 text-xs text-zinc-600 text-center">
-                            This string can only be decrypted by the Link Postmortem tool.
+                        <div class="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Number of Keys</label>
+                                <span id="keys-count-val" class="text-amber-500 font-bold font-mono text-sm">3</span>
+                            </div>
+                            <input type="range" id="keys-count" min="2" max="10" value="3" class="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500" oninput="document.getElementById('keys-count-val').innerText = this.value; document.getElementById('keys-req-val').innerText = this.value;">
+                            <p class="text-[10px] text-zinc-500 mt-2 text-center">
+                                * To decrypt, the user will need exactly <span id="keys-req-val" class="text-amber-500 font-bold">3</span> keys.
+                            </p>
                         </div>
+
+                        <button onclick="forgeKeys()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 mt-auto shadow-lg shadow-amber-900/20">
+                            <i data-lucide="key" class="w-4 h-4"></i> Generate Keys
+                        </button>
+
+                        <div id="forge-output" class="hidden w-full bg-zinc-950 border border-amber-900/50 rounded-lg p-3 font-mono text-[10px] text-amber-400 break-all relative max-h-40 overflow-y-auto btn-scroll">
+                            <!-- Output -->
+                        </div>
+                    </div>
+
+                    <!-- KEY UNLOCK -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
+                            <i data-lucide="unlock" class="text-zinc-400 w-5 h-5"></i>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Unlock Vault</h3>
+                        </div>
+
+                        <div class="flex-grow flex flex-col">
+                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Input Keys (One per line)</label>
+                            <textarea id="keys-unlock-input" placeholder="Paste Key 1&#10;Paste Key 2&#10;..." class="w-full flex-grow bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-300 focus:border-amber-500 outline-none resize-none font-mono text-xs placeholder:text-zinc-700 min-h-[150px]"></textarea>
+                        </div>
+
+                        <button onclick="unlockKeys()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg border border-zinc-700 flex items-center justify-center gap-2">
+                            <i data-lucide="folder-open" class="w-4 h-4"></i> Combine & Reveal
+                        </button>
+
+                        <div id="unlock-result" class="hidden w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-sm text-center break-all"></div>
                     </div>
 
                 </div>
@@ -312,30 +460,25 @@
                     <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
                         Stego <span class="text-rose-600">Lab</span>
                     </h1>
-                    <p class="text-zinc-500 max-w-lg mx-auto">
-                        Digital Steganography: Inject encrypted payloads and links directly into image pixels.
-                    </p>
+                    <p class="text-zinc-500 max-w-lg mx-auto">Inject encrypted payloads into image pixels.</p>
                 </div>
 
                 <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800 backdrop-blur-sm">
-                    
-                    <!-- INJECT (Hide) -->
+                    <!-- Inject -->
                     <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
                         <div class="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
                             <i data-lucide="file-plus" class="text-rose-500 w-5 h-5"></i>
-                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Injection Protocol</h3>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Injection</h3>
                         </div>
-
                         <div class="space-y-3">
                             <div>
-                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">1. Carrier Source</label>
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Carrier</label>
                                 <div class="flex gap-2">
-                                    <label class="flex-1 cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg p-2 text-xs text-center border border-zinc-700 transition-colors flex items-center justify-center gap-2">
+                                    <label class="flex-1 cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg p-2 text-xs text-center border border-zinc-700 flex items-center justify-center gap-2">
                                         <input type="file" id="stego-upload-inject" accept="image/*" class="hidden" onchange="document.getElementById('file-name-display').innerText = this.files[0]?.name || 'Upload Image'"/>
                                         <i data-lucide="upload" class="w-3 h-3"></i> <span id="file-name-display">Upload Image</span>
                                     </label>
-                                    <div class="text-zinc-600 text-xs flex items-center">OR</div>
-                                    <button type="button" onclick="generateCarrierImage()" class="flex-1 bg-indigo-900/50 hover:bg-indigo-900 text-indigo-200 rounded-lg p-2 text-xs border border-indigo-800 transition-colors flex items-center justify-center gap-2">
+                                    <button type="button" onclick="generateCarrierImage()" class="flex-1 bg-indigo-900/50 hover:bg-indigo-900 text-indigo-200 rounded-lg p-2 text-xs border border-indigo-800 flex items-center justify-center gap-2">
                                         <i data-lucide="cpu" class="w-3 h-3"></i> Auto-Generate
                                     </button>
                                 </div>
@@ -343,59 +486,91 @@
                                     <i data-lucide="check" class="w-3 h-3 inline"></i> Carrier Generated
                                 </div>
                             </div>
-
-                            <div>
-                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">2. Secret Payload</label>
-                                <textarea id="stego-text-inject" placeholder="Paste link(s) or code to hide..." class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-300 focus:border-rose-600 outline-none resize-none font-mono text-xs h-20"></textarea>
-                            </div>
-
-                            <div>
-                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">3. Passcode Lock (Optional)</label>
-                                <input type="text" id="stego-pass-inject" placeholder="Leave empty for no lock" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none transition-colors">
-                            </div>
+                            <textarea id="stego-text-inject" placeholder="Payload..." class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-300 focus:border-rose-600 outline-none resize-none font-mono text-xs h-20"></textarea>
+                            <input type="text" id="stego-pass-inject" placeholder="Passcode (Optional)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none">
                         </div>
-
-                        <div class="bg-amber-900/20 border border-amber-900/50 p-2 rounded text-[10px] text-amber-500 flex gap-2 items-start mt-auto">
-                            <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
-                            <p>Warning: Share the result as a DOCUMENT. Image compression (like WhatsApp/Messenger) will destroy the hidden data.</p>
-                        </div>
-
-                        <button type="button" onclick="stegoInject()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                        <button type="button" onclick="stegoInject()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 mt-auto">
                             <i data-lucide="syringe" class="w-4 h-4"></i> Inject & Download
                         </button>
                     </div>
 
-                    <!-- EXTRACT (Reveal) -->
+                    <!-- Extract -->
                     <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
                         <div class="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
                             <i data-lucide="scan-eye" class="text-emerald-500 w-5 h-5"></i>
-                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Batch Extraction Protocol</h3>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Batch Extraction</h3>
                         </div>
-
                         <div>
-                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">1. Upload Carrier Image(s)</label>
-                            <!-- UPDATED: Added 'multiple' attribute -->
                             <input type="file" id="stego-upload-extract" multiple accept="image/*" class="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"/>
-                            <div class="text-[10px] text-zinc-600 mt-1">Select multiple images to process them all at once.</div>
                         </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">2. Decryption Passcode</label>
-                            <input type="text" id="stego-pass-extract" placeholder="Enter universal passcode (if images are locked)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-600 outline-none transition-colors">
-                            <div class="text-[10px] text-zinc-600 mt-1">Unprotected images will open even if passcode is wrong.</div>
+                        <input type="text" id="stego-pass-extract" placeholder="Decryption Passcode" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-600 outline-none">
+                        <div id="stego-result-area" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-500 font-mono text-xs h-64 overflow-y-auto break-all relative">
+                            <div class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">Waiting...</div>
                         </div>
+                        <button type="button" onclick="stegoExtract()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg border border-zinc-700 flex items-center justify-center gap-2">
+                            <i data-lucide="download-cloud" class="w-4 h-4"></i> Extract Data
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="flex-grow flex flex-col">
-                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">3. Analysis Result</label>
-                            <div id="stego-result-area" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-500 font-mono text-xs h-64 overflow-y-auto break-all flex flex-col gap-2 relative">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none" id="stego-empty-state">
-                                    Waiting for images...
-                                </div>
+            <!-- TAB: SONIC LAB (NEW EXPERIMENT) -->
+            <div id="tab-sonic" class="tab-content animate-in">
+                <div class="text-center mb-10">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
+                        Sonic <span class="text-cyan-500">Lab</span> <span class="text-xs align-top bg-cyan-900/30 text-cyan-300 px-2 py-1 rounded ml-2 font-mono font-normal tracking-wide">BETA</span>
+                    </h1>
+                    <p class="text-zinc-500 max-w-lg mx-auto">
+                        Audio Steganography. Hide data inside "Dark Ambient" drone frequencies.
+                    </p>
+                </div>
+
+                <!-- Visualizer -->
+                <div class="max-w-4xl mx-auto mb-8 bg-black border border-cyan-900/50 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(8,145,178,0.1)] relative">
+                    <canvas id="sonic-canvas"></canvas>
+                    <div class="absolute top-2 left-3 text-[10px] font-mono text-cyan-500/50 uppercase tracking-widest">Frequency Domain Monitor</div>
+                </div>
+
+                <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 bg-cyan-950/10 p-6 rounded-2xl border border-cyan-900/30 backdrop-blur-sm">
+                    
+                    <!-- ENCODE AUDIO -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 text-cyan-400 border-b border-cyan-900/30 pb-2">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
+                            <h3 class="font-bold uppercase tracking-wider text-sm">Generate Carrier Signal</h3>
+                        </div>
+                        <p class="text-xs text-zinc-500">Creates a generated 10s audio file with data embedded in the noise floor.</p>
+                        
+                        <textarea id="sonic-input" placeholder="Enter secret message to modulate..." class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-cyan-100 focus:border-cyan-500 outline-none resize-none font-mono text-xs h-32 placeholder:text-zinc-600"></textarea>
+                        
+                        <button onclick="generateSonic()" id="btn-sonic-gen" class="w-full bg-cyan-900 hover:bg-cyan-800 text-cyan-100 border border-cyan-700/50 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/20">
+                            <i data-lucide="activity" class="w-4 h-4"></i> Generate & Download WAV
+                        </button>
+                    </div>
+
+                    <!-- DECODE AUDIO -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 text-rose-400 border-b border-rose-900/30 pb-2">
+                            <i data-lucide="headphones" class="w-5 h-5"></i>
+                            <h3 class="font-bold uppercase tracking-wider text-sm">Analyze Audio Signal</h3>
+                        </div>
+                        <p class="text-xs text-zinc-500">Upload a WAV file generated by this lab.</p>
+
+                        <div class="border-2 border-dashed border-zinc-800 rounded-xl p-8 text-center hover:border-cyan-800 transition-colors group cursor-pointer relative bg-zinc-900/50">
+                            <input type="file" id="sonic-upload" accept=".wav" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleSonicUpload(this)">
+                            <div class="flex flex-col items-center">
+                                <i data-lucide="music" class="w-8 h-8 text-zinc-600 group-hover:text-cyan-500 mb-2 transition-colors"></i>
+                                <span class="text-sm text-zinc-400 font-mono" id="sonic-file-name">Drop .WAV File</span>
                             </div>
                         </div>
 
-                        <button type="button" onclick="stegoExtract()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 border border-zinc-700">
-                            <i data-lucide="download-cloud" class="w-4 h-4"></i> Extract Data
+                        <div id="sonic-result" class="hidden w-full bg-black border border-cyan-900/50 rounded-lg p-4 font-mono text-xs break-all relative min-h-[80px]">
+                            <div class="text-[10px] text-zinc-600 uppercase mb-1">Decoded Signal:</div>
+                            <div id="sonic-result-text" class="text-cyan-400"></div>
+                        </div>
+
+                        <button onclick="decodeSonic()" id="btn-sonic-decode" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 mt-auto">
+                            <i data-lucide="search" class="w-4 h-4"></i> Analyze Spectrum
                         </button>
                     </div>
 
@@ -407,152 +582,729 @@
 
     <!-- FOOTER -->
     <footer class="bg-black border-t border-zinc-900 py-12 mt-auto">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between gap-8 mb-8">
-                <div class="max-w-sm">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i data-lucide="skull" class="text-rose-600 w-6 h-6"></i>
-                        <span class="text-lg font-bold text-white">Link Postmortem</span>
-                    </div>
-                    <p class="text-zinc-500 text-sm">
-                        Advanced link forensics and extraction tools. Deconstruct the web, one link at a time.
-                    </p>
-                </div>
-                <div>
-                    <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Tools</h4>
-                    <ul class="space-y-2 text-sm text-zinc-500">
-                        <li class="hover:text-rose-500 cursor-pointer">Cloud Extractor</li>
-                        <li class="hover:text-rose-500 cursor-pointer">Link Obfuscator</li>
-                        <li class="hover:text-rose-500 cursor-pointer">Payload Analyzer</li>
-                        <li class="hover:text-rose-500 cursor-pointer">Stego Lab</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- Credits Section -->
-            <div class="border-t border-zinc-900 pt-8 flex flex-col items-center gap-2 text-center">
-                <p class="text-zinc-400 font-medium">Designed & Developed by <span class="text-rose-500 font-bold">MKD</span></p>
-                <p class="text-xs text-zinc-600 flex items-center gap-1">
-                    Made with <i data-lucide="heart" class="w-3 h-3 text-red-600 fill-current"></i> by Indian Developer
-                </p>
-                <p class="text-[10px] text-zinc-700 mt-2">© 2025 Link Postmortem. Secure Build.</p>
-            </div>
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-zinc-400 font-medium">Designed & Developed by <span class="text-rose-500 font-bold">MKD</span></p>
+            <p class="text-xs text-zinc-600 flex items-center justify-center gap-1 mt-1">
+                Made with <i data-lucide="heart" class="w-3 h-3 text-red-600 fill-current"></i> by Indian Developer
+            </p>
+            <p class="text-[10px] text-zinc-700 mt-2">© 2025 Link Postmortem. Secure Build.</p>
         </div>
     </footer>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- FLOATING GHOST COMMS BUTTON -->
+    <button onclick="openGhostComms()" id="ghost-float-btn" 
+        class="fixed bottom-6 right-6 w-16 h-16 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-2xl shadow-emerald-900/50 hover:shadow-emerald-900/70 transition-all flex items-center justify-center z-50 group">
+        <i data-lucide="message-square-lock" class="w-7 h-7 group-hover:scale-110 transition-transform"></i>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-black animate-pulse hidden" id="ghost-notification-dot"></span>
+    </button>
+
+    <!-- GHOST COMMS MODAL -->
+    <div id="ghost-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-zinc-950 border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-600/20 rounded-full flex items-center justify-center border border-emerald-600/30">
+                        <i data-lucide="message-square-lock" class="w-5 h-5 text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white">Ghost Comms</h2>
+                        <p class="text-xs text-zinc-500">Zero-Knowledge Encrypted Chat</p>
+                    </div>
+                </div>
+                <button onclick="closeGhostComms()" class="text-zinc-500 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-hidden flex">
+                <!-- LEFT SIDE: Join/Create Room (Hidden when in room) -->
+                <div id="ghost-join-panel" class="w-96 bg-zinc-950 border-r border-zinc-800 p-6 overflow-y-auto">
+                    <div class="space-y-6">
+                        <!-- Create Room Section -->
+                        <div>
+                            <div class="flex items-center gap-2 text-emerald-400 mb-4">
+                                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                                <h3 class="font-bold uppercase tracking-wider text-sm">Create Room</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Master Key</label>
+                                    <input type="password" id="ghost-master-key" placeholder="Enter master key to create room" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none font-mono">
+                                    <p class="text-[10px] text-zinc-600 mt-1">Key required to create new rooms</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Room ID</label>
+                                    <input type="text" id="ghost-room-id-create" placeholder="e.g., RedHawk" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none font-mono">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Room Password</label>
+                                    <input type="password" id="ghost-password-create" placeholder="Room access password" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Your Handle</label>
+                                    <input type="text" id="ghost-handle-create" placeholder="Your Name" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none">
+                                </div>
+                                
+                                <button onclick="createGhostRoom()" id="ghost-create-btn" 
+                                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20">
+                                    <i data-lucide="shield-check" class="w-4 h-4"></i> Create & Join Room
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-zinc-800 pt-6">
+                            <div class="flex items-center gap-2 text-zinc-400 mb-4">
+                                <i data-lucide="link" class="w-5 h-5"></i>
+                                <h3 class="font-bold uppercase tracking-wider text-sm">Join via Link</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Room ID</label>
+                                    <input type="text" id="ghost-room-id-join" placeholder="From shared link" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none font-mono">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Room Password</label>
+                                    <input type="password" id="ghost-password-join" placeholder="From shared link" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Your Handle</label>
+                                    <input type="text" id="ghost-handle-join" placeholder="Your Name" 
+                                        class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none">
+                                </div>
+                                
+                                <button onclick="joinViaLink()" id="ghost-join-link-btn" 
+                                    class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="log-in" class="w-4 h-4"></i> Join Room
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE: Chat Area -->
+                <div class="flex-1 flex flex-col bg-zinc-900/50">
+                    <!-- Chat Header -->
+                    <div class="bg-zinc-950 border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-emerald-600/20 rounded-full flex items-center justify-center border border-emerald-600/30">
+                                <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-sm" id="ghost-room-display">Not Connected</h3>
+                                <p class="text-[10px] text-zinc-500" id="ghost-room-status">Join or create a room to start</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="copyRoomLink()" id="ghost-share-btn" class="hidden text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+                                <i data-lucide="share-2" class="w-4 h-4"></i> Share Link
+                            </button>
+                            <button onclick="disconnectGhost()" id="ghost-disconnect-btn" class="hidden text-xs text-rose-500 hover:text-rose-400 transition-colors">
+                                <i data-lucide="log-out" class="w-4 h-4"></i> Leave
+                            </button>
+                            <div id="ghost-encryption-indicator" class="w-2 h-2 rounded-full bg-zinc-700"></div>
+                            <span class="text-[10px] text-zinc-500 font-mono">E2E</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Messages Container -->
+                    <div id="ghost-messages" class="flex-1 min-h-[400px] overflow-y-auto bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 space-y-3">
+                        <div class="text-center text-zinc-600 text-sm py-12">
+                            <div class="w-16 h-16 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-600/20">
+                                <i data-lucide="message-square-lock" class="w-8 h-8 text-emerald-500/50"></i>
+                            </div>
+                            <p class="font-medium">Join or create a room to start messaging</p>
+                            <p class="text-xs text-zinc-700 mt-1">Messages are end-to-end encrypted</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Input Area -->
+                    <div class="bg-zinc-950 border-t border-zinc-800 p-4">
+                        <div class="flex items-end gap-2">
+                            <div class="flex-1 relative">
+                                <textarea id="ghost-message-input" placeholder="Type a message..." 
+                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 pr-12 text-sm text-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none resize-none min-h-[48px] max-h-[120px] placeholder:text-zinc-600"
+                                    disabled rows="1"></textarea>
+                                <button onclick="sendGhostMessage()" id="ghost-send-btn" 
+                                    class="absolute right-2 bottom-2 w-8 h-8 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-full transition-all flex items-center justify-center shadow-lg hover:shadow-emerald-600/50 disabled:shadow-none"
+                                    disabled>
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <p class="text-[10px] text-zinc-700 font-mono">🔒 Encrypted with AES-GCM</p>
+                            <p class="text-[10px] text-zinc-700" id="ghost-char-count">0/1000</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
     <script>
-        // --- ANTI-THEFT / ANTI-INSPECT MODULE ---
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        // --- ANTI-INSPECT ---
+        document.addEventListener('contextmenu', e => e.preventDefault());
         document.onkeydown = function(e) {
-            // Disable F12
             if(e.keyCode == 123) return false;
-            // Disable Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J
             if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
-            // Disable Ctrl+U
             if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
         };
 
-        // Global Error Handler
-        window.onerror = function(message, source, lineno, colno, error) {
-            console.error("Script Error: " + message);
-        };
+        // --- INIT ---
+        try { lucide.createIcons(); } catch(e){}
 
-        // --- 1. INITIALIZATION ---
-        try {
-            lucide.createIcons();
-        } catch(e) {
-            console.warn("Icons failed to load. Checking connection.");
-        }
-
-        // --- 2. TABS LOGIC ---
-        function switchTab(tabName) {
+        // --- NAVIGATION ---
+        function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
             
-            const btnDownloader = document.getElementById('btn-nav-downloader');
-            const btnCrypter = document.getElementById('btn-nav-crypter');
-            const btnStego = document.getElementById('btn-nav-stego');
-            
-            const inactiveClass = "px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300";
-            const activeClass = "px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg";
-            
-            btnDownloader.className = inactiveClass;
-            btnCrypter.className = inactiveClass;
-            btnStego.className = inactiveClass;
+            // Reset styles
+            ['downloader','crypter','keys','stego','sonic'].forEach(t => {
+                const btn = document.getElementById(`btn-nav-${t}`);
+                if (!btn) return;
+                if (t === 'sonic') {
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1";
+                } else if (t === 'ghost') {
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-emerald-500 hover:text-emerald-300 border border-transparent hover:border-emerald-900/50 flex items-center gap-1";
+                } else {
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300";
+                }
+            });
 
-            if(tabName === 'downloader') btnDownloader.className = activeClass;
-            else if(tabName === 'crypter') btnCrypter.className = activeClass;
-            else if(tabName === 'stego') btnStego.className = activeClass;
+            // Set active
+            const activeBtn = document.getElementById(`btn-nav-${tab}`);
+            if (tab === 'sonic') {
+                activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-cyan-950 text-cyan-300 border border-cyan-800 shadow-[0_0_15px_rgba(8,145,178,0.2)] flex items-center gap-1";
+                initVisualizer(); // Start visualizer loop
+            } else if (tab === 'keys') {
+                activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-amber-950 text-amber-500 border border-amber-900 shadow-[0_0_15px_rgba(245,158,11,0.2)]";
+                stopVisualizer(); // Stop visualizer when switching away
+            } else {
+                activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-zinc-800 text-white shadow-lg";
+                stopVisualizer(); // Stop visualizer when switching away
+            }
         }
+        function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
-        function toggleMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
-        }
-
-        function clearInput(id) {
-            document.getElementById(id).value = '';
-            document.getElementById(id).focus();
-        }
-
+        // --- COMMON UTILS ---
+        function clearInput(id) { document.getElementById(id).value = ''; }
         async function pasteToInput(id) {
+            try { document.getElementById(id).value = await navigator.clipboard.readText(); }
+            catch(e) { document.getElementById(id).value = prompt("Paste text:"); }
+        }
+        function copyToClipboard() {
+            const t = document.getElementById('result-text').innerText;
+            navigator.clipboard.writeText(t).then(() => alert("Copied")).catch(()=> prompt("Copy:", t));
+        }
+
+        // --- 1. DOWNLOADER LOGIC ---
+        function isYouTubeURL(url) {
+            const patterns = [
+                /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
+                /youtube\.com\/watch\?v=([^"&?\/\s]{11})/,
+                /youtu\.be\/([^"&?\/\s]{11})/
+            ];
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        function extractVideoID(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            return match ? match[1] : null;
+        }
+
+        async function fetchYouTubeVideoInfo(videoId) {
             try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById(id).value = text;
-            } catch (err) {
-                const userText = prompt("Paste your text here:");
-                if (userText) document.getElementById(id).value = userText;
+                const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Failed to fetch video info');
+                const data = await response.json();
+                return {
+                    title: data.title,
+                    thumbnail: data.thumbnail_url,
+                    author: data.author_name
+                };
+            } catch (e) {
+                console.error('Error fetching video info:', e);
+                return {
+                    title: 'YouTube Video',
+                    thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                    author: 'Unknown'
+                };
             }
         }
 
-        // --- 3. DOWNLOADER LOGIC ---
+        async function getYouTubeDownloadLinks(videoId) {
+            try {
+                const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                
+                // Return available formats - we'll use Cobalt API to get download links
+                return {
+                    success: true,
+                    formats: [
+                        { quality: 'max', type: 'Video', ext: 'mp4', label: 'Maximum Quality (Best Available)', videoId: videoId },
+                        { quality: '1080', type: 'Video', ext: 'mp4', label: '1080p MP4 (HD)', videoId: videoId },
+                        { quality: '720', type: 'Video', ext: 'mp4', label: '720p MP4 (HD)', videoId: videoId },
+                        { quality: '480', type: 'Video', ext: 'mp4', label: '480p MP4 (SD)', videoId: videoId },
+                        { quality: '360', type: 'Video', ext: 'mp4', label: '360p MP4 (SD)', videoId: videoId },
+                        { quality: 'Audio', type: 'Audio', ext: 'mp3', label: 'MP3 Audio (Best Quality)', videoId: videoId }
+                    ],
+                    videoUrl: videoUrl
+                };
+            } catch (e) {
+                console.error('Error fetching download links:', e);
+                return { success: false, error: e.message };
+            }
+        }
+
+        // Backend proxy URL - UPDATE THIS with your deployed backend URL
+        // If you deploy the backend-proxy.js, set this to your backend URL
+        // Example: 'http://localhost:3000' for local testing
+        // Example: 'https://your-backend.herokuapp.com' for production
+        const BACKEND_PROXY_URL = null; // Set this if you deploy the backend
+        
+        // YouTube Downloader API - using CORS-enabled services with backend fallback
+        async function Cobalt(videoUrl, audioOnly = false, quality = 'max') {
+            // Method 0: Try backend proxy first (if configured)
+            if (BACKEND_PROXY_URL) {
+                try {
+                    const response = await fetch(`${BACKEND_PROXY_URL}/api/youtube-download`, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            url: videoUrl,
+                            vQuality: quality,
+                            isAudioOnly: audioOnly
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data?.url) {
+                            return data.url;
+                        }
+                        if (data?.status === 'error') {
+                            throw new Error(data.text || 'Backend API error');
+                        }
+                    }
+                } catch (error) {
+                    console.log('Backend proxy failed, trying direct APIs:', error);
+                }
+            }
+            const videoId = extractVideoID(videoUrl) || videoUrl.split('v=')[1]?.split('&')[0];
+            
+            // Method 1: Try yt-dlp API (CORS-enabled)
+            try {
+                const ytdlpApi = `https://yt-dlp-api.herokuapp.com/api/info?url=${encodeURIComponent(videoUrl)}`;
+                const response = await fetch(ytdlpApi, { 
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.formats && data.formats.length > 0) {
+                        let selectedFormat;
+                        
+                        if (audioOnly) {
+                            // Get best audio format
+                            selectedFormat = data.formats
+                                .filter(f => f.acodec && f.acodec !== 'none' && !f.vcodec)
+                                .sort((a, b) => (b.abr || 0) - (a.abr || 0))[0];
+                        } else {
+                            // Get video format based on quality
+                            const qualityMap = {
+                                'max': 9999,
+                                '1080': 1080,
+                                '720': 720,
+                                '480': 480,
+                                '360': 360
+                            };
+                            const targetHeight = qualityMap[quality] || 720;
+                            
+                            selectedFormat = data.formats
+                                .filter(f => f.vcodec && f.vcodec !== 'none')
+                                .sort((a, b) => {
+                                    const aDiff = Math.abs((a.height || 0) - targetHeight);
+                                    const bDiff = Math.abs((b.height || 0) - targetHeight);
+                                    return aDiff - bDiff;
+                                })[0];
+                        }
+                        
+                        if (selectedFormat?.url) {
+                            return selectedFormat.url;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('yt-dlp API failed:', error);
+            }
+            
+            // Method 2: Try loader.to API (CORS-enabled alternative)
+            try {
+                const format = audioOnly ? 'mp3' : 'mp4';
+                const loaderApi = `https://loader.to/ajax/download.php?format=${format}&url=${encodeURIComponent(videoUrl)}`;
+                
+                const response = await fetch(loaderApi, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success' && data.downloadUrl) {
+                        return data.downloadUrl;
+                    }
+                }
+            } catch (error) {
+                console.log('loader.to API failed:', error);
+            }
+            
+            // Method 3: Try Cobalt API with CORS proxy
+            try {
+                const cobaltData = {
+                    url: encodeURI(videoUrl),
+                    vQuality: quality,
+                    filenamePattern: 'basic',
+                    isAudioOnly: audioOnly,
+                    disableMetadata: true,
+                };
+                
+                // Use a CORS proxy that supports POST
+                const proxyUrl = `https://api.allorigins.win/post?url=${encodeURIComponent('https://api.cobalt.tools/api/json')}`;
+                
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(cobaltData)
+                    })
+                });
+
+                if (response.ok) {
+                    const proxyData = await response.json();
+                    const data = JSON.parse(proxyData.contents);
+                    
+                    if (data?.url) {
+                        return data.url;
+                    }
+                    if (data?.status === 'error') {
+                        throw new Error(data.text || 'Cobalt API error');
+                    }
+                }
+            } catch (error) {
+                console.log('Cobalt with proxy failed:', error);
+            }
+            
+            // Method 4: Try alternative yt-dlp service
+            try {
+                const altApi = `https://www.youtubeinmp3.com/fetch/?format=JSON&video=${encodeURIComponent(videoUrl)}`;
+                const response = await fetch(altApi, { mode: 'cors' });
+                
+                if (response.ok && audioOnly) {
+                    const data = await response.json();
+                    if (data.link) {
+                        return data.link;
+                    }
+                }
+            } catch (error) {
+                console.log('Alternative API failed:', error);
+            }
+            
+            // If all methods fail
+            throw new Error('All download methods failed. The APIs may be temporarily unavailable or blocked. Please try again later.');
+        }
+
+        async function handleYouTubeDownload(videoId) {
+            const ytResult = document.getElementById('yt-result');
+            const ytLoading = document.getElementById('yt-loading');
+            const formatsList = document.getElementById('yt-formats-list');
+            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            
+            ytResult.classList.remove('hidden');
+            document.getElementById('dl-error').classList.add('hidden');
+            document.getElementById('media-result').classList.add('hidden');
+            document.getElementById('dl-result').classList.add('hidden');
+            
+            ytLoading.classList.remove('hidden');
+            formatsList.innerHTML = '';
+            
+            // Fetch video info
+            const videoInfo = await fetchYouTubeVideoInfo(videoId);
+            document.getElementById('yt-title').textContent = videoInfo.title;
+            document.getElementById('yt-thumbnail-img').src = videoInfo.thumbnail;
+            document.getElementById('yt-channel').innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> ${videoInfo.author}`;
+            
+            // Get download formats
+            const downloadData = await getYouTubeDownloadLinks(videoId);
+            
+            if (downloadData.success && downloadData.formats) {
+                formatsList.innerHTML = '';
+                
+                downloadData.formats.forEach((format, index) => {
+                    const formatCard = document.createElement('div');
+                    formatCard.className = 'bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-zinc-800 transition-colors';
+                    
+                    const isAudio = format.type === 'Audio';
+                    const iconType = isAudio ? 'music' : 'video';
+                    const qualityColor = format.quality.includes('1080') || format.quality === 'Best' ? 'text-emerald-400' : 
+                                       format.quality.includes('720') ? 'text-blue-400' :
+                                       format.quality.includes('480') || format.quality.includes('360') ? 'text-yellow-400' : 'text-rose-400';
+                    
+                    formatCard.innerHTML = `
+                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                            <div class="w-12 h-12 bg-rose-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="${iconType}" class="w-6 h-6 text-rose-500"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-semibold text-white mb-1">${format.label}</div>
+                                <div class="text-xs ${qualityColor} font-medium">${format.quality === 'max' ? 'Best Available' : format.quality} Quality • ${format.ext.toUpperCase()}</div>
+                            </div>
+                        </div>
+                        <button onclick="downloadYouTubeVideo('${videoId}', '${format.quality}', '${format.ext}', '${format.type}')" 
+                           class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg hover:shadow-rose-600/50 flex-shrink-0">
+                            <i data-lucide="download" class="w-4 h-4"></i> Download
+                        </button>
+                    `;
+                    formatsList.appendChild(formatCard);
+                });
+                
+            } else {
+                formatsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <i data-lucide="alert-circle" class="w-12 h-12 text-rose-500 mx-auto mb-3"></i>
+                        <p class="text-zinc-400 mb-4">Unable to fetch download options. Please try again.</p>
+                        <button onclick="handleYouTubeDownload('${videoId}')" 
+                           class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Retry
+                        </button>
+                    </div>
+                `;
+            }
+            
+            ytLoading.classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        async function downloadYouTubeVideo(videoId, quality, ext, type) {
+            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            const isAudioOnly = type === 'Audio';
+            const vQuality = isAudioOnly ? 'max' : (quality === 'max' ? 'max' : quality);
+            
+            // Show loading state
+            const loadingToast = document.createElement('div');
+            loadingToast.id = 'yt-download-toast';
+            loadingToast.className = 'fixed top-20 right-4 bg-zinc-900 border border-zinc-800 rounded-lg p-4 shadow-xl z-50 flex items-center gap-3 min-w-[280px]';
+            loadingToast.innerHTML = `
+                <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-rose-500"></i>
+                <div class="flex-1">
+                    <div class="text-white text-sm font-semibold">Processing Download</div>
+                    <div class="text-zinc-400 text-xs">Getting ${quality} ${ext.toUpperCase()} link from Cobalt API...</div>
+                </div>
+            `;
+            document.body.appendChild(loadingToast);
+            lucide.createIcons();
+            
+            try {
+                // Use Cobalt API (same as the userscript)
+                const downloadUrl = await Cobalt(videoUrl, isAudioOnly, vQuality);
+                
+                // Update toast to show success
+                loadingToast.innerHTML = `
+                    <i data-lucide="check" class="w-5 h-5 text-emerald-500"></i>
+                    <div class="flex-1">
+                        <div class="text-white text-sm font-semibold">Download Ready!</div>
+                        <div class="text-zinc-400 text-xs">Starting download...</div>
+                    </div>
+                `;
+                lucide.createIcons();
+                
+                // Start download directly - no redirect needed!
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `youtube_${videoId}_${quality}.${ext}`;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show success message
+                setTimeout(() => {
+                    loadingToast.innerHTML = `
+                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
+                        <div class="flex-1">
+                            <div class="text-white text-sm font-semibold">Download Started!</div>
+                            <div class="text-zinc-400 text-xs">Check your downloads folder</div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    setTimeout(() => loadingToast.remove(), 3000);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Cobalt API error:', error);
+                
+                // Extract error message
+                let errorMessage = 'Unknown error occurred';
+                if (error?.message) {
+                    errorMessage = error.message;
+                } else if (error?.text) {
+                    errorMessage = error.text;
+                } else if (typeof error === 'string') {
+                    errorMessage = error;
+                }
+                
+                // Show detailed error message
+                loadingToast.innerHTML = `
+                    <i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>
+                    <div class="flex-1">
+                        <div class="text-white text-sm font-semibold">Download Failed</div>
+                        <div class="text-zinc-400 text-xs break-words">${errorMessage.length > 60 ? errorMessage.substring(0, 60) + '...' : errorMessage}</div>
+                    </div>
+                `;
+                lucide.createIcons();
+                
+                // Add retry and alternative options
+                setTimeout(() => {
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.className = 'flex flex-col gap-2 mt-3';
+                    
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded text-xs font-semibold transition-colors';
+                    retryBtn.textContent = 'Retry Download';
+                    retryBtn.onclick = () => {
+                        loadingToast.remove();
+                        downloadYouTubeVideo(videoId, quality, ext, type);
+                    };
+                    
+                    const altBtn = document.createElement('button');
+                    altBtn.className = 'bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded text-xs font-semibold transition-colors';
+                    altBtn.textContent = 'Try Different Quality';
+                    altBtn.onclick = () => {
+                        loadingToast.remove();
+                        // Try with max quality
+                        downloadYouTubeVideo(videoId, 'max', ext, type);
+                    };
+                    
+                    buttonContainer.appendChild(retryBtn);
+                    buttonContainer.appendChild(altBtn);
+                    loadingToast.appendChild(buttonContainer);
+                }, 1000);
+                
+                // Log full error for debugging
+                console.error('Full error details:', {
+                    error: error,
+                    videoId: videoId,
+                    quality: quality,
+                    type: type,
+                    audioOnly: isAudioOnly
+                });
+                
+                // Show helpful message if it's a CORS error
+                if (errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch')) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'mt-3 p-3 bg-zinc-800/50 border border-zinc-700 rounded text-xs text-zinc-400';
+                    infoDiv.innerHTML = `
+                        <strong class="text-yellow-400 block mb-1">Why this happens:</strong>
+                        <p>The Cobalt API blocks direct browser requests due to CORS restrictions. 
+                        To fix this, you need a backend server that proxies the API requests.</p>
+                    `;
+                    loadingToast.appendChild(infoDiv);
+                }
+            }
+        }
+
         function handleDownload(e) {
             e.preventDefault();
-            const urlInput = document.getElementById('dl-input').value.trim();
-            const errorDiv = document.getElementById('dl-error');
-            const resultDiv = document.getElementById('dl-result');
-            const mediaResultDiv = document.getElementById('media-result');
+            const url = document.getElementById('dl-input').value.trim();
             const btn = document.getElementById('dl-btn');
-            const btnSpan = btn.querySelector('span');
             
-            errorDiv.classList.add('hidden');
-            resultDiv.classList.add('hidden');
-            if(mediaResultDiv) mediaResultDiv.classList.add('hidden');
-
-            const isCloud = urlInput.includes('terabox') || urlInput.includes('1024') || urlInput.includes('box');
-            const isMedia = /\.(mp4|m3u8|mkv|avi|mov|webm|flv)(\?|$)/i.test(urlInput);
-            
-            if (!isCloud && !isMedia) {
-                document.getElementById('dl-error-text').innerText = "Please enter a valid supported Cloud URL or a direct media link (mp4, m3u8).";
-                errorDiv.classList.remove('hidden');
+            if(!url.includes('http')) {
+                document.getElementById('dl-error').classList.remove('hidden');
+                document.getElementById('dl-error-text').innerText = "Invalid URL";
                 return;
             }
+            
+            document.getElementById('dl-error').classList.add('hidden');
+            document.getElementById('media-result').classList.add('hidden');
+            document.getElementById('dl-result').classList.add('hidden');
+            document.getElementById('yt-result').classList.add('hidden');
 
-            btn.disabled = true;
-            btnSpan.innerText = "Analyzing...";
-
-            setTimeout(() => {
-                if (isMedia) {
-                    document.getElementById('media-download-btn').href = urlInput;
-                    document.getElementById('media-url-display').innerText = urlInput;
-                    const isStream = urlInput.includes('.m3u8');
-                    const btnLabel = document.getElementById('media-btn-label');
-                    if(btnLabel) btnLabel.innerText = isStream ? "Open Stream" : "Download File";
-                    if(mediaResultDiv) mediaResultDiv.classList.remove('hidden');
-                } else {
-                    const encodedUrl = encodeURIComponent(urlInput);
-                    const finalLink = `https://teradownloader.com/download?l=${encodedUrl}`;
-                    document.getElementById('dl-iframe').src = finalLink;
-                    document.getElementById('dl-external-link').href = finalLink;
-                    resultDiv.classList.remove('hidden');
+            // Check if it's a YouTube URL
+            if (isYouTubeURL(url)) {
+                const videoId = extractVideoID(url);
+                if (videoId) {
+                    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Processing`;
+                    lucide.createIcons();
+                    handleYouTubeDownload(videoId).then(() => {
+                        btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Extract`;
+                        lucide.createIcons();
+                    }).catch(() => {
+                        btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Extract`;
+                        document.getElementById('dl-error').classList.remove('hidden');
+                        document.getElementById('dl-error-text').innerText = "Failed to process YouTube video. Please try again.";
+                        lucide.createIcons();
+                    });
+                    return;
                 }
-                btn.disabled = false;
-                btnSpan.innerText = "Extract";
-            }, 800);
+            }
+
+            const isMedia = /\.(mp4|m3u8|mkv|avi|mov|webm|flv)(\?|$)/i.test(url);
+            
+            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Processing`;
+            
+            setTimeout(() => {
+                btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Extract`;
+                lucide.createIcons();
+
+                if(isMedia) {
+                    document.getElementById('media-result').classList.remove('hidden');
+                    document.getElementById('media-download-btn').href = url;
+                } else {
+                    document.getElementById('dl-result').classList.remove('hidden');
+                    const link = `https://teradownloader.com/download?l=${encodeURIComponent(url)}`;
+                    document.getElementById('dl-iframe').src = link;
+                    document.getElementById('dl-external-link').href = link;
+                }
+            }, 1000);
         }
 
-        // --- 4. CRYPTO LOGIC ---
+        // --- 2. CRYPTER LOGIC (Restored Complex Version) ---
         const SALT = "POSTMORTEM_KEY_X9";
         const DELIMITER = "|||"; 
         const PASS_MARKER = "LOCKED::";
@@ -616,19 +1368,19 @@
             const btnDecrypt = document.getElementById('mode-decrypt');
             const input = document.getElementById('crypto-input');
             const actionText = document.getElementById('action-text');
-            const hint = document.getElementById('mode-hint');
             const settingsPanel = document.getElementById('crypto-settings');
             const expiryContainer = document.getElementById('crypto-expiry-container');
 
             hiddenTargetUrls = [];
-            resetCryptoResultUI();
+            document.getElementById('result-empty').classList.remove('hidden');
+            document.getElementById('result-text').classList.add('hidden');
+            document.getElementById('result-launch').classList.add('hidden');
 
             if (mode === 'encrypt') {
                 btnEncrypt.className = "p-1.5 rounded-md transition-all bg-zinc-700 text-white";
                 btnDecrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
                 input.placeholder = "Paste link(s) here. For multiple links, put each on a new line...";
                 actionText.innerText = "Encrypt Payload";
-                hint.innerText = "This string can only be decrypted by the Link Postmortem tool.";
                 settingsPanel.classList.remove('hidden');
                 settingsPanel.classList.add('grid');
                 if(expiryContainer) expiryContainer.style.display = 'block';
@@ -638,8 +1390,6 @@
                 btnEncrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
                 input.placeholder = "Paste encrypted string...";
                 actionText.innerText = "Decrypt & Verify";
-                hint.innerText = "Decryption attempts to reconstruct the original link source.";
-                
                 settingsPanel.classList.remove('hidden');
                 settingsPanel.classList.add('grid');
                 if(expiryContainer) expiryContainer.style.display = 'none';
@@ -647,26 +1397,19 @@
             }
         }
 
-        function resetCryptoResultUI() {
-            document.getElementById('result-empty').classList.remove('hidden');
-            document.getElementById('result-text').classList.add('hidden');
-            document.getElementById('result-text').innerText = "";
-            document.getElementById('result-launch').classList.add('hidden');
-            document.getElementById('btn-copy').classList.add('hidden');
-            document.getElementById('btn-inject-quick').classList.add('hidden');
-            document.getElementById('btn-generate-quick').classList.add('hidden');
-            document.getElementById('launch-buttons-container').innerHTML = ''; 
-        }
-
         function handleCryptoProcess() {
             const inputVal = document.getElementById('crypto-input').value.trim();
             const passVal = document.getElementById('crypto-pass').value.trim();
             const expiryVal = parseInt(document.getElementById('crypto-expiry').value);
+            const resultBox = document.getElementById('result-text');
+            const emptyBox = document.getElementById('result-empty');
             
             if(!inputVal) return;
-
-            resetCryptoResultUI();
             
+            emptyBox.classList.add('hidden');
+            resultBox.classList.remove('hidden');
+            document.getElementById('btn-copy').classList.remove('hidden');
+
             if (currentMode === 'encrypt') {
                 const lines = inputVal.split(/\r?\n/).filter(line => line.trim() !== '');
                 if (lines.length === 0) return;
@@ -677,37 +1420,28 @@
                     payload += TIME_MARKER + expiryTime;
                 }
 
-                let finalOutput = complexEncrypt(payload);
-
+                let finalOutput;
                 if(passVal) {
-                    finalOutput = wrapWithPass(payload, passVal); 
+                    finalOutput = wrapWithPass(payload, passVal);
+                } else {
+                    finalOutput = complexEncrypt(payload);
                 }
-
-                document.getElementById('result-empty').classList.add('hidden');
-                const resText = document.getElementById('result-text');
-                resText.innerText = finalOutput;
-                resText.classList.remove('hidden');
-                document.getElementById('btn-copy').classList.remove('hidden');
-                document.getElementById('btn-inject-quick').classList.remove('hidden');
-                document.getElementById('btn-generate-quick').classList.remove('hidden');
+                
+                resultBox.className = "break-all font-mono text-sm text-emerald-400";
+                resultBox.innerText = finalOutput;
             } else {
                 let decrypted = null;
-                document.getElementById('result-empty').classList.add('hidden');
 
                 if (inputVal.startsWith(PASS_MARKER)) {
                     if (!passVal) {
-                        const resText = document.getElementById('result-text');
-                        resText.innerText = "Error: This payload is locked. Please enter the passcode.";
-                        resText.classList.remove('hidden');
-                        resText.classList.add('text-red-500');
+                        resultBox.innerText = "Error: This payload is locked. Please enter the passcode.";
+                        resultBox.className = "text-red-500";
                         return;
                     }
                     const unlockResult = unwrapPass(inputVal, passVal);
                     if (unlockResult === "WRONG_PASS") {
-                        const resText = document.getElementById('result-text');
-                        resText.innerText = "Error: Invalid Passcode.";
-                        resText.classList.remove('hidden');
-                        resText.classList.add('text-red-500');
+                        resultBox.innerText = "Error: Invalid Passcode.";
+                        resultBox.className = "text-red-500";
                         return;
                     }
                     decrypted = unlockResult;
@@ -722,10 +1456,8 @@
                         const expiry = parseInt(parts[1]);
                         
                         if(Date.now() > expiry) {
-                            const resText = document.getElementById('result-text');
-                            resText.innerHTML = "STATUS: <b>DECEASED</b><br>This link has expired and the payload has been purged.";
-                            resText.classList.remove('hidden');
-                            resText.classList.add('text-red-500');
+                            resultBox.innerHTML = "STATUS: <b>DECEASED</b><br>This link has expired and the payload has been purged.";
+                            resultBox.className = "text-red-500";
                             return;
                         }
                         decrypted = content; 
@@ -733,10 +1465,10 @@
 
                     hiddenTargetUrls = decrypted.split(DELIMITER);
                     const container = document.getElementById('launch-buttons-container');
+                    container.innerHTML = '';
                     
                     hiddenTargetUrls.forEach((url, index) => {
                         let safeUrl = url.trim();
-                        // Smart URL Sanitize
                         if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
                             safeUrl = 'https://' + safeUrl;
                         }
@@ -745,99 +1477,26 @@
                         btn.type = "button";
                         btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
                         btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
-                        
-                        btn.onclick = () => {
-                            try {
-                                const newWindow = window.open(safeUrl, '_blank', 'noopener,noreferrer');
-                                if (!newWindow) {
-                                    alert("Pop-up blocked. Please allow pop-ups for this site to launch the target.");
-                                }
-                            } catch (e) {
-                                alert("Failed to open link: " + safeUrl);
-                            }
-                        };
+                        btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
                         container.appendChild(btn);
                     });
                     
                     lucide.createIcons();
-
-                    const fakeId = Math.random().toString(36).substring(2, 10).toUpperCase();
-                    const illusionUrl = `https://postmortem.secure/redirect?auth=${fakeId}&status=verified&batch=${hiddenTargetUrls.length}`;
-                    document.getElementById('illusion-link').innerText = illusionUrl;
-                    
                     document.getElementById('result-launch').classList.remove('hidden');
+                    resultBox.innerText = decrypted;
                 } else {
-                    const resText = document.getElementById('result-text');
-                    resText.innerText = "Error: Decryption failed. Invalid signature or corrupted string.";
-                    resText.classList.remove('hidden');
-                    resText.classList.add('text-red-500');
+                    resultBox.innerText = "Error: Decryption failed. Invalid signature or corrupted string.";
+                    resultBox.className = "text-red-500";
                 }
             }
         }
 
-        function copyToClipboard() {
-            const text = document.getElementById('result-text').innerText;
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    const btn = document.getElementById('btn-copy').querySelector('span');
-                    const originalText = btn.innerText;
-                    btn.innerText = "Copied";
-                    setTimeout(() => btn.innerText = originalText, 2000);
-                }
-            } catch (err) {
-                console.error('Unable to copy', err);
-            }
-            document.body.removeChild(textArea);
-        }
+        // --- 3. STEGO LOGIC (Restored Full Logic) ---
+        let generatedCarrierBlob = null;
 
-        function launchTarget() {
-            if (hiddenTargetUrls.length > 0) {
-                window.open(hiddenTargetUrls[0], '_blank', 'noopener,noreferrer');
-            }
-        }
-
-        // --- CRYPTER STEGO HANDLERS ---
-        function triggerCrypterStego() {
-            document.getElementById('crypter-stego-input').click();
-        }
-
-        function processCrypterStego(fileInput) {
-            const text = document.getElementById('result-text').innerText;
-            if (!fileInput.files[0] || !text) return;
-            processStegoInjection(fileInput.files[0], text);
-            fileInput.value = '';
-        }
-
-        async function quickGenerateStego() {
-            const text = document.getElementById('result-text').innerText;
-            if(!text) return;
-            
-            const btn = document.getElementById('btn-generate-quick');
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '<span>Generating...</span>';
-            
-            try {
-                const blob = await generateNoiseCarrier();
-                processStegoInjection(blob, text);
-            } catch(e) {
-                alert("Generation failed");
-            }
-            btn.innerHTML = originalContent;
-            lucide.createIcons();
-        }
-
-        // --- SHARED STEGO LOGIC ---
         function generateNoiseCarrier() {
             const canvas = document.createElement('canvas');
-            canvas.width = 800; // Increased size for cleaner data density
+            canvas.width = 800; 
             canvas.height = 800;
             const ctx = canvas.getContext('2d');
             
@@ -853,11 +1512,48 @@
                 ctx.fillRect(x, y, size, size);
             }
             
-            return new Promise(resolve => {
-                canvas.toBlob(blob => {
-                    resolve(blob);
-                });
-            });
+            return new Promise(resolve => canvas.toBlob(resolve));
+        }
+
+        async function generateCarrierImage() {
+            const statusDiv = document.getElementById('generated-status');
+            statusDiv.innerHTML = '<span class="animate-pulse">Generating noise pattern...</span>';
+            statusDiv.classList.remove('hidden');
+            
+            try {
+                generatedCarrierBlob = await generateNoiseCarrier();
+                statusDiv.innerHTML = '<i data-lucide="check" class="w-3 h-3 inline"></i> Carrier Generated & Ready';
+                lucide.createIcons();
+                document.getElementById('stego-upload-inject').value = '';
+                document.getElementById('file-name-display').innerText = "Using Generated Image";
+            } catch(e) {
+                statusDiv.innerText = "Generation failed.";
+            }
+        }
+
+        function stegoInject() {
+            const fileInput = document.getElementById('stego-upload-inject');
+            const textInput = document.getElementById('stego-text-inject').value.trim();
+            const passInput = document.getElementById('stego-pass-inject').value.trim();
+            
+            let sourceBlob = null;
+            if (fileInput.files[0]) {
+                sourceBlob = fileInput.files[0];
+            } else if (generatedCarrierBlob) {
+                sourceBlob = generatedCarrierBlob;
+            }
+
+            if (!sourceBlob || !textInput) {
+                alert("Please select/generate an image and enter payload text.");
+                return;
+            }
+
+            let finalPayload = textInput;
+            if(passInput) {
+                finalPayload = wrapWithPass(textInput, passInput);
+            }
+
+            processStegoInjection(sourceBlob, finalPayload);
         }
 
         function processStegoInjection(blob, textPayload) {
@@ -901,7 +1597,6 @@
                     }
 
                     ctx.putImageData(imgData, 0, 0);
-                    
                     const link = document.createElement('a');
                     link.download = 'coded_image.png';
                     link.href = canvas.toDataURL('image/png');
@@ -912,72 +1607,20 @@
             reader.readAsDataURL(blob);
         }
 
-        let generatedCarrierBlob = null;
-
-        async function generateCarrierImage() {
-            const statusDiv = document.getElementById('generated-status');
-            statusDiv.innerHTML = '<span class="animate-pulse">Generating noise pattern...</span>';
-            statusDiv.classList.remove('hidden');
-            
-            try {
-                generatedCarrierBlob = await generateNoiseCarrier();
-                statusDiv.innerHTML = '<i data-lucide="check" class="w-3 h-3 inline"></i> Carrier Generated & Ready';
-                lucide.createIcons();
-                document.getElementById('stego-upload-inject').value = '';
-                document.getElementById('file-name-display').innerText = "Using Generated Image";
-            } catch(e) {
-                statusDiv.innerText = "Generation failed.";
-                console.error(e);
-            }
-        }
-
-        // --- 5. STEGO LAB LOGIC ---
-        function stegoInject() {
-            const fileInput = document.getElementById('stego-upload-inject');
-            const textInput = document.getElementById('stego-text-inject').value.trim();
-            const passInput = document.getElementById('stego-pass-inject').value.trim();
-            
-            let sourceBlob = null;
-            if (fileInput.files[0]) {
-                sourceBlob = fileInput.files[0];
-            } else if (generatedCarrierBlob) {
-                sourceBlob = generatedCarrierBlob;
-            }
-
-            if (!sourceBlob || !textInput) {
-                alert("Please select/generate an image and enter payload text.");
-                return;
-            }
-
-            let finalPayload = textInput;
-            if(passInput) {
-                finalPayload = wrapWithPass(textInput, passInput);
-            }
-
-            processStegoInjection(sourceBlob, finalPayload);
-        }
-
-        // --- BATCH EXTRACTION LOGIC ---
         async function stegoExtract() {
             const fileInput = document.getElementById('stego-upload-extract');
             const files = fileInput.files;
             const passInput = document.getElementById('stego-pass-extract').value.trim();
             const resultArea = document.getElementById('stego-result-area');
             
-            if (files.length === 0) {
-                alert("Please select at least one image.");
-                return;
-            }
+            if (files.length === 0) return alert("Please select at least one image.");
 
-            // Clear previous results
             resultArea.innerHTML = '';
             
-            // Iterate over all selected files
             for(let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const cardId = `stego-res-${i}`;
                 
-                // Create result card shell
                 const card = document.createElement('div');
                 card.id = cardId;
                 card.className = "bg-black/50 p-3 rounded border-l-2 border-zinc-700 animate-in mb-2";
@@ -992,12 +1635,10 @@
                 resultArea.appendChild(card);
                 lucide.createIcons();
 
-                // Process individually
                 try {
                     const text = await processSingleImage(file);
                     handleDecryptedText(text, passInput, cardId);
                 } catch (e) {
-                    // Update card to show error (but don't stop loop)
                     const statusDiv = document.getElementById(`${cardId}-status`);
                     const icon = document.getElementById(`${cardId}-icon`);
                     statusDiv.innerHTML = `<span class="text-red-900 bg-red-900/10 px-1 rounded">No payload found</span>`;
@@ -1029,11 +1670,9 @@
                             let charBinary = "";
                             let resultText = "";
                             
-                            // Basic LSB extraction
                             for (let i = 0; i < data.length; i += 4) {
                                 for(let j=0; j<3; j++) { 
                                     charBinary += (data[i+j] & 1).toString();
-                                    
                                     if (charBinary.length === 8) {
                                         const charCode = parseInt(charBinary, 2);
                                         if (charCode === 0) { 
@@ -1067,7 +1706,6 @@
             let statusHtml = '<span class="text-emerald-500">Decrypted</span>';
             let cardColor = 'border-emerald-600';
 
-            // Check if Locked
             if (extractedText.startsWith(PASS_MARKER)) {
                 if (!password) {
                     statusHtml = '<span class="text-amber-500 font-bold">LOCKED: Passcode Required</span>';
@@ -1078,7 +1716,7 @@
                     icon.classList.remove('animate-spin');
                     icon.classList.add('text-amber-500');
                     lucide.createIcons();
-                    return; // Stop processing for this file
+                    return; 
                 }
                 const unlockResult = unwrapPass(extractedText, password);
                 if (unlockResult === "WRONG_PASS") {
@@ -1095,7 +1733,6 @@
                 finalText = unlockResult;
             }
 
-            // Check internal encryption/expiry
             const autoDecrypt = complexDecrypt(finalText);
             if (autoDecrypt) {
                  if(autoDecrypt.includes(TIME_MARKER)) {
@@ -1114,19 +1751,15 @@
                 }
             }
 
-            // Update UI
             icon.classList.remove('animate-spin');
             
             if(finalText === null) {
-                // Expired case
                 icon.setAttribute('data-lucide', 'skull');
                 icon.classList.add('text-red-700');
             } else {
-                // Success case
                 icon.setAttribute('data-lucide', 'check-circle');
                 icon.classList.add('text-emerald-500');
                 
-                // Render Content (Links or Text)
                 const isUrl = finalText.includes('http') || finalText.includes('www');
                 const multiLinks = finalText.split(DELIMITER);
                 contentDiv.classList.remove('hidden');
@@ -1150,11 +1783,923 @@
                     contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all bg-zinc-900 p-1 rounded">${finalText}</p>`;
                 }
             }
-            
             card.classList.replace('border-zinc-700', cardColor);
             statusDiv.innerHTML = statusHtml;
             lucide.createIcons();
         }
+
+        // --- 4. KEY FORGE LOGIC ---
+        function strToBytes(str) {
+            const utf8 = unescape(encodeURIComponent(str));
+            const arr = new Uint8Array(utf8.length);
+            for (let i = 0; i < utf8.length; i++) arr[i] = utf8.charCodeAt(i);
+            return arr;
+        }
+
+        function bytesToStr(arr) {
+            let str = '';
+            for (let i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
+            return decodeURIComponent(escape(str));
+        }
+
+        function bytesToHex(arr) {
+            return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function hexToBytes(hex) {
+            const pairs = hex.match(/.{1,2}/g) || [];
+            return new Uint8Array(pairs.map(byte => parseInt(byte, 16)));
+        }
+
+        function forgeKeys() {
+            const secret = document.getElementById('keys-input').value;
+            const count = parseInt(document.getElementById('keys-count').value);
+            const outputDiv = document.getElementById('forge-output');
+
+            if (!secret) return alert("Enter a secret first.");
+
+            const secretBytes = strToBytes(secret);
+            const len = secretBytes.length;
+            const keys = [];
+
+            // Generate N-1 random keys
+            let finalXor = new Uint8Array(len);
+            for(let i=0; i<len; i++) finalXor[i] = secretBytes[i];
+
+            for (let i = 0; i < count - 1; i++) {
+                const randomBytes = new Uint8Array(len);
+                crypto.getRandomValues(randomBytes);
+                keys.push(randomBytes);
+                // XOR this random key into our running total
+                for(let j=0; j<len; j++) finalXor[j] ^= randomBytes[j];
+            }
+
+            // The last key is the result of (Secret XOR R1 XOR R2 ... XOR Rn-1)
+            keys.push(finalXor);
+
+            // Render Output
+            outputDiv.classList.remove('hidden');
+            outputDiv.innerHTML = '';
+            
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+
+            keys.forEach((k, idx) => {
+                const hex = bytesToHex(k);
+                const div = document.createElement('div');
+                div.className = "flex gap-2 items-center bg-zinc-900 p-2 rounded border border-zinc-800";
+                div.innerHTML = `
+                    <span class="text-amber-600 font-bold select-none w-6">${idx+1}.</span>
+                    <code class="flex-grow select-all text-amber-500 break-all">${hex}</code>
+                    <button onclick="navigator.clipboard.writeText('${hex}').then(() => { const btn = this; const orig = btn.innerHTML; btn.innerHTML = '<i data-lucide=\\'check\\' class=\\'w-3 h-3\\'></i>'; setTimeout(() => btn.innerHTML = orig, 1000); }); lucide.createIcons();" class="text-zinc-500 hover:text-white transition-colors flex-shrink-0"><i data-lucide="copy" class="w-3 h-3"></i></button>
+                `;
+                list.appendChild(div);
+            });
+            outputDiv.appendChild(list);
+            
+            const note = document.createElement('div');
+            note.className = "mt-4 text-center text-zinc-500 italic text-xs";
+            note.innerText = "⚠️ Copy all keys. If any key is lost, data is unrecoverable.";
+            outputDiv.appendChild(note);
+            lucide.createIcons();
+        }
+
+        function unlockKeys() {
+            const input = document.getElementById('keys-unlock-input').value;
+            const resultDiv = document.getElementById('unlock-result');
+            
+            if (!input.trim()) return;
+
+            const lines = input.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            
+            if (lines.length < 2) {
+                resultDiv.classList.remove('hidden');
+                resultDiv.innerText = "Need at least 2 keys to combine.";
+                resultDiv.className = "w-full bg-red-950/50 border border-red-900 rounded-lg p-3 text-red-400 text-center";
+                return;
+            }
+
+            try {
+                // Decode first key hex
+                let combined = hexToBytes(lines[0]);
+                
+                // XOR with rest
+                for(let i=1; i<lines.length; i++) {
+                    const current = hexToBytes(lines[i]);
+                    if(current.length !== combined.length) throw new Error("Length mismatch");
+                    
+                    for(let j=0; j<combined.length; j++) {
+                        combined[j] ^= current[j];
+                    }
+                }
+
+                const result = bytesToStr(combined);
+                resultDiv.classList.remove('hidden');
+                resultDiv.innerHTML = `<span class="text-zinc-500 text-xs block mb-2">Decrypted Secret:</span><span class="text-emerald-400 text-lg font-bold break-all">${result}</span>`;
+                resultDiv.className = "w-full bg-zinc-950 border border-emerald-900/50 rounded-lg p-4 font-mono break-all text-center";
+
+            } catch(e) {
+                resultDiv.classList.remove('hidden');
+                resultDiv.innerText = "Decryption Failed. Invalid keys or mismatch.";
+                resultDiv.className = "w-full bg-red-950/50 border border-red-900 rounded-lg p-3 text-red-400 text-center";
+            }
+        }
+
+        // --- 5. SONIC LAB EXPERIMENT (NEW) ---
+        let audioContext;
+        let analyser;
+        let visualizerCanvas;
+        let visualizerCtx;
+        let animationFrameId = null;
+        let isVisualizerActive = false;
+        
+        function initVisualizer() {
+            if(audioContext && isVisualizerActive) return;
+            try {
+                if(!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                }
+                visualizerCanvas = document.getElementById('sonic-canvas');
+                if(!visualizerCanvas) return;
+                visualizerCtx = visualizerCanvas.getContext('2d');
+                visualizerCanvas.width = visualizerCanvas.offsetWidth;
+                visualizerCanvas.height = visualizerCanvas.offsetHeight;
+                isVisualizerActive = true;
+                drawVisualizer();
+            } catch(e) { console.log("Audio API blocked"); }
+        }
+
+        function stopVisualizer() {
+            isVisualizerActive = false;
+            if(animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        function drawVisualizer() {
+            if(!isVisualizerActive || !analyser || !visualizerCanvas || !visualizerCtx) {
+                animationFrameId = null;
+                return;
+            }
+            animationFrameId = requestAnimationFrame(drawVisualizer);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            visualizerCtx.fillStyle = '#000';
+            visualizerCtx.fillRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
+            const barWidth = (visualizerCanvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+
+            for(let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i] / 2;
+                visualizerCtx.fillStyle = `rgb(${barHeight + 20}, ${50 + barHeight}, ${200})`;
+                visualizerCtx.fillRect(x, visualizerCanvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+        }
+
+        function playTone() {
+            if(!audioContext) initVisualizer();
+            if(!audioContext || !analyser) return;
+            if(audioContext.state === 'suspended') audioContext.resume();
+            
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioContext.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+            
+            gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            osc.connect(gain);
+            gain.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.5);
+        }
+
+        function generateSonic() {
+            const msg = document.getElementById('sonic-input').value;
+            if(!msg) return alert("Enter message");
+
+            const btn = document.getElementById('btn-sonic-gen');
+            btn.innerHTML = "Generating...";
+            playTone(); 
+
+            setTimeout(() => {
+                const sampleRate = 44100;
+                const duration = 10; 
+                const numSamples = sampleRate * duration;
+                
+                const header = "MKD_SONIC::";
+                const payload = header + msg + "\0"; 
+                const binary = [];
+                for (let i = 0; i < payload.length; i++) {
+                    let bin = payload.charCodeAt(i).toString(2).padStart(8, '0');
+                    for(let j=0; j<8; j++) binary.push(parseInt(bin[j]));
+                }
+
+                const buffer = new Int16Array(numSamples);
+                let binIdx = 0;
+
+                for (let i = 0; i < numSamples; i++) {
+                    const t = i / sampleRate;
+                    const f1 = 50; 
+                    const f2 = 55; 
+                    let sample = Math.sin(2 * Math.PI * f1 * t) * 0.4 + 
+                                 Math.sin(2 * Math.PI * f2 * t) * 0.4 + 
+                                 (Math.random() - 0.5) * 0.1; 
+                    
+                    let intSample = Math.floor(sample * 30000);
+
+                    if (binIdx < binary.length) {
+                        intSample = (intSample & ~1) | binary[binIdx];
+                        binIdx++;
+                    }
+
+                    buffer[i] = intSample;
+                }
+
+                if (binIdx < binary.length) {
+                    alert("Message too long for 10s audio");
+                    btn.innerHTML = `<i data-lucide="activity" class="w-4 h-4"></i> Generate`;
+                    return;
+                }
+
+                const wavBytes = encodeWAV(buffer, sampleRate);
+                const blob = new Blob([wavBytes], { type: 'audio/wav' });
+                
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `sonic_artifact_${Date.now()}.wav`;
+                link.click();
+                
+                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> Done`;
+                lucide.createIcons();
+                setTimeout(() => btn.innerHTML = `<i data-lucide="activity" class="w-4 h-4"></i> Generate & Download WAV`, 2000);
+            }, 100);
+        }
+
+        function handleSonicUpload(input) {
+            document.getElementById('sonic-file-name').innerText = input.files[0]?.name || "Drop .WAV File";
+        }
+
+        function decodeSonic() {
+            const input = document.getElementById('sonic-upload');
+            if(!input.files[0]) return alert("Upload file first");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const buffer = e.target.result;
+                const dataView = new DataView(buffer);
+                
+                let text = "";
+                let binChar = "";
+                
+                try {
+                    for (let i = 44; i < dataView.byteLength; i += 2) {
+                        const sample = dataView.getInt16(i, true); 
+                        const bit = sample & 1;
+                        binChar += bit;
+
+                        if (binChar.length === 8) {
+                            const charCode = parseInt(binChar, 2);
+                            if (charCode === 0) break;
+                            text += String.fromCharCode(charCode);
+                            binChar = "";
+                        }
+                    }
+
+                    const resultDiv = document.getElementById('sonic-result');
+                    const textDiv = document.getElementById('sonic-result-text');
+                    resultDiv.classList.remove('hidden');
+
+                    if (text.startsWith("MKD_SONIC::")) {
+                        textDiv.innerText = text.replace("MKD_SONIC::", "");
+                        textDiv.className = "text-cyan-400";
+                        playTone();
+                    } else {
+                        textDiv.innerText = "No hidden data found or corrupted signal.";
+                        textDiv.className = "text-red-500";
+                    }
+                } catch(e) {
+                    alert("Error parsing audio.");
+                }
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+        }
+
+        function encodeWAV(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(view, 8, 'WAVE');
+
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); 
+            view.setUint16(22, 1, true); 
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true); 
+            view.setUint16(34, 16, true); 
+
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < samples.length; i++, offset += 2) {
+                view.setInt16(offset, samples[i], true);
+            }
+
+            return buffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // --- 5. GHOST COMMS (ZERO-KNOWLEDGE ENCRYPTED MESSAGING) ---
+        let ghostCryptoKey = null;
+        let ghostRoomId = null;
+        let ghostHandle = null;
+        let ghostUnsubscribe = null;
+        let ghostRoomPassword = null;
+        let isRoomCreator = false;
+
+        // MASTER KEYS (100 Lifetime Keys)
+        const MASTER_KEYS = [
+            "GHOST-2025-KEY-001-ALPHA-BRAVO-CHARLIE",
+            "GHOST-2025-KEY-002-DELTA-ECHO-FOXTROT",
+            "GHOST-2025-KEY-003-GOLF-HOTEL-INDIA",
+            "GHOST-2025-KEY-004-JULIET-KILO-LIMA",
+            "GHOST-2025-KEY-005-MIKE-NOVEMBER-OSCAR",
+            "GHOST-2025-KEY-006-PAPA-QUEBEC-ROMEO",
+            "GHOST-2025-KEY-007-SIERRA-TANGO-UNIFORM",
+            "GHOST-2025-KEY-008-VICTOR-WHISKEY-XRAY",
+            "GHOST-2025-KEY-009-YANKEE-ZULU-ALPHA",
+            "GHOST-2025-KEY-010-BRAVO-CHARLIE-DELTA",
+            "GHOST-2025-KEY-011-ECHO-FOXTROT-GOLF",
+            "GHOST-2025-KEY-012-HOTEL-INDIA-JULIET",
+            "GHOST-2025-KEY-013-KILO-LIMA-MIKE",
+            "GHOST-2025-KEY-014-NOVEMBER-OSCAR-PAPA",
+            "GHOST-2025-KEY-015-QUEBEC-ROMEO-SIERRA",
+            "GHOST-2025-KEY-016-TANGO-UNIFORM-VICTOR",
+            "GHOST-2025-KEY-017-WHISKEY-XRAY-YANKEE",
+            "GHOST-2025-KEY-018-ZULU-ALPHA-BRAVO",
+            "GHOST-2025-KEY-019-CHARLIE-DELTA-ECHO",
+            "GHOST-2025-KEY-020-FOXTROT-GOLF-HOTEL",
+            "GHOST-2025-KEY-021-INDIA-JULIET-KILO",
+            "GHOST-2025-KEY-022-LIMA-MIKE-NOVEMBER",
+            "GHOST-2025-KEY-023-OSCAR-PAPA-QUEBEC",
+            "GHOST-2025-KEY-024-ROMEO-SIERRA-TANGO",
+            "GHOST-2025-KEY-025-UNIFORM-VICTOR-WHISKEY",
+            "GHOST-2025-KEY-026-XRAY-YANKEE-ZULU",
+            "GHOST-2025-KEY-027-ALPHA-BRAVO-CHARLIE",
+            "GHOST-2025-KEY-028-DELTA-ECHO-FOXTROT",
+            "GHOST-2025-KEY-029-GOLF-HOTEL-INDIA",
+            "GHOST-2025-KEY-030-JULIET-KILO-LIMA",
+            "GHOST-2025-KEY-031-MIKE-NOVEMBER-OSCAR",
+            "GHOST-2025-KEY-032-PAPA-QUEBEC-ROMEO",
+            "GHOST-2025-KEY-033-SIERRA-TANGO-UNIFORM",
+            "GHOST-2025-KEY-034-VICTOR-WHISKEY-XRAY",
+            "GHOST-2025-KEY-035-YANKEE-ZULU-ALPHA",
+            "GHOST-2025-KEY-036-BRAVO-CHARLIE-DELTA",
+            "GHOST-2025-KEY-037-ECHO-FOXTROT-GOLF",
+            "GHOST-2025-KEY-038-HOTEL-INDIA-JULIET",
+            "GHOST-2025-KEY-039-KILO-LIMA-MIKE",
+            "GHOST-2025-KEY-040-NOVEMBER-OSCAR-PAPA",
+            "GHOST-2025-KEY-041-QUEBEC-ROMEO-SIERRA",
+            "GHOST-2025-KEY-042-TANGO-UNIFORM-VICTOR",
+            "GHOST-2025-KEY-043-WHISKEY-XRAY-YANKEE",
+            "GHOST-2025-KEY-044-ZULU-ALPHA-BRAVO",
+            "GHOST-2025-KEY-045-CHARLIE-DELTA-ECHO",
+            "GHOST-2025-KEY-046-FOXTROT-GOLF-HOTEL",
+            "GHOST-2025-KEY-047-INDIA-JULIET-KILO",
+            "GHOST-2025-KEY-048-LIMA-MIKE-NOVEMBER",
+            "GHOST-2025-KEY-049-OSCAR-PAPA-QUEBEC",
+            "GHOST-2025-KEY-050-ROMEO-SIERRA-TANGO",
+            "GHOST-2025-KEY-051-UNIFORM-VICTOR-WHISKEY",
+            "GHOST-2025-KEY-052-XRAY-YANKEE-ZULU",
+            "GHOST-2025-KEY-053-ALPHA-BRAVO-CHARLIE",
+            "GHOST-2025-KEY-054-DELTA-ECHO-FOXTROT",
+            "GHOST-2025-KEY-055-GOLF-HOTEL-INDIA",
+            "GHOST-2025-KEY-056-JULIET-KILO-LIMA",
+            "GHOST-2025-KEY-057-MIKE-NOVEMBER-OSCAR",
+            "GHOST-2025-KEY-058-PAPA-QUEBEC-ROMEO",
+            "GHOST-2025-KEY-059-SIERRA-TANGO-UNIFORM",
+            "GHOST-2025-KEY-060-VICTOR-WHISKEY-XRAY",
+            "GHOST-2025-KEY-061-YANKEE-ZULU-ALPHA",
+            "GHOST-2025-KEY-062-BRAVO-CHARLIE-DELTA",
+            "GHOST-2025-KEY-063-ECHO-FOXTROT-GOLF",
+            "GHOST-2025-KEY-064-HOTEL-INDIA-JULIET",
+            "GHOST-2025-KEY-065-KILO-LIMA-MIKE",
+            "GHOST-2025-KEY-066-NOVEMBER-OSCAR-PAPA",
+            "GHOST-2025-KEY-067-QUEBEC-ROMEO-SIERRA",
+            "GHOST-2025-KEY-068-TANGO-UNIFORM-VICTOR",
+            "GHOST-2025-KEY-069-WHISKEY-XRAY-YANKEE",
+            "GHOST-2025-KEY-070-ZULU-ALPHA-BRAVO",
+            "GHOST-2025-KEY-071-CHARLIE-DELTA-ECHO",
+            "GHOST-2025-KEY-072-FOXTROT-GOLF-HOTEL",
+            "GHOST-2025-KEY-073-INDIA-JULIET-KILO",
+            "GHOST-2025-KEY-074-LIMA-MIKE-NOVEMBER",
+            "GHOST-2025-KEY-075-OSCAR-PAPA-QUEBEC",
+            "GHOST-2025-KEY-076-ROMEO-SIERRA-TANGO",
+            "GHOST-2025-KEY-077-UNIFORM-VICTOR-WHISKEY",
+            "GHOST-2025-KEY-078-XRAY-YANKEE-ZULU",
+            "GHOST-2025-KEY-079-ALPHA-BRAVO-CHARLIE",
+            "GHOST-2025-KEY-080-DELTA-ECHO-FOXTROT",
+            "GHOST-2025-KEY-081-GOLF-HOTEL-INDIA",
+            "GHOST-2025-KEY-082-JULIET-KILO-LIMA",
+            "GHOST-2025-KEY-083-MIKE-NOVEMBER-OSCAR",
+            "GHOST-2025-KEY-084-PAPA-QUEBEC-ROMEO",
+            "GHOST-2025-KEY-085-SIERRA-TANGO-UNIFORM",
+            "GHOST-2025-KEY-086-VICTOR-WHISKEY-XRAY",
+            "GHOST-2025-KEY-087-YANKEE-ZULU-ALPHA",
+            "GHOST-2025-KEY-088-BRAVO-CHARLIE-DELTA",
+            "GHOST-2025-KEY-089-ECHO-FOXTROT-GOLF",
+            "GHOST-2025-KEY-090-HOTEL-INDIA-JULIET",
+            "GHOST-2025-KEY-091-KILO-LIMA-MIKE",
+            "GHOST-2025-KEY-092-NOVEMBER-OSCAR-PAPA",
+            "GHOST-2025-KEY-093-QUEBEC-ROMEO-SIERRA",
+            "GHOST-2025-KEY-094-TANGO-UNIFORM-VICTOR",
+            "GHOST-2025-KEY-095-WHISKEY-XRAY-YANKEE",
+            "GHOST-2025-KEY-096-ZULU-ALPHA-BRAVO",
+            "GHOST-2025-KEY-097-CHARLIE-DELTA-ECHO",
+            "GHOST-2025-KEY-098-FOXTROT-GOLF-HOTEL",
+            "GHOST-2025-KEY-099-INDIA-JULIET-KILO",
+            "GHOST-2025-KEY-100-LIMA-MIKE-NOVEMBER"
+        ];
+
+        // Validate master key
+        function validateMasterKey(key) {
+            return MASTER_KEYS.includes(key.trim());
+        }
+
+        // Open/Close Modal
+        function openGhostComms() {
+            document.getElementById('ghost-modal').classList.remove('hidden');
+            document.getElementById('ghost-notification-dot').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function closeGhostComms() {
+            document.getElementById('ghost-modal').classList.add('hidden');
+        }
+
+        // Check URL for room link
+        function checkRoomLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            const password = urlParams.get('pass');
+            
+            if (roomId && password) {
+                openGhostComms();
+                document.getElementById('ghost-room-id-join').value = roomId;
+                document.getElementById('ghost-password-join').value = password;
+                // Auto-join will be handled by user clicking join
+            }
+        }
+
+        // Generate shareable link
+        function generateRoomLink(roomId, password) {
+            const currentUrl = window.location.origin + window.location.pathname;
+            return `${currentUrl}?room=${encodeURIComponent(roomId)}&pass=${encodeURIComponent(password)}`;
+        }
+
+        // Copy room link
+        function copyRoomLink() {
+            if (!ghostRoomId || !ghostRoomPassword) return;
+            
+            const link = generateRoomLink(ghostRoomId, ghostRoomPassword);
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.getElementById('ghost-share-btn');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Copied!';
+                btn.classList.add('bg-emerald-600');
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-emerald-600');
+                }, 2000);
+                lucide.createIcons();
+            }).catch(() => {
+                prompt("Copy this link:", link);
+            });
+        }
+
+        // Join via link
+        async function joinViaLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let roomId = urlParams.get('room') || document.getElementById('ghost-room-id-join')?.value.trim();
+            let password = urlParams.get('pass') || document.getElementById('ghost-password-join')?.value.trim();
+            const handle = document.getElementById('ghost-handle-join').value.trim();
+
+            if (!roomId || !password || !handle) {
+                alert("Please fill in all fields or use a shared link.");
+                return;
+            }
+
+            isRoomCreator = false;
+            await joinGhostRoomDirect(roomId, password, handle);
+        }
+
+        // Create room (requires master key)
+        async function createGhostRoom() {
+            const masterKey = document.getElementById('ghost-master-key').value.trim();
+            const roomId = document.getElementById('ghost-room-id-create').value.trim();
+            const password = document.getElementById('ghost-password-create').value.trim();
+            const handle = document.getElementById('ghost-handle-create').value.trim();
+
+            if (!masterKey || !roomId || !password || !handle) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            if (!validateMasterKey(masterKey)) {
+                alert("Invalid master key. Only authorized users can create rooms.");
+                return;
+            }
+
+            isRoomCreator = true;
+            await joinGhostRoomDirect(roomId, password, handle);
+        }
+
+        // Direct join function
+        async function joinGhostRoomDirect(roomId, password, handle) {
+
+        // PBKDF2 Key Derivation (100,000 iterations)
+        async function deriveKey(password, salt) {
+            const encoder = new TextEncoder();
+            const passwordKey = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: encoder.encode(salt),
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                passwordKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+
+            return key;
+        }
+
+        // AES-GCM Encryption
+        async function encryptMessage(text, key) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            
+            // Generate random IV (12 bytes for GCM)
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            
+            const encrypted = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                data
+            );
+
+            // Return IV + encrypted data as base64
+            const combined = new Uint8Array(iv.length + encrypted.byteLength);
+            combined.set(iv);
+            combined.set(new Uint8Array(encrypted), iv.length);
+
+            return {
+                iv: Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join(''),
+                data: btoa(String.fromCharCode(...combined))
+            };
+        }
+
+        // AES-GCM Decryption
+        async function decryptMessage(encryptedData, ivHex, key) {
+            try {
+                const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                const data = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+                
+                // Extract actual encrypted data (skip IV)
+                const encrypted = data.slice(12);
+
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    encrypted
+                );
+
+                const decoder = new TextDecoder();
+                return decoder.decode(decrypted);
+            } catch (error) {
+                throw new Error('Decryption failed - wrong password or corrupted data');
+            }
+        }
+
+            // Wait a moment for Firebase to initialize if needed
+            if (!window.firebaseDB) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (!window.firebaseDB) {
+                    alert("Firebase not initialized. Please check your Firebase configuration and ensure Firestore Database is created.");
+                    return;
+                }
+            }
+
+            try {
+                // Derive encryption key from password + room ID
+                ghostCryptoKey = await deriveKey(password, roomId);
+                ghostRoomId = roomId;
+                ghostHandle = handle;
+                ghostRoomPassword = password;
+
+                // Hide join panel, show share button and disconnect
+                document.getElementById('ghost-join-panel').classList.add('hidden');
+                if (isRoomCreator) {
+                    document.getElementById('ghost-share-btn').classList.remove('hidden');
+                }
+                document.getElementById('ghost-disconnect-btn').classList.remove('hidden');
+                
+                // Update chat header
+                document.getElementById('ghost-room-display').textContent = roomId;
+                document.getElementById('ghost-room-status').textContent = `Connected as ${handle}${isRoomCreator ? ' (Creator)' : ''}`;
+                document.getElementById('ghost-encryption-indicator').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+                
+                // Enable messaging
+                document.getElementById('ghost-message-input').disabled = false;
+                document.getElementById('ghost-send-btn').disabled = false;
+
+                // Clear messages
+                document.getElementById('ghost-messages').innerHTML = '';
+
+                // Listen for new messages
+                const messagesRef = window.firebaseCollection(window.firebaseDB, `rooms/${roomId}/messages`);
+                const q = window.firebaseQuery(messagesRef, window.firebaseOrderBy('timestamp', 'asc'));
+
+                ghostUnsubscribe = window.firebaseOnSnapshot(q, async (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
+                        if (change.type === 'added') {
+                            const msgData = change.doc.data();
+                            await displayGhostMessage(msgData);
+                        }
+                    });
+                });
+
+                // Show success
+                addSystemMessage(`Joined room "${roomId}" as "${handle}"`);
+
+            } catch (error) {
+                console.error('Join error:', error);
+                alert("Error joining room: " + error.message);
+            }
+        }
+
+        // Get user initials for avatar
+        function getUserInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // Get color for user
+        function getUserColor(name) {
+            if (!name) return 'emerald';
+            const colors = ['emerald', 'blue', 'purple', 'rose', 'cyan', 'amber', 'indigo'];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // Display encrypted message
+        async function displayGhostMessage(msgData) {
+            try {
+                const decrypted = await decryptMessage(msgData.data, msgData.iv, ghostCryptoKey);
+                const messagesDiv = document.getElementById('ghost-messages');
+                
+                // Remove "join a room" placeholder if exists
+                const placeholder = messagesDiv.querySelector('.text-center');
+                if (placeholder) placeholder.remove();
+
+                const isOwnMessage = msgData.sender === ghostHandle;
+                const senderName = msgData.sender || 'Unknown';
+                const timestamp = msgData.timestamp?.toDate() || new Date();
+                const timeStr = timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                const dateStr = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const isToday = new Date().toDateString() === timestamp.toDateString();
+                
+                const userColor = getUserColor(senderName);
+                const colorClasses = {
+                    emerald: 'bg-emerald-600/20 text-emerald-400 border-emerald-600/30',
+                    blue: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
+                    purple: 'bg-purple-600/20 text-purple-400 border-purple-600/30',
+                    rose: 'bg-rose-600/20 text-rose-400 border-rose-600/30',
+                    cyan: 'bg-cyan-600/20 text-cyan-400 border-cyan-600/30',
+                    amber: 'bg-amber-600/20 text-amber-400 border-amber-600/30',
+                    indigo: 'bg-indigo-600/20 text-indigo-400 border-indigo-600/30'
+                };
+
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message-bubble flex gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} max-w-[85%]`;
+                
+                if (!isOwnMessage) {
+                    // Avatar for other users
+                    msgDiv.innerHTML = `
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full ${colorClasses[userColor]} border flex items-center justify-center text-xs font-bold">
+                            ${getUserInitials(senderName)}
+                        </div>
+                        <div class="flex flex-col gap-1 flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-zinc-400">${senderName}</span>
+                                <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
+                            </div>
+                            <div class="message-other rounded-2xl px-4 py-2.5 shadow-lg">
+                                <p class="text-sm break-words whitespace-pre-wrap">${decrypted}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Own message (no avatar, right-aligned)
+                    msgDiv.innerHTML = `
+                        <div class="flex flex-col gap-1 flex-1 min-w-0 items-end">
+                            <div class="message-own rounded-2xl px-4 py-2.5 shadow-lg max-w-full">
+                                <p class="text-sm break-words whitespace-pre-wrap">${decrypted}</p>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
+                                <i data-lucide="check-check" class="w-3 h-3 text-emerald-500"></i>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                messagesDiv.appendChild(msgDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Decryption error:', error);
+                addSystemMessage(`Failed to decrypt message from ${msgData.sender || 'Unknown'}`);
+            }
+        }
+
+        // Send encrypted message
+        async function sendGhostMessage() {
+            const messageInput = document.getElementById('ghost-message-input');
+            const message = messageInput.value.trim();
+
+            if (!message || !ghostCryptoKey) return;
+
+            try {
+                const encrypted = await encryptMessage(message, ghostCryptoKey);
+
+                await window.firebaseAddDoc(
+                    window.firebaseCollection(window.firebaseDB, `rooms/${ghostRoomId}/messages`),
+                    {
+                        sender: ghostHandle,
+                        timestamp: window.firebaseServerTimestamp(),
+                        iv: encrypted.iv,
+                        data: encrypted.data
+                    }
+                );
+
+                messageInput.value = '';
+            } catch (error) {
+                console.error('Send error:', error);
+                alert("Error sending message: " + error.message);
+            }
+        }
+
+        // Disconnect from room
+        function disconnectGhost() {
+            if (ghostUnsubscribe) {
+                ghostUnsubscribe();
+                ghostUnsubscribe = null;
+            }
+
+            ghostCryptoKey = null;
+            ghostRoomId = null;
+            ghostHandle = null;
+            ghostRoomPassword = null;
+            isRoomCreator = false;
+
+            // Show join panel again
+            document.getElementById('ghost-join-panel').classList.remove('hidden');
+            document.getElementById('ghost-share-btn').classList.add('hidden');
+            document.getElementById('ghost-disconnect-btn').classList.add('hidden');
+            
+            // Reset chat header
+            document.getElementById('ghost-room-display').textContent = 'Not Connected';
+            document.getElementById('ghost-room-status').textContent = 'Join or create a room to start';
+            document.getElementById('ghost-encryption-indicator').className = 'w-2 h-2 rounded-full bg-zinc-700';
+            
+            // Disable messaging
+            document.getElementById('ghost-message-input').disabled = true;
+            document.getElementById('ghost-send-btn').disabled = true;
+            
+            // Clear messages
+            document.getElementById('ghost-messages').innerHTML = `
+                <div class="text-center text-zinc-600 text-sm py-12">
+                    <div class="w-16 h-16 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-600/20">
+                        <i data-lucide="message-square-lock" class="w-8 h-8 text-emerald-500/50"></i>
+                    </div>
+                    <p class="font-medium">Join or create a room to start messaging</p>
+                    <p class="text-xs text-zinc-700 mt-1">Messages are end-to-end encrypted</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // Check for room link on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkRoomLink();
+            
+            // Display master keys in console (for you to copy)
+            console.log('%c🔑 MASTER KEYS (100 Lifetime Keys)', 'color: #10b981; font-size: 16px; font-weight: bold;');
+            console.log('%cCopy these keys - they have lifetime validity:', 'color: #a1a1aa; font-size: 12px;');
+            MASTER_KEYS.forEach((key, index) => {
+                console.log(`${(index + 1).toString().padStart(3, '0')}. ${key}`);
+            });
+        });
+
+        // Add system message
+        function addSystemMessage(text) {
+            const messagesDiv = document.getElementById('ghost-messages');
+            const placeholder = messagesDiv.querySelector('.text-center');
+            if (placeholder) placeholder.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message-bubble text-center py-3';
+            msgDiv.innerHTML = `
+                <div class="inline-flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded-full px-4 py-1.5">
+                    <i data-lucide="info" class="w-3 h-3 text-zinc-500"></i>
+                    <span class="text-xs text-zinc-500 font-medium">${text}</span>
+                </div>
+            `;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            lucide.createIcons();
+        }
+
+        // Auto-resize textarea and character counter
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageInput = document.getElementById('ghost-message-input');
+            const charCount = document.getElementById('ghost-char-count');
+            
+            if (messageInput) {
+                // Auto-resize textarea
+                messageInput.addEventListener('input', (e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    
+                    // Update character count
+                    if (charCount) {
+                        const count = e.target.value.length;
+                        charCount.textContent = `${count}/1000`;
+                        if (count > 1000) {
+                            charCount.className = 'text-[10px] text-rose-500';
+                        } else if (count > 800) {
+                            charCount.className = 'text-[10px] text-amber-500';
+                        } else {
+                            charCount.className = 'text-[10px] text-zinc-700';
+                        }
+                    }
+                });
+
+                // Enter to send, Shift+Enter for new line
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (messageInput.value.trim() && !messageInput.disabled) {
+                            sendGhostMessage();
+                        }
+                    }
+                });
+            }
+        });
+
     </script>
 </body>
+</html>
 </html>
