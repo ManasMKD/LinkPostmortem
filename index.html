@@ -1117,7 +1117,6 @@
         // SELF-DEFENDING WEBSITE SYSTEM
         // ============================================
         // CONFIGURATION
-        const ALLOWED_DOMAIN = "localhost"; // REPLACE with your actual domain (e.g., "endeavour.com") when deploying
         const SECURITY_KEY = "endeavour_security_log"; // The name in browser memory
 
         // Caution Board Functions (Define early - MUST be available immediately)
@@ -1177,7 +1176,6 @@
         // 1. THE MEMORY CHECK (Runs immediately on load)
         window.addEventListener('DOMContentLoaded', function() {
             checkMemory();
-            checkDomainIntegrity();
             
             // Set up proceed button click handler (backup method)
             const proceedBtn = document.getElementById('proceedBtn');
@@ -1270,34 +1268,7 @@
             }
         });
 
-        // 2. THE DOMAIN LOCK (Anti-Cloning/Kill Switch)
-        function checkDomainIntegrity() {
-            const hostname = window.location.hostname;
-            
-            // Allow localhost and 127.0.0.1 for development
-            const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
-            
-            // If we are NOT on the allowed domain AND not local, NUKE IT
-            if (!isLocal && !hostname.includes(ALLOWED_DOMAIN)) {
-                // KILL SWITCH - Wipe the page
-                document.body.innerHTML = `
-                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: red; display: flex; align-items: center; justify-content: center; font-family: 'Courier New', monospace; font-size: 2rem; text-align: center; z-index: 99999;">
-                        <div>
-                            <h1 style="color: red; margin-bottom: 20px;">⚠ PIRACY DETECTED ⚠</h1>
-                            <p style="color: #ff4444; font-size: 1.5rem;">SYSTEM SELF-DESTRUCTED.</p>
-                            <p style="color: #ff6666; font-size: 1rem; margin-top: 20px;">This website can only run on authorized domains.</p>
-                        </div>
-                    </div>
-                `;
-                
-                // Optional: Crash the tab (Use with caution - commented out)
-                // while(true){}
-                
-                return false;
-            }
-        }
-
-        // 3. ENHANCED TRAP WITH REASON TRACKING & FIRESTORE LOGGING
+        // 2. ENHANCED TRAP WITH REASON TRACKING & FIRESTORE LOGGING
         async function triggerSecurityBreach(reason) {
             // Prevent multiple rapid triggers (debounce)
             const now = Date.now();
@@ -4310,4 +4281,4 @@
     </script>
 </body>
 </html>
-</html>
+    </html>
