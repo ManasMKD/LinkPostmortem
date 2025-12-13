@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -792,12 +793,32 @@
                                 </div>
                                 
                                 <!-- GIF Picker Popup -->
-                                <div id="ghost-gif-picker" class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 w-96 max-h-96 overflow-y-auto z-50">
-                                    <div class="mb-3">
-                                        <input type="text" id="ghost-gif-search" placeholder="Search GIFs..." 
-                                            class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-600">
+                                <div id="ghost-gif-picker" class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-[400px] max-h-[500px] flex flex-col z-50">
+                                    <!-- Search Bar -->
+                                    <div class="p-3 border-b border-zinc-800">
+                                        <div class="relative">
+                                            <input type="text" id="ghost-gif-search" placeholder="Search GIFs..." 
+                                                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 pl-10 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-600">
+                                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
+                                        </div>
                                     </div>
-                                    <div id="ghost-gif-results" class="grid grid-cols-2 gap-2"></div>
+                                    
+                                    <!-- Categories/Tabs -->
+                                    <div class="flex gap-2 px-3 py-2 border-b border-zinc-800 overflow-x-auto">
+                                        <button onclick="loadGifCategory('trending')" id="gif-tab-trending" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white whitespace-nowrap">Trending</button>
+                                        <button onclick="loadGifCategory('reactions')" id="gif-tab-reactions" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 whitespace-nowrap">Reactions</button>
+                                        <button onclick="loadGifCategory('funny')" id="gif-tab-funny" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 whitespace-nowrap">Funny</button>
+                                        <button onclick="loadGifCategory('love')" id="gif-tab-love" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 whitespace-nowrap">Love</button>
+                                    </div>
+                                    
+                                    <!-- GIF Grid -->
+                                    <div id="ghost-gif-results" class="flex-1 overflow-y-auto p-3">
+                                        <div class="grid grid-cols-2 gap-2" id="ghost-gif-grid"></div>
+                                        <div id="ghost-gif-loading" class="hidden text-center py-8">
+                                            <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-emerald-500 mx-auto"></i>
+                                            <p class="text-xs text-zinc-500 mt-2">Loading GIFs...</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <button onclick="sendGhostMessage()" id="ghost-send-btn" 
@@ -1428,6 +1449,33 @@
             return complexDecrypt(content);
         }
 
+        // Check if a string is a URL/link
+        function isUrl(str) {
+            if (!str || typeof str !== 'string') return false;
+            const trimmed = str.trim();
+            
+            // Check for common URL patterns
+            const urlPattern = /^(https?:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/i;
+            if (!urlPattern.test(trimmed)) return false;
+            
+            // More specific URL validation
+            try {
+                // If it starts with http:// or https://, it's definitely a URL
+                if (/^https?:\/\//i.test(trimmed)) return true;
+                
+                // If it contains a domain pattern (e.g., example.com, subdomain.example.com)
+                const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(\/.*)?$/i;
+                if (domainPattern.test(trimmed)) return true;
+                
+                // Check if it looks like a URL with path/query
+                if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/|\?|#)/.test(trimmed)) return true;
+            } catch (e) {
+                return false;
+            }
+            
+            return false;
+        }
+
         function setCryptoMode(mode) {
             currentMode = mode;
             const btnEncrypt = document.getElementById('mode-encrypt');
@@ -1445,7 +1493,7 @@
             if (mode === 'encrypt') {
                 btnEncrypt.className = "p-1.5 rounded-md transition-all bg-zinc-700 text-white";
                 btnDecrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
-                input.placeholder = "Paste link(s) here. For multiple links, put each on a new line...";
+                input.placeholder = "Paste text or link(s) here. For multiple links, put each on a new line...";
                 actionText.innerText = "Encrypt Payload";
                 settingsPanel.classList.remove('hidden');
                 settingsPanel.classList.add('grid');
@@ -1522,34 +1570,50 @@
                         const expiry = parseInt(parts[1]);
                         
                         if(Date.now() > expiry) {
-                            resultBox.innerHTML = "STATUS: <b>DECEASED</b><br>This link has expired and the payload has been purged.";
+                            resultBox.innerHTML = "STATUS: <b>DECEASED</b><br>This payload has expired and has been purged.";
                             resultBox.className = "text-red-500";
                             return;
                         }
                         decrypted = content; 
                     }
 
-                    hiddenTargetUrls = decrypted.split(DELIMITER);
-                    const container = document.getElementById('launch-buttons-container');
-                    container.innerHTML = '';
+                    // Check if decrypted content contains URLs
+                    const parts = decrypted.split(DELIMITER);
+                    const hasUrls = parts.some(part => isUrl(part.trim()));
                     
-                    hiddenTargetUrls.forEach((url, index) => {
-                        let safeUrl = url.trim();
-                        if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
-                            safeUrl = 'https://' + safeUrl;
-                        }
+                    if (hasUrls) {
+                        // Contains URLs - show launch buttons
+                        hiddenTargetUrls = parts.filter(part => {
+                            const trimmed = part.trim();
+                            return trimmed && isUrl(trimmed);
+                        });
+                        
+                        const container = document.getElementById('launch-buttons-container');
+                        container.innerHTML = '';
+                        
+                        hiddenTargetUrls.forEach((url, index) => {
+                            let safeUrl = url.trim();
+                            if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
+                                safeUrl = 'https://' + safeUrl;
+                            }
 
-                        const btn = document.createElement('button');
-                        btn.type = "button";
-                        btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
-                        btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
-                        btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
-                        container.appendChild(btn);
-                    });
-                    
-                    lucide.createIcons();
-                    document.getElementById('result-launch').classList.remove('hidden');
-                    resultBox.innerText = decrypted;
+                            const btn = document.createElement('button');
+                            btn.type = "button";
+                            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
+                            btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
+                            btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                            container.appendChild(btn);
+                        });
+                        
+                        lucide.createIcons();
+                        document.getElementById('result-launch').classList.remove('hidden');
+                        resultBox.innerText = decrypted;
+                    } else {
+                        // Plain text - display directly
+                        document.getElementById('result-launch').classList.add('hidden');
+                        resultBox.className = "break-all font-mono text-sm text-emerald-400";
+                        resultBox.innerText = decrypted;
+                    }
                 } else {
                     resultBox.innerText = "Error: Decryption failed. Invalid signature or corrupted string.";
                     resultBox.className = "text-red-500";
@@ -2661,6 +2725,7 @@
                 const dateStr = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const isToday = new Date().toDateString() === timestamp.toDateString();
                 const isGif = msgData.isGif || false;
+                const mediaType = msgData.mediaType || 'gif';
                 
                 const userColor = getUserColor(senderName);
                 const colorClasses = {
@@ -2679,7 +2744,11 @@
                 
                 let messageContent = '';
                 if (isGif) {
-                    messageContent = `<img src="${decrypted}" alt="GIF" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;">`;
+                    if (mediaType === 'video') {
+                        messageContent = `<video src="${decrypted}" alt="Video" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;" controls autoplay loop muted playsinline></video>`;
+                    } else {
+                        messageContent = `<img src="${decrypted}" alt="GIF" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;">`;
+                    }
                 } else {
                     messageContent = `<p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>`;
                 }
@@ -2745,7 +2814,7 @@
         }
 
         // Send encrypted message
-        async function sendGhostMessage(messageText = null, isGif = false) {
+        async function sendGhostMessage(messageText = null, isGif = false, mediaType = 'gif') {
             const messageInput = document.getElementById('ghost-message-input');
             const message = messageText || messageInput.value.trim();
 
@@ -2777,6 +2846,7 @@
 
                 if (isGif) {
                     messageData.isGif = true;
+                    messageData.mediaType = mediaType; // 'gif' or 'video'
                 }
 
                 await window.firebaseAddDoc(
@@ -2928,54 +2998,115 @@
 
         // GIF picker functions
         let gifSearchTimeout = null;
-        const GIPHY_API_KEY = 'YOUR_GIPHY_API_KEY'; // Users need to add their own API key
+        let currentGifCategory = 'trending';
+        const GIPHY_API_KEY = 'dc6zaTOxFJmzC'; // Public API key for GIPHY
+
+        // Load GIFs by category
+        async function loadGifCategory(category) {
+            if (!ghostRoomSettings.enableGifs) return;
+            
+            currentGifCategory = category;
+            
+            // Update tab styles
+            document.querySelectorAll('[id^="gif-tab-"]').forEach(btn => {
+                btn.className = 'px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 whitespace-nowrap';
+            });
+            const activeTab = document.getElementById(`gif-tab-${category}`);
+            if (activeTab) {
+                activeTab.className = 'px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white whitespace-nowrap';
+            }
+            
+            const categoryQueries = {
+                'trending': '',
+                'reactions': 'reactions',
+                'funny': 'funny',
+                'love': 'love'
+            };
+            
+            await searchGifs(categoryQueries[category] || '');
+        }
 
         async function searchGifs(query) {
-            if (!query || query.length < 2) return;
+            if (!ghostRoomSettings.enableGifs) return;
+            
+            const gridDiv = document.getElementById('ghost-gif-grid');
+            const loadingDiv = document.getElementById('ghost-gif-loading');
+            
+            if (!gridDiv) return;
+            
+            // Show loading
+            gridDiv.innerHTML = '';
+            loadingDiv.classList.remove('hidden');
             
             try {
-                // Using a public GIPHY endpoint (no API key required for trending)
-                const url = query ? 
-                    `https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=20` :
-                    `https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=20`;
+                let url;
+                if (query && query.trim().length > 0) {
+                    url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=30&rating=g`;
+                } else {
+                    url = `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=30&rating=g`;
+                }
                 
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                const resultsDiv = document.getElementById('ghost-gif-results');
-                resultsDiv.innerHTML = '';
+                loadingDiv.classList.add('hidden');
                 
                 if (data.data && data.data.length > 0) {
+                    gridDiv.innerHTML = '';
+                    
                     data.data.forEach(gif => {
                         const gifItem = document.createElement('div');
-                        gifItem.className = 'cursor-pointer hover:opacity-80 transition-opacity';
-                        gifItem.innerHTML = `<img src="${gif.images.fixed_height.url}" alt="GIF" class="w-full rounded">`;
-                        gifItem.onclick = () => sendGif(gif.images.original.url);
-                        resultsDiv.appendChild(gifItem);
+                        gifItem.className = 'relative group cursor-pointer rounded-lg overflow-hidden bg-zinc-800 hover:ring-2 hover:ring-emerald-500 transition-all aspect-square';
+                        gifItem.innerHTML = `
+                            <img src="${gif.images.fixed_height_small.url}" 
+                                 alt="${gif.title || 'GIF'}" 
+                                 class="w-full h-full object-cover"
+                                 loading="lazy">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <i data-lucide="play" class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                        `;
+                        gifItem.onclick = () => sendGif(gif.images.original.url, gif.images.original.mp4);
+                        gridDiv.appendChild(gifItem);
                     });
+                    
+                    lucide.createIcons();
                 } else {
-                    resultsDiv.innerHTML = '<p class="text-zinc-500 text-sm text-center py-4">No GIFs found</p>';
+                    gridDiv.innerHTML = '<div class="col-span-2 text-center py-8"><p class="text-zinc-500 text-sm">No GIFs found</p></div>';
                 }
             } catch (error) {
                 console.error('GIF search error:', error);
-                document.getElementById('ghost-gif-results').innerHTML = '<p class="text-red-500 text-sm text-center py-4">Error loading GIFs</p>';
+                loadingDiv.classList.add('hidden');
+                gridDiv.innerHTML = '<div class="col-span-2 text-center py-8"><p class="text-red-500 text-sm">Error loading GIFs</p></div>';
             }
         }
 
         function toggleGifPicker() {
+            if (!ghostRoomSettings.enableGifs) {
+                alert("GIF feature is not enabled in this room.");
+                return;
+            }
+            
             const picker = document.getElementById('ghost-gif-picker');
             const emojiPicker = document.getElementById('ghost-emoji-picker');
             if (emojiPicker) emojiPicker.classList.add('hidden');
             if (picker) {
+                const isHidden = picker.classList.contains('hidden');
                 picker.classList.toggle('hidden');
-                if (!picker.classList.contains('hidden')) {
-                    searchGifs(''); // Load trending GIFs
+                
+                if (!isHidden) {
+                    // Opening picker - load trending GIFs
+                    loadGifCategory('trending');
                 }
             }
         }
 
-        function sendGif(gifUrl) {
-            sendGhostMessage(gifUrl, true);
+        function sendGif(gifUrl, videoUrl = null) {
+            if (!ghostRoomSettings.enableGifs) return;
+            
+            // Prefer video URL if available, otherwise use GIF
+            const mediaUrl = videoUrl || gifUrl;
+            sendGhostMessage(mediaUrl, true, videoUrl ? 'video' : 'gif');
             document.getElementById('ghost-gif-picker').classList.add('hidden');
         }
 
@@ -2985,9 +3116,27 @@
             if (gifSearch) {
                 gifSearch.addEventListener('input', (e) => {
                     clearTimeout(gifSearchTimeout);
-                    gifSearchTimeout = setTimeout(() => {
-                        searchGifs(e.target.value);
-                    }, 500);
+                    const query = e.target.value.trim();
+                    
+                    if (query.length === 0) {
+                        // If search is cleared, reload current category
+                        loadGifCategory(currentGifCategory);
+                    } else if (query.length >= 2) {
+                        gifSearchTimeout = setTimeout(() => {
+                            searchGifs(query);
+                        }, 500);
+                    }
+                });
+                
+                // Allow Enter key to search
+                gifSearch.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const query = gifSearch.value.trim();
+                        if (query.length > 0) {
+                            searchGifs(query);
+                        }
+                    }
                 });
             }
         });
@@ -3097,4 +3246,4 @@
     </script>
 </body>
 </html>
-</html>
+    </html>
