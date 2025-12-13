@@ -14,11 +14,6 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap" rel="stylesheet">
 
-    <!-- ============================================================ -->
-    <!-- AD SPACE: GLOBAL SCRIPTS                                     -->
-    <!-- Paste your Google AdSense (or other network) script tag here -->
-    <!-- ============================================================ -->
-
     <script>
         tailwind.config = {
             theme: {
@@ -49,14 +44,20 @@
 
         .animate-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Security: Prevent selection */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
     </style>
 </head>
-<body class="selection:bg-rose-900 selection:text-white min-h-screen flex flex-col">
+<body class="selection:bg-rose-900 selection:text-white min-h-screen flex flex-col no-select">
 
     <!-- NAVIGATION -->
     <nav class="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-zinc-900">
         <div class="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
                 <div class="w-8 h-8 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center justify-center text-rose-600 font-bold text-xl shadow-[0_0_15px_rgba(225,29,72,0.3)]">
                     <i data-lucide="skull" class="w-5 h-5"></i>
                 </div>
@@ -67,20 +68,22 @@
 
             <!-- Desktop Nav -->
             <div class="hidden md:flex items-center gap-1 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
-                <button onclick="switchTab('downloader')" id="btn-nav-downloader" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg">Downloader</button>
-                <button onclick="switchTab('crypter')" id="btn-nav-crypter" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300">Encrypter</button>
+                <button type="button" onclick="switchTab('downloader')" id="btn-nav-downloader" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg">Downloader</button>
+                <button type="button" onclick="switchTab('crypter')" id="btn-nav-crypter" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300">Encrypter</button>
+                <button type="button" onclick="switchTab('stego')" id="btn-nav-stego" class="px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300">Stego Lab</button>
             </div>
 
             <!-- Mobile Menu Toggle -->
-            <button onclick="toggleMenu()" class="md:hidden p-2 text-zinc-400">
+            <button type="button" onclick="toggleMenu()" class="md:hidden p-2 text-zinc-400">
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
         </div>
 
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-zinc-950 border-b border-zinc-900 p-4 flex flex-col gap-4">
-            <button onclick="switchTab('downloader'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Downloader</button>
-            <button onclick="switchTab('crypter'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Link Crypter</button>
+            <button type="button" onclick="switchTab('downloader'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Downloader</button>
+            <button type="button" onclick="switchTab('crypter'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Link Crypter</button>
+            <button type="button" onclick="switchTab('stego'); toggleMenu()" class="text-left text-zinc-300 font-medium p-2 hover:bg-zinc-900 rounded">Steganography</button>
         </div>
     </nav>
 
@@ -94,15 +97,6 @@
         </div>
 
         <div class="container mx-auto px-4 relative z-10">
-
-            <!-- ============================================================ -->
-            <!-- AD SPACE: TOP BANNER                                         -->
-            <!-- ============================================================ -->
-            <!-- 
-            <div class="w-full max-w-4xl mx-auto mb-8 bg-zinc-900/50 border border-zinc-800 rounded-lg p-4 flex justify-center items-center">
-                 Place ad code here 
-            </div> 
-            -->
 
             <!-- TAB: DOWNLOADER -->
             <div id="tab-downloader" class="tab-content active animate-in">
@@ -136,15 +130,6 @@
                     </form>
                 </div>
 
-                <!-- ============================================================ -->
-                <!-- AD SPACE: MIDDLE CONTENT                                     -->
-                <!-- ============================================================ -->
-                <!-- 
-                <div class="w-full max-w-3xl mx-auto mb-8 flex justify-center">
-                     Place ad code here 
-                </div> 
-                -->
-
                 <div id="dl-error" class="hidden max-w-3xl mx-auto mb-8 p-4 bg-rose-950/30 text-rose-400 border border-rose-900/50 rounded-xl flex items-center justify-center gap-2">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     <span id="dl-error-text"></span>
@@ -158,7 +143,7 @@
                         </div>
                         <h3 class="text-xl font-bold text-white mb-2">Direct Media Detected</h3>
                         <p class="text-zinc-400 mb-6 text-sm max-w-md">
-                            The link appears to be a direct media file (MP4, M3U8, MKV, etc.). You can access it directly without the secure tunnel.
+                            The link appears to be a direct media file. You can access it directly without the secure tunnel.
                         </p>
                         <div class="flex gap-3">
                             <a id="media-download-btn" href="#" target="_blank" rel="noopener noreferrer" 
@@ -180,7 +165,7 @@
                     <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <p class="text-sm text-zinc-300">Tunnel established successfully. Loading external content...</p>
+                            <p class="text-sm text-zinc-300">Tunnel established successfully. Loading content...</p>
                         </div>
                         <a id="dl-external-link" href="#" target="_blank" rel="noopener noreferrer"
                             class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
@@ -204,15 +189,6 @@
                     </p>
                 </div>
 
-                <!-- ============================================================ -->
-                <!-- AD SPACE: CRYPTER BANNER                                     -->
-                <!-- ============================================================ -->
-                <!-- 
-                <div class="w-full max-w-4xl mx-auto mb-8 flex justify-center">
-                     Place ad code here 
-                </div> 
-                -->
-
                 <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 bg-zinc-900/30 p-2 rounded-2xl border border-zinc-800 backdrop-blur-sm">
                     
                     <!-- Input Section -->
@@ -220,8 +196,8 @@
                         <div class="flex justify-between items-center mb-4">
                             <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Input Payload</label>
                             <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-                                <button onclick="setCryptoMode('encrypt')" id="mode-encrypt" class="p-1.5 rounded-md transition-all bg-zinc-700 text-white" title="Encrypt Mode"><i data-lucide="lock" class="w-4 h-4"></i></button>
-                                <button onclick="setCryptoMode('decrypt')" id="mode-decrypt" class="p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400" title="Decrypt Mode"><i data-lucide="unlock" class="w-4 h-4"></i></button>
+                                <button type="button" onclick="setCryptoMode('encrypt')" id="mode-encrypt" class="p-1.5 rounded-md transition-all bg-zinc-700 text-white" title="Encrypt Mode"><i data-lucide="lock" class="w-4 h-4"></i></button>
+                                <button type="button" onclick="setCryptoMode('decrypt')" id="mode-decrypt" class="p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400" title="Decrypt Mode"><i data-lucide="unlock" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         
@@ -229,10 +205,10 @@
                             <textarea id="crypto-input" placeholder="Paste link(s) here..." class="w-full flex-grow bg-zinc-900 border border-zinc-800 rounded-lg p-4 pr-10 text-zinc-300 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none resize-none font-mono text-sm min-h-[150px]"></textarea>
                             <!-- Input Actions -->
                             <div class="absolute top-2 right-2 flex flex-col gap-1">
-                                <button onclick="clearInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Clear">
+                                <button type="button" onclick="clearInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Clear">
                                     <i data-lucide="x" class="w-3 h-3"></i>
                                 </button>
-                                <button onclick="pasteToInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Paste">
+                                <button type="button" onclick="pasteToInput('crypto-input')" class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded hover:bg-zinc-800 transition-colors" title="Paste">
                                     <i data-lucide="clipboard" class="w-3 h-3"></i>
                                 </button>
                             </div>
@@ -240,7 +216,6 @@
 
                         <!-- Settings Grid -->
                         <div id="crypto-settings" class="mt-4 grid grid-cols-2 gap-3">
-                            <!-- Passcode Field -->
                             <div>
                                 <div class="flex items-center gap-2 mb-2">
                                     <i data-lucide="key" class="w-3 h-3 text-zinc-500"></i>
@@ -250,8 +225,7 @@
                                     class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none transition-colors">
                             </div>
                             
-                            <!-- Expiration Field (New) -->
-                            <div>
+                            <div id="crypto-expiry-container">
                                 <div class="flex items-center gap-2 mb-2">
                                     <i data-lucide="clock" class="w-3 h-3 text-zinc-500"></i>
                                     <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Lifespan</label>
@@ -267,7 +241,7 @@
                             </div>
                         </div>
 
-                        <button onclick="handleCryptoProcess()" id="crypto-action-btn" class="mt-4 w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                        <button type="button" onclick="handleCryptoProcess()" id="crypto-action-btn" class="mt-4 w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
                             <i data-lucide="lock" id="action-icon" class="w-4 h-4"></i>
                             <span id="action-text">Encrypt Payload</span>
                         </button>
@@ -279,10 +253,21 @@
                         
                         <div class="flex justify-between items-center mb-4 relative z-10">
                             <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Result</label>
-                            <button id="btn-copy" onclick="copyToClipboard()" class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium transition-colors">
-                                <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
-                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" id="btn-inject-quick" onclick="triggerCrypterStego()" class="hidden text-xs flex items-center gap-1 text-zinc-400 hover:text-white font-medium transition-colors" title="Inject current payload into an existing image">
+                                    <i data-lucide="image-plus" class="w-3 h-3"></i> <span>Upload</span>
+                                </button>
+                                <button type="button" id="btn-generate-quick" onclick="quickGenerateStego()" class="hidden text-xs flex items-center gap-1 text-emerald-500 hover:text-emerald-400 font-medium transition-colors" title="Auto-generate a new noise carrier">
+                                    <i data-lucide="cpu" class="w-3 h-3"></i> <span>Auto-Generate</span>
+                                </button>
+                                <button type="button" id="btn-copy" onclick="copyToClipboard()" class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium transition-colors">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span>
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Hidden File Input for Crypter Tab Injection -->
+                        <input type="file" id="crypter-stego-input" accept="image/*" class="hidden" onchange="processCrypterStego(this)">
 
                         <div class="flex-grow bg-black border border-zinc-800 rounded-lg p-4 relative group min-h-[150px] flex flex-col overflow-hidden">
                             
@@ -296,14 +281,14 @@
                             <div id="result-text" class="hidden break-all font-mono text-sm text-emerald-400"></div>
 
                             <!-- Launch Button (Decrypt Mode) -->
-                            <div id="result-launch" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[1px] pt-4 pb-2">
+                            <div id="result-launch" class="hidden absolute inset-0 flex flex-col items-center justify-start bg-black/60 backdrop-blur-[1px] pt-4 pb-2">
                                 <div class="flex items-center gap-2 text-green-500 mb-3 flex-shrink-0">
                                     <i data-lucide="eye-off" class="w-4 h-4"></i>
-                                    <span class="text-xs font-bold uppercase tracking-widest">Payload Verified & Masked</span>
+                                    <span class="text-xs font-bold uppercase tracking-widest">Payload Verified</span>
                                 </div>
                                 
                                 <!-- Dynamic Buttons Container -->
-                                <div id="launch-buttons-container" class="flex flex-col gap-2 w-full px-4 overflow-y-auto btn-scroll items-center mb-2" style="max-height: 200px;">
+                                <div id="launch-buttons-container" class="flex flex-col gap-2 w-full px-4 overflow-y-auto btn-scroll items-center mb-2 justify-start flex-grow" style="max-height: 200px;">
                                     <!-- Buttons will be injected here via JS -->
                                 </div>
 
@@ -321,13 +306,109 @@
                 </div>
             </div>
 
+            <!-- TAB: STEGO LAB -->
+            <div id="tab-stego" class="tab-content animate-in">
+                <div class="text-center mb-10">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
+                        Stego <span class="text-rose-600">Lab</span>
+                    </h1>
+                    <p class="text-zinc-500 max-w-lg mx-auto">
+                        Digital Steganography: Inject encrypted payloads and links directly into image pixels.
+                    </p>
+                </div>
+
+                <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 bg-zinc-900/30 p-4 rounded-2xl border border-zinc-800 backdrop-blur-sm">
+                    
+                    <!-- INJECT (Hide) -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
+                            <i data-lucide="file-plus" class="text-rose-500 w-5 h-5"></i>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Injection Protocol</h3>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">1. Carrier Source</label>
+                                <div class="flex gap-2">
+                                    <label class="flex-1 cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg p-2 text-xs text-center border border-zinc-700 transition-colors flex items-center justify-center gap-2">
+                                        <input type="file" id="stego-upload-inject" accept="image/*" class="hidden" onchange="document.getElementById('file-name-display').innerText = this.files[0]?.name || 'Upload Image'"/>
+                                        <i data-lucide="upload" class="w-3 h-3"></i> <span id="file-name-display">Upload Image</span>
+                                    </label>
+                                    <div class="text-zinc-600 text-xs flex items-center">OR</div>
+                                    <button type="button" onclick="generateCarrierImage()" class="flex-1 bg-indigo-900/50 hover:bg-indigo-900 text-indigo-200 rounded-lg p-2 text-xs border border-indigo-800 transition-colors flex items-center justify-center gap-2">
+                                        <i data-lucide="cpu" class="w-3 h-3"></i> Auto-Generate
+                                    </button>
+                                </div>
+                                <div id="generated-status" class="hidden text-[10px] text-indigo-400 mt-1 text-center">
+                                    <i data-lucide="check" class="w-3 h-3 inline"></i> Carrier Generated
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">2. Secret Payload</label>
+                                <textarea id="stego-text-inject" placeholder="Paste link(s) or code to hide..." class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-300 focus:border-rose-600 outline-none resize-none font-mono text-xs h-20"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">3. Passcode Lock (Optional)</label>
+                                <input type="text" id="stego-pass-inject" placeholder="Leave empty for no lock" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-900/20 border border-amber-900/50 p-2 rounded text-[10px] text-amber-500 flex gap-2 items-start mt-auto">
+                            <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                            <p>Warning: Share the result as a DOCUMENT. Image compression (like WhatsApp/Messenger) will destroy the hidden data.</p>
+                        </div>
+
+                        <button type="button" onclick="stegoInject()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="syringe" class="w-4 h-4"></i> Inject & Download
+                        </button>
+                    </div>
+
+                    <!-- EXTRACT (Reveal) -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-zinc-800 pb-2">
+                            <i data-lucide="scan-eye" class="text-emerald-500 w-5 h-5"></i>
+                            <h3 class="font-bold text-white uppercase tracking-wider text-sm">Batch Extraction Protocol</h3>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">1. Upload Carrier Image(s)</label>
+                            <!-- UPDATED: Added 'multiple' attribute -->
+                            <input type="file" id="stego-upload-extract" multiple accept="image/*" class="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 cursor-pointer"/>
+                            <div class="text-[10px] text-zinc-600 mt-1">Select multiple images to process them all at once.</div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">2. Decryption Passcode</label>
+                            <input type="text" id="stego-pass-extract" placeholder="Enter universal passcode (if images are locked)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-600 outline-none transition-colors">
+                            <div class="text-[10px] text-zinc-600 mt-1">Unprotected images will open even if passcode is wrong.</div>
+                        </div>
+
+                        <div class="flex-grow flex flex-col">
+                            <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">3. Analysis Result</label>
+                            <div id="stego-result-area" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-500 font-mono text-xs h-64 overflow-y-auto break-all flex flex-col gap-2 relative">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none" id="stego-empty-state">
+                                    Waiting for images...
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="stegoExtract()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 border border-zinc-700">
+                            <i data-lucide="download-cloud" class="w-4 h-4"></i> Extract Data
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </main>
 
     <!-- FOOTER -->
     <footer class="bg-black border-t border-zinc-900 py-12 mt-auto">
         <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between gap-8 mb-12">
+            <div class="flex flex-col md:flex-row justify-between gap-8 mb-8">
                 <div class="max-w-sm">
                     <div class="flex items-center gap-2 mb-4">
                         <i data-lucide="skull" class="text-rose-600 w-6 h-6"></i>
@@ -343,23 +424,46 @@
                         <li class="hover:text-rose-500 cursor-pointer">Cloud Extractor</li>
                         <li class="hover:text-rose-500 cursor-pointer">Link Obfuscator</li>
                         <li class="hover:text-rose-500 cursor-pointer">Payload Analyzer</li>
+                        <li class="hover:text-rose-500 cursor-pointer">Stego Lab</li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-zinc-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-600">
-                <p>© 2025 Link Postmortem. All rights reserved.</p>
-                <div class="flex gap-4">
-                    <span class="hover:text-white cursor-pointer">Privacy Protocol</span>
-                    <span class="hover:text-white cursor-pointer">Terms of Execution</span>
-                </div>
+            
+            <!-- Credits Section -->
+            <div class="border-t border-zinc-900 pt-8 flex flex-col items-center gap-2 text-center">
+                <p class="text-zinc-400 font-medium">Designed & Developed by <span class="text-rose-500 font-bold">MKD</span></p>
+                <p class="text-xs text-zinc-600 flex items-center gap-1">
+                    Made with <i data-lucide="heart" class="w-3 h-3 text-red-600 fill-current"></i> by Indian Developer
+                </p>
+                <p class="text-[10px] text-zinc-700 mt-2">© 2025 Link Postmortem. Secure Build.</p>
             </div>
         </div>
     </footer>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // --- ANTI-THEFT / ANTI-INSPECT MODULE ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            // Disable F12
+            if(e.keyCode == 123) return false;
+            // Disable Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J
+            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            // Disable Ctrl+U
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        };
+
+        // Global Error Handler
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error("Script Error: " + message);
+        };
+
         // --- 1. INITIALIZATION ---
-        lucide.createIcons();
+        try {
+            lucide.createIcons();
+        } catch(e) {
+            console.warn("Icons failed to load. Checking connection.");
+        }
 
         // --- 2. TABS LOGIC ---
         function switchTab(tabName) {
@@ -368,14 +472,18 @@
             
             const btnDownloader = document.getElementById('btn-nav-downloader');
             const btnCrypter = document.getElementById('btn-nav-crypter');
+            const btnStego = document.getElementById('btn-nav-stego');
             
-            if(tabName === 'downloader') {
-                btnDownloader.className = "px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg";
-                btnCrypter.className = "px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300";
-            } else {
-                btnCrypter.className = "px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg";
-                btnDownloader.className = "px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300";
-            }
+            const inactiveClass = "px-6 py-1.5 rounded-full text-sm font-medium transition-all text-zinc-500 hover:text-zinc-300";
+            const activeClass = "px-6 py-1.5 rounded-full text-sm font-medium transition-all bg-zinc-800 text-white shadow-lg";
+            
+            btnDownloader.className = inactiveClass;
+            btnCrypter.className = inactiveClass;
+            btnStego.className = inactiveClass;
+
+            if(tabName === 'downloader') btnDownloader.className = activeClass;
+            else if(tabName === 'crypter') btnCrypter.className = activeClass;
+            else if(tabName === 'stego') btnStego.className = activeClass;
         }
 
         function toggleMenu() {
@@ -393,7 +501,8 @@
                 const text = await navigator.clipboard.readText();
                 document.getElementById(id).value = text;
             } catch (err) {
-                console.error('Failed to read clipboard', err);
+                const userText = prompt("Paste your text here:");
+                if (userText) document.getElementById(id).value = userText;
             }
         }
 
@@ -485,7 +594,6 @@
             }
         }
 
-        // Password obfuscation helper
         function wrapWithPass(payload, pass) {
             let signature = btoa(pass).substring(0, 8);
             return PASS_MARKER + signature + "::" + complexEncrypt(payload); 
@@ -507,10 +615,10 @@
             const btnEncrypt = document.getElementById('mode-encrypt');
             const btnDecrypt = document.getElementById('mode-decrypt');
             const input = document.getElementById('crypto-input');
-            const actionBtn = document.getElementById('crypto-action-btn');
             const actionText = document.getElementById('action-text');
             const hint = document.getElementById('mode-hint');
             const settingsPanel = document.getElementById('crypto-settings');
+            const expiryContainer = document.getElementById('crypto-expiry-container');
 
             hiddenTargetUrls = [];
             resetCryptoResultUI();
@@ -521,34 +629,21 @@
                 input.placeholder = "Paste link(s) here. For multiple links, put each on a new line...";
                 actionText.innerText = "Encrypt Payload";
                 hint.innerText = "This string can only be decrypted by the Link Postmortem tool.";
-                // Show settings in encrypt mode
                 settingsPanel.classList.remove('hidden');
                 settingsPanel.classList.add('grid');
+                if(expiryContainer) expiryContainer.style.display = 'block';
+                document.getElementById('crypto-pass').placeholder = "Optional PIN";
             } else {
                 btnDecrypt.className = "p-1.5 rounded-md transition-all bg-zinc-700 text-white";
                 btnEncrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
                 input.placeholder = "Paste encrypted string...";
                 actionText.innerText = "Decrypt & Verify";
                 hint.innerText = "Decryption attempts to reconstruct the original link source.";
-                // Hide extra settings in decrypt mode (passcode input handled dynamically if needed, but simple UI hides it)
-                // Actually, keep passcode visible for input
-                settingsPanel.classList.remove('grid');
-                settingsPanel.classList.add('hidden');
-                // We show a simplified pass field only if needed, but for now lets keep the passcode field visible 
-                // actually better to hide lifespan in decrypt mode.
                 
-                // Let's modify the UI logic slightly: Hide the settings panel entirely in decrypt mode?
-                // No, we need passcode input for decryption. 
-                // Let's hide the Expiry select but keep Passcode input.
                 settingsPanel.classList.remove('hidden');
                 settingsPanel.classList.add('grid');
-                document.getElementById('crypto-expiry').parentElement.style.display = 'none';
+                if(expiryContainer) expiryContainer.style.display = 'none';
                 document.getElementById('crypto-pass').placeholder = "Enter passcode if required";
-            }
-            
-            if(mode === 'encrypt') {
-                 document.getElementById('crypto-expiry').parentElement.style.display = 'block';
-                 document.getElementById('crypto-pass').placeholder = "Leave empty for open access";
             }
         }
 
@@ -558,6 +653,8 @@
             document.getElementById('result-text').innerText = "";
             document.getElementById('result-launch').classList.add('hidden');
             document.getElementById('btn-copy').classList.add('hidden');
+            document.getElementById('btn-inject-quick').classList.add('hidden');
+            document.getElementById('btn-generate-quick').classList.add('hidden');
             document.getElementById('launch-buttons-container').innerHTML = ''; 
         }
 
@@ -571,21 +668,17 @@
             resetCryptoResultUI();
             
             if (currentMode === 'encrypt') {
-                // 1. Prepare Content
                 const lines = inputVal.split(/\r?\n/).filter(line => line.trim() !== '');
                 if (lines.length === 0) return;
                 let payload = lines.join(DELIMITER);
                 
-                // 1.5 Handle Expiration
                 if(expiryVal > 0) {
-                    const expiryTime = Date.now() + (expiryVal * 60 * 1000); // minutes to ms
+                    const expiryTime = Date.now() + (expiryVal * 60 * 1000); 
                     payload += TIME_MARKER + expiryTime;
                 }
 
-                // 2. Encrypt Content (Standard)
                 let finalOutput = complexEncrypt(payload);
 
-                // 3. Apply Password Wrapping if needed
                 if(passVal) {
                     finalOutput = wrapWithPass(payload, passVal); 
                 }
@@ -595,12 +688,12 @@
                 resText.innerText = finalOutput;
                 resText.classList.remove('hidden');
                 document.getElementById('btn-copy').classList.remove('hidden');
+                document.getElementById('btn-inject-quick').classList.remove('hidden');
+                document.getElementById('btn-generate-quick').classList.remove('hidden');
             } else {
-                // DECRYPT MODE
                 let decrypted = null;
                 document.getElementById('result-empty').classList.add('hidden');
 
-                // Check if Locked
                 if (inputVal.startsWith(PASS_MARKER)) {
                     if (!passVal) {
                         const resText = document.getElementById('result-text');
@@ -619,12 +712,10 @@
                     }
                     decrypted = unlockResult;
                 } else {
-                    // Standard Decrypt
                     decrypted = complexDecrypt(inputVal);
                 }
                 
                 if (decrypted) {
-                    // Check Expiration
                     if(decrypted.includes(TIME_MARKER)) {
                         const parts = decrypted.split(TIME_MARKER);
                         const content = parts[0];
@@ -637,17 +728,34 @@
                             resText.classList.add('text-red-500');
                             return;
                         }
-                        decrypted = content; // Continue with valid content
+                        decrypted = content; 
                     }
 
                     hiddenTargetUrls = decrypted.split(DELIMITER);
                     const container = document.getElementById('launch-buttons-container');
                     
                     hiddenTargetUrls.forEach((url, index) => {
+                        let safeUrl = url.trim();
+                        // Smart URL Sanitize
+                        if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
+                            safeUrl = 'https://' + safeUrl;
+                        }
+
                         const btn = document.createElement('button');
-                        btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center";
+                        btn.type = "button";
+                        btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
                         btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
-                        btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer');
+                        
+                        btn.onclick = () => {
+                            try {
+                                const newWindow = window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                                if (!newWindow) {
+                                    alert("Pop-up blocked. Please allow pop-ups for this site to launch the target.");
+                                }
+                            } catch (e) {
+                                alert("Failed to open link: " + safeUrl);
+                            }
+                        };
                         container.appendChild(btn);
                     });
                     
@@ -695,6 +803,358 @@
                 window.open(hiddenTargetUrls[0], '_blank', 'noopener,noreferrer');
             }
         }
+
+        // --- CRYPTER STEGO HANDLERS ---
+        function triggerCrypterStego() {
+            document.getElementById('crypter-stego-input').click();
+        }
+
+        function processCrypterStego(fileInput) {
+            const text = document.getElementById('result-text').innerText;
+            if (!fileInput.files[0] || !text) return;
+            processStegoInjection(fileInput.files[0], text);
+            fileInput.value = '';
+        }
+
+        async function quickGenerateStego() {
+            const text = document.getElementById('result-text').innerText;
+            if(!text) return;
+            
+            const btn = document.getElementById('btn-generate-quick');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span>Generating...</span>';
+            
+            try {
+                const blob = await generateNoiseCarrier();
+                processStegoInjection(blob, text);
+            } catch(e) {
+                alert("Generation failed");
+            }
+            btn.innerHTML = originalContent;
+            lucide.createIcons();
+        }
+
+        // --- SHARED STEGO LOGIC ---
+        function generateNoiseCarrier() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 800; // Increased size for cleaner data density
+            canvas.height = 800;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#09090b'; 
+            ctx.fillRect(0, 0, 800, 800);
+            
+            for(let i=0; i<60000; i++) {
+                const x = Math.random() * 800;
+                const y = Math.random() * 800;
+                const gray = Math.floor(Math.random() * 50) + 20; 
+                const size = Math.random() * 2 + 1;
+                ctx.fillStyle = `rgba(${gray},${gray},${gray}, 0.8)`;
+                ctx.fillRect(x, y, size, size);
+            }
+            
+            return new Promise(resolve => {
+                canvas.toBlob(blob => {
+                    resolve(blob);
+                });
+            });
+        }
+
+        function processStegoInjection(blob, textPayload) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imgData.data;
+                    
+                    const payload = textPayload + String.fromCharCode(0);
+                    const binary = [];
+                    for (let i = 0; i < payload.length; i++) {
+                        let bin = payload.charCodeAt(i).toString(2).padStart(8, '0');
+                        for(let j=0; j<8; j++) binary.push(parseInt(bin[j]));
+                    }
+
+                    if (binary.length > data.length / 4) {
+                        alert("Image is too small for this payload.");
+                        return;
+                    }
+
+                    let binIndex = 0;
+                    for (let i = 0; i < data.length; i += 4) {
+                        if (binIndex < binary.length) {
+                            for(let j=0; j<3; j++) { 
+                                if(binIndex < binary.length) {
+                                    data[i+j] = (data[i+j] & ~1) | binary[binIndex];
+                                    binIndex++;
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                    
+                    const link = document.createElement('a');
+                    link.download = 'coded_image.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(blob);
+        }
+
+        let generatedCarrierBlob = null;
+
+        async function generateCarrierImage() {
+            const statusDiv = document.getElementById('generated-status');
+            statusDiv.innerHTML = '<span class="animate-pulse">Generating noise pattern...</span>';
+            statusDiv.classList.remove('hidden');
+            
+            try {
+                generatedCarrierBlob = await generateNoiseCarrier();
+                statusDiv.innerHTML = '<i data-lucide="check" class="w-3 h-3 inline"></i> Carrier Generated & Ready';
+                lucide.createIcons();
+                document.getElementById('stego-upload-inject').value = '';
+                document.getElementById('file-name-display').innerText = "Using Generated Image";
+            } catch(e) {
+                statusDiv.innerText = "Generation failed.";
+                console.error(e);
+            }
+        }
+
+        // --- 5. STEGO LAB LOGIC ---
+        function stegoInject() {
+            const fileInput = document.getElementById('stego-upload-inject');
+            const textInput = document.getElementById('stego-text-inject').value.trim();
+            const passInput = document.getElementById('stego-pass-inject').value.trim();
+            
+            let sourceBlob = null;
+            if (fileInput.files[0]) {
+                sourceBlob = fileInput.files[0];
+            } else if (generatedCarrierBlob) {
+                sourceBlob = generatedCarrierBlob;
+            }
+
+            if (!sourceBlob || !textInput) {
+                alert("Please select/generate an image and enter payload text.");
+                return;
+            }
+
+            let finalPayload = textInput;
+            if(passInput) {
+                finalPayload = wrapWithPass(textInput, passInput);
+            }
+
+            processStegoInjection(sourceBlob, finalPayload);
+        }
+
+        // --- BATCH EXTRACTION LOGIC ---
+        async function stegoExtract() {
+            const fileInput = document.getElementById('stego-upload-extract');
+            const files = fileInput.files;
+            const passInput = document.getElementById('stego-pass-extract').value.trim();
+            const resultArea = document.getElementById('stego-result-area');
+            
+            if (files.length === 0) {
+                alert("Please select at least one image.");
+                return;
+            }
+
+            // Clear previous results
+            resultArea.innerHTML = '';
+            
+            // Iterate over all selected files
+            for(let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const cardId = `stego-res-${i}`;
+                
+                // Create result card shell
+                const card = document.createElement('div');
+                card.id = cardId;
+                card.className = "bg-black/50 p-3 rounded border-l-2 border-zinc-700 animate-in mb-2";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-zinc-300 truncate w-3/4">${file.name}</span>
+                        <i data-lucide="loader-2" class="w-3 h-3 text-zinc-500 animate-spin" id="${cardId}-icon"></i>
+                    </div>
+                    <div class="text-[10px] text-zinc-500 font-mono" id="${cardId}-status">Scanning...</div>
+                    <div id="${cardId}-content" class="mt-2 hidden"></div>
+                `;
+                resultArea.appendChild(card);
+                lucide.createIcons();
+
+                // Process individually
+                try {
+                    const text = await processSingleImage(file);
+                    handleDecryptedText(text, passInput, cardId);
+                } catch (e) {
+                    // Update card to show error (but don't stop loop)
+                    const statusDiv = document.getElementById(`${cardId}-status`);
+                    const icon = document.getElementById(`${cardId}-icon`);
+                    statusDiv.innerHTML = `<span class="text-red-900 bg-red-900/10 px-1 rounded">No payload found</span>`;
+                    icon.setAttribute('data-lucide', 'x-circle');
+                    icon.classList.remove('animate-spin');
+                    icon.classList.add('text-red-800');
+                    card.classList.replace('border-zinc-700', 'border-red-900');
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function processSingleImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            
+                            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imgData.data;
+                            
+                            let charBinary = "";
+                            let resultText = "";
+                            
+                            // Basic LSB extraction
+                            for (let i = 0; i < data.length; i += 4) {
+                                for(let j=0; j<3; j++) { 
+                                    charBinary += (data[i+j] & 1).toString();
+                                    
+                                    if (charBinary.length === 8) {
+                                        const charCode = parseInt(charBinary, 2);
+                                        if (charCode === 0) { 
+                                            resolve(resultText);
+                                            return;
+                                        }
+                                        resultText += String.fromCharCode(charCode);
+                                        charBinary = "";
+                                    }
+                                }
+                            }
+                            reject(new Error("No null terminator"));
+                        } catch(err) {
+                            reject(err);
+                        }
+                    };
+                    img.onerror = () => reject(new Error("Invalid image"));
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function handleDecryptedText(extractedText, password, cardId) {
+            const statusDiv = document.getElementById(`${cardId}-status`);
+            const contentDiv = document.getElementById(`${cardId}-content`);
+            const icon = document.getElementById(`${cardId}-icon`);
+            const card = document.getElementById(cardId);
+            
+            let finalText = extractedText;
+            let statusHtml = '<span class="text-emerald-500">Decrypted</span>';
+            let cardColor = 'border-emerald-600';
+
+            // Check if Locked
+            if (extractedText.startsWith(PASS_MARKER)) {
+                if (!password) {
+                    statusHtml = '<span class="text-amber-500 font-bold">LOCKED: Passcode Required</span>';
+                    cardColor = 'border-amber-600';
+                    icon.setAttribute('data-lucide', 'lock');
+                    card.classList.replace('border-zinc-700', cardColor);
+                    statusDiv.innerHTML = statusHtml;
+                    icon.classList.remove('animate-spin');
+                    icon.classList.add('text-amber-500');
+                    lucide.createIcons();
+                    return; // Stop processing for this file
+                }
+                const unlockResult = unwrapPass(extractedText, password);
+                if (unlockResult === "WRONG_PASS") {
+                    statusHtml = '<span class="text-red-500 font-bold">Wrong Passcode</span>';
+                    cardColor = 'border-red-600';
+                    icon.setAttribute('data-lucide', 'shield-alert');
+                    card.classList.replace('border-zinc-700', cardColor);
+                    statusDiv.innerHTML = statusHtml;
+                    icon.classList.remove('animate-spin');
+                    icon.classList.add('text-red-500');
+                    lucide.createIcons();
+                    return;
+                }
+                finalText = unlockResult;
+            }
+
+            // Check internal encryption/expiry
+            const autoDecrypt = complexDecrypt(finalText);
+            if (autoDecrypt) {
+                 if(autoDecrypt.includes(TIME_MARKER)) {
+                    const parts = autoDecrypt.split(TIME_MARKER);
+                    const content = parts[0];
+                    const expiry = parseInt(parts[1]);
+                    if(Date.now() > expiry) {
+                         statusHtml = '<span class="text-red-600 font-bold">EXPIRED / DELETED</span>';
+                         cardColor = 'border-red-900';
+                         finalText = null;
+                    } else {
+                        finalText = content;
+                    }
+                } else {
+                    finalText = autoDecrypt;
+                }
+            }
+
+            // Update UI
+            icon.classList.remove('animate-spin');
+            
+            if(finalText === null) {
+                // Expired case
+                icon.setAttribute('data-lucide', 'skull');
+                icon.classList.add('text-red-700');
+            } else {
+                // Success case
+                icon.setAttribute('data-lucide', 'check-circle');
+                icon.classList.add('text-emerald-500');
+                
+                // Render Content (Links or Text)
+                const isUrl = finalText.includes('http') || finalText.includes('www');
+                const multiLinks = finalText.split(DELIMITER);
+                contentDiv.classList.remove('hidden');
+
+                if (multiLinks.length > 1 || isUrl) {
+                    const validLinks = multiLinks.filter(l => l.includes('http') || l.includes('www'));
+                    if(validLinks.length > 0) {
+                        validLinks.forEach((url, idx) => {
+                            let safeUrl = url.trim();
+                            if (safeUrl && !safeUrl.match(/^https?:\/\//i)) safeUrl = 'https://' + safeUrl;
+                            const btn = document.createElement('button');
+                            btn.className = "w-full text-left text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline mb-1 truncate flex items-center gap-1";
+                            btn.innerHTML = `<i data-lucide="external-link" class="w-3 h-3"></i> ${safeUrl}`;
+                            btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                            contentDiv.appendChild(btn);
+                        });
+                    } else {
+                        contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all">${finalText}</p>`;
+                    }
+                } else {
+                    contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all bg-zinc-900 p-1 rounded">${finalText}</p>`;
+                }
+            }
+            
+            card.classList.replace('border-zinc-700', cardColor);
+            statusDiv.innerHTML = statusHtml;
+            lucide.createIcons();
+        }
     </script>
 </body>
-    </html>
+</html>
