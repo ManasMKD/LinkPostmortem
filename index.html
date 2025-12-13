@@ -3335,7 +3335,7 @@
                         messageContent = `<img src="${decrypted}" alt="GIF" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;">`;
                     }
                 } else if (isAudio && mediaType === 'audio') {
-                    messageContent = `<audio src="${decrypted}" controls class="w-full max-w-sm" style="outline: none;">
+                    messageContent = `<audio src="${decrypted}" controls class="w-full max-w-sm" style="outline: none;" preload="auto">
                         <p class="text-xs text-zinc-500">Your browser does not support audio playback.</p>
                     </audio>`;
                 } else {
@@ -3975,8 +3975,12 @@
         // ============================================
         let peerConnection = null;
         let localStream = null;
+        let remoteAudioElement = null;
         let callId = null;
         let callUnsubscribe = null;
+        let answerUnsubscribe = null;
+        let offerCandidatesUnsubscribe = null;
+        let answerCandidatesUnsubscribe = null;
         let isCaller = false;
         let callActive = false;
 
@@ -4005,6 +4009,11 @@
                 return;
             }
 
+            if (callActive) {
+                alert("A call is already active.");
+                return;
+            }
+
             try {
                 // Get user media
                 localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
@@ -4023,39 +4032,58 @@
                 
                 // Handle ICE candidates
                 peerConnection.onicecandidate = async (event) => {
-                    if (event.candidate) {
-                        await window.firebaseAddDoc(
-                            window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`),
-                            { candidate: event.candidate.candidate, sdpMLineIndex: event.candidate.sdpMLineIndex, sdpMid: event.candidate.sdpMid }
-                        );
+                    if (event.candidate && callId) {
+                        try {
+                            await window.firebaseAddDoc(
+                                window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`),
+                                { 
+                                    candidate: event.candidate.candidate, 
+                                    sdpMLineIndex: event.candidate.sdpMLineIndex, 
+                                    sdpMid: event.candidate.sdpMid 
+                                }
+                            );
+                        } catch (e) {
+                            console.error('Error adding ICE candidate:', e);
+                        }
                     }
                 };
                 
                 // Handle remote stream
                 peerConnection.ontrack = (event) => {
-                    const remoteAudio = new Audio();
-                    remoteAudio.srcObject = event.streams[0];
-                    remoteAudio.play();
+                    console.log('Received remote track');
+                    if (event.streams && event.streams[0]) {
+                        if (!remoteAudioElement) {
+                            remoteAudioElement = new Audio();
+                            remoteAudioElement.autoplay = true;
+                            remoteAudioElement.srcObject = event.streams[0];
+                            remoteAudioElement.play().catch(e => {
+                                console.error('Error playing remote audio:', e);
+                            });
+                        } else {
+                            remoteAudioElement.srcObject = event.streams[0];
+                        }
+                    }
                 };
                 
                 // Create offer
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 
-                // Save offer to Firestore
-                await window.firebaseAddDoc(
+                // Save offer to Firestore - create new document
+                const callDocRef = await window.firebaseAddDoc(
                     window.firebaseCollection(window.firebaseDB, 'calls'),
                     {
-                        callId: callId,
                         offer: {
                             type: offer.type,
                             sdp: offer.sdp
                         },
                         roomId: ghostRoomId,
                         caller: ghostHandle,
-                        timestamp: window.firebaseServerTimestamp()
+                        timestamp: window.firebaseServerTimestamp(),
+                        status: 'calling'
                     }
                 );
+                callId = callDocRef.id; // Use actual document ID
                 
                 // Listen for answer
                 listenForAnswer();
@@ -4081,10 +4109,20 @@
                 snapshot.docChanges().forEach(async (change) => {
                     if (change.type === 'added' && !isCaller && !callActive) {
                         const callData = change.doc.data();
-                        if (callData.roomId === ghostRoomId && callData.caller !== ghostHandle) {
+                        // Check if call is for this room, not from this user, and not ended
+                        if (callData.roomId === ghostRoomId && 
+                            callData.caller !== ghostHandle && 
+                            callData.status !== 'ended' &&
+                            !callData.ended) {
                             callId = change.doc.id;
-                            document.getElementById('caller-name-display').textContent = callData.caller || 'Unknown';
-                            document.getElementById('incoming-call-modal').classList.remove('hidden');
+                            const callerNameEl = document.getElementById('caller-name-display');
+                            if (callerNameEl) {
+                                callerNameEl.textContent = callData.caller || 'Unknown';
+                            }
+                            const incomingModal = document.getElementById('incoming-call-modal');
+                            if (incomingModal) {
+                                incomingModal.classList.remove('hidden');
+                            }
                         }
                     }
                 });
@@ -4094,6 +4132,11 @@
         // Accept incoming call
         async function acceptCall() {
             if (!callId || !window.firebaseDB) return;
+            
+            if (callActive) {
+                alert("A call is already active.");
+                return;
+            }
             
             try {
                 // Get user media
@@ -4109,27 +4152,49 @@
                 
                 // Handle ICE candidates
                 peerConnection.onicecandidate = async (event) => {
-                    if (event.candidate) {
-                        await window.firebaseAddDoc(
-                            window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`),
-                            { candidate: event.candidate.candidate, sdpMLineIndex: event.candidate.sdpMLineIndex, sdpMid: event.candidate.sdpMid }
-                        );
+                    if (event.candidate && callId) {
+                        try {
+                            await window.firebaseAddDoc(
+                                window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`),
+                                { 
+                                    candidate: event.candidate.candidate, 
+                                    sdpMLineIndex: event.candidate.sdpMLineIndex, 
+                                    sdpMid: event.candidate.sdpMid 
+                                }
+                            );
+                        } catch (e) {
+                            console.error('Error adding ICE candidate:', e);
+                        }
                     }
                 };
                 
                 // Handle remote stream
                 peerConnection.ontrack = (event) => {
-                    const remoteAudio = new Audio();
-                    remoteAudio.srcObject = event.streams[0];
-                    remoteAudio.play();
+                    console.log('Received remote track');
+                    if (event.streams && event.streams[0]) {
+                        if (!remoteAudioElement) {
+                            remoteAudioElement = new Audio();
+                            remoteAudioElement.autoplay = true;
+                            remoteAudioElement.srcObject = event.streams[0];
+                            remoteAudioElement.play().catch(e => {
+                                console.error('Error playing remote audio:', e);
+                            });
+                        } else {
+                            remoteAudioElement.srcObject = event.streams[0];
+                        }
+                    }
                 };
                 
                 // Get offer from Firestore
-                const callDocRef = window.firebaseDoc(window.firebaseDB, 'calls', callId);
-                const callDocSnap = await new Promise((resolve) => {
+                const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                const callDocSnap = await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Timeout waiting for call document')), 10000);
                     const unsubscribe = window.firebaseOnSnapshot(callDocRef, (doc) => {
-                        unsubscribe();
-                        resolve(doc);
+                        if (doc.exists()) {
+                            clearTimeout(timeout);
+                            unsubscribe();
+                            resolve(doc);
+                        }
                     });
                 });
                 
@@ -4145,15 +4210,13 @@
                 await peerConnection.setLocalDescription(answer);
                 
                 // Save answer to Firestore
-                await window.firebaseUpdateDoc(
-                    window.firebaseDoc(window.firebaseDB, 'calls', callId),
-                    {
-                        answer: {
-                            type: answer.type,
-                            sdp: answer.sdp
-                        }
-                    }
-                );
+                await window.firebaseUpdateDoc(callDocRef, {
+                    answer: {
+                        type: answer.type,
+                        sdp: answer.sdp
+                    },
+                    status: 'active'
+                });
                 
                 // Listen for ICE candidates from caller
                 listenForOfferCandidates();
@@ -4177,28 +4240,42 @@
 
         // Listen for answer (caller side)
         async function listenForAnswer() {
-            if (!callId) return;
+            if (!callId || !window.firebaseDB) return;
             
-            const callDocRef = window.firebaseDoc(window.firebaseDB, 'calls', callId);
-            const unsubscribe = window.firebaseOnSnapshot(callDocRef, async (doc) => {
-                const data = doc.data();
-                if (data?.answer && peerConnection.remoteDescription === null) {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                    listenForAnswerCandidates();
+            const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+            answerUnsubscribe = window.firebaseOnSnapshot(callDocRef, async (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
+                        try {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                            listenForAnswerCandidates();
+                        } catch (e) {
+                            console.error('Error setting remote description:', e);
+                        }
+                    }
                 }
             });
         }
 
         // Listen for answer candidates (caller side)
         async function listenForAnswerCandidates() {
-            if (!callId) return;
+            if (!callId || !window.firebaseDB) return;
             
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`);
-            window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
+            answerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added') {
-                        const candidate = change.doc.data();
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    if (change.type === 'added' && peerConnection) {
+                        try {
+                            const candidate = change.doc.data();
+                            await peerConnection.addIceCandidate(new RTCIceCandidate({
+                                candidate: candidate.candidate,
+                                sdpMLineIndex: candidate.sdpMLineIndex,
+                                sdpMid: candidate.sdpMid
+                            }));
+                        } catch (e) {
+                            console.error('Error adding ICE candidate:', e);
+                        }
                     }
                 });
             });
@@ -4206,14 +4283,22 @@
 
         // Listen for offer candidates (receiver side)
         async function listenForOfferCandidates() {
-            if (!callId) return;
+            if (!callId || !window.firebaseDB) return;
             
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`);
-            window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
+            offerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added') {
-                        const candidate = change.doc.data();
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    if (change.type === 'added' && peerConnection) {
+                        try {
+                            const candidate = change.doc.data();
+                            await peerConnection.addIceCandidate(new RTCIceCandidate({
+                                candidate: candidate.candidate,
+                                sdpMLineIndex: candidate.sdpMLineIndex,
+                                sdpMid: candidate.sdpMid
+                            }));
+                        } catch (e) {
+                            console.error('Error adding ICE candidate:', e);
+                        }
                     }
                 });
             });
@@ -4235,10 +4320,35 @@
         async function cleanupCall() {
             callActive = false;
             
+            // Unsubscribe from all listeners
+            if (callUnsubscribe) {
+                callUnsubscribe();
+                callUnsubscribe = null;
+            }
+            if (answerUnsubscribe) {
+                answerUnsubscribe();
+                answerUnsubscribe = null;
+            }
+            if (offerCandidatesUnsubscribe) {
+                offerCandidatesUnsubscribe();
+                offerCandidatesUnsubscribe = null;
+            }
+            if (answerCandidatesUnsubscribe) {
+                answerCandidatesUnsubscribe();
+                answerCandidatesUnsubscribe = null;
+            }
+            
             // Stop all tracks
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
+            }
+            
+            // Stop remote audio
+            if (remoteAudioElement) {
+                remoteAudioElement.pause();
+                remoteAudioElement.srcObject = null;
+                remoteAudioElement = null;
             }
             
             // Close peer connection
@@ -4247,22 +4357,27 @@
                 peerConnection = null;
             }
             
-            // Delete call document from Firestore
+            // Update call document in Firestore
             if (callId && window.firebaseDB) {
                 try {
-                    await window.firebaseUpdateDoc(
-                        window.firebaseDoc(window.firebaseDB, 'calls', callId),
-                        { ended: true, endedAt: window.firebaseServerTimestamp() }
-                    );
+                    const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                    await window.firebaseUpdateDoc(callDocRef, { 
+                        ended: true, 
+                        endedAt: window.firebaseServerTimestamp(),
+                        status: 'ended'
+                    });
                 } catch (e) {
                     console.warn('Could not update call document:', e);
                 }
             }
             
             // Hide UI
-            document.getElementById('active-call-interface').classList.add('hidden');
-            document.getElementById('incoming-call-modal').classList.add('hidden');
-            document.getElementById('ghost-call-btn').classList.remove('hidden');
+            const activeCallUI = document.getElementById('active-call-interface');
+            if (activeCallUI) activeCallUI.classList.add('hidden');
+            const incomingModal = document.getElementById('incoming-call-modal');
+            if (incomingModal) incomingModal.classList.add('hidden');
+            const callBtn = document.getElementById('ghost-call-btn');
+            if (callBtn) callBtn.classList.remove('hidden');
             
             callId = null;
             isCaller = false;
@@ -4281,4 +4396,4 @@
     </script>
 </body>
 </html>
-    </html>
+</html>
