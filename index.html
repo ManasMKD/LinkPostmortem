@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +10,12 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Matter.js Physics Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <!-- Matter.js Physics Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -111,6 +116,7 @@
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -169,6 +175,101 @@
 
         #ghost-modal {
             animation: fadeIn 0.3s ease-out;
+        }
+
+        /* HACKER TRAP - GLITCH MODE */
+        .system-breach {
+            animation: glitch 0.3s infinite, colorShift 0.5s infinite, shake 0.1s infinite;
+            filter: invert(1) hue-rotate(180deg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .system-breach::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,0,0.1) 2px, rgba(255,0,0,0.1) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,255,0,0.1) 2px, rgba(0,255,0,0.1) 4px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: noise 0.2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes colorShift {
+            0% { filter: invert(1) hue-rotate(0deg); }
+            25% { filter: invert(1) hue-rotate(90deg); }
+            50% { filter: invert(1) hue-rotate(180deg); }
+            75% { filter: invert(1) hue-rotate(270deg); }
+            100% { filter: invert(1) hue-rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes noise {
+            0% { opacity: 0.1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.1; }
+        }
+
+        /* SECURITY BREACH MODAL */
+        #security-breach-modal {
+            animation: fadeIn 0.2s ease-out;
+            z-index: 10000;
+        }
+
+        .breach-warning {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 3px solid #fca5a5;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* CHAOS MODE - PHYSICS */
+        .physics-active {
+            position: relative;
+        }
+
+        .physics-body {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* SONIC PULSE - AUDIO VISUALIZATION */
+        .pulse-active {
+            transition: box-shadow 0.1s ease-out, transform 0.1s ease-out;
+        }
+
+        /* GLITCH OVERLAY FOR PIRACY DETECTION */
+        .glitch-overlay {
+            display: none;
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 99999;
+            color: red;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding-top: 20%;
+            font-size: 2rem;
         }
     </style>
 </head>
@@ -241,7 +342,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500">
                                 <i data-lucide="link" class="w-5 h-5"></i>
                             </div>
-                            <input type="text" id="dl-input" placeholder="Paste YouTube URL or source link (Cloud or Direct)..." 
+                            <input type="text" id="dl-input" placeholder="Paste source link (Cloud or Direct)..." 
                                 class="w-full pl-12 pr-10 py-4 rounded-xl bg-black border border-zinc-800 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none transition-all text-white placeholder:text-zinc-600">
                             <button type="button" onclick="clearInput('dl-input')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-600 hover:text-zinc-300 transition-colors">
                                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -274,39 +375,6 @@
                     </div>
                 </div>
 
-                <!-- YouTube Video Result -->
-                <div id="yt-result" class="hidden max-w-5xl mx-auto mt-8 animate-in">
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                        <!-- Video Info -->
-                        <div id="yt-video-info" class="mb-6">
-                            <div class="flex flex-col md:flex-row gap-6 items-start">
-                                <div id="yt-thumbnail" class="flex-shrink-0 w-full md:w-80 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-800">
-                                    <img id="yt-thumbnail-img" src="" alt="Video thumbnail" class="w-full h-auto" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'320\' height=\'180\'%3E%3Crect fill=\'%2318181b\' width=\'320\' height=\'180\'/%3E%3Ctext fill=\'%23666\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\'%3EThumbnail%3C/text%3E%3C/svg%3E'">
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h3 id="yt-title" class="text-xl font-bold text-white mb-3 line-clamp-2">Loading video info...</h3>
-                                    <div id="yt-meta" class="flex flex-wrap gap-4 text-sm text-zinc-400 mb-4">
-                                        <span id="yt-duration" class="flex items-center gap-1"></span>
-                                        <span id="yt-channel" class="flex items-center gap-1"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Download Options -->
-                        <div id="yt-download-options" class="space-y-3">
-                            <div class="bg-black/50 border border-zinc-800 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="text-sm font-bold text-zinc-300 uppercase tracking-wider">Download Options</h4>
-                                    <span id="yt-loading" class="text-xs text-zinc-500 flex items-center gap-2">
-                                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...
-                                    </span>
-                                </div>
-                                <div id="yt-formats-list" class="space-y-2"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div id="dl-result" class="hidden max-w-5xl mx-auto mt-8 animate-in">
                     <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -595,6 +663,82 @@
         </div>
     </footer>
 
+    <!-- CAUTION BOARD -->
+    <div id="cautionBoard" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" style="pointer-events: auto;">
+        <div class="bg-amber-950/90 border-2 border-amber-600 rounded-2xl p-8 max-w-md text-center shadow-2xl" style="pointer-events: auto;">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-amber-600/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="alert-triangle" class="w-10 h-10 text-amber-500"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white mb-2 tracking-wider">⚠️ PROCEED WITH CAUTION ⚠️</h2>
+                <p class="text-amber-200 text-sm mb-2">This system is monitored.</p>
+                <p class="text-amber-300 text-xs">Unauthorized access is prohibited.</p>
+            </div>
+            <button type="button" id="proceedBtn" onclick="if(typeof dismissCautionBoard === 'function') { dismissCautionBoard(); } else { const cb = document.getElementById('cautionBoard'); if(cb) { cb.style.display = 'none'; cb.classList.add('hidden'); localStorage.setItem('caution_dismissed', 'true'); } } return false;" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-8 py-3 rounded-lg transition-colors shadow-lg cursor-pointer" style="pointer-events: auto; z-index: 101;">
+                I UNDERSTAND
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Immediate function definitions for modals
+        (function() {
+            function dismissCautionBoardNow() {
+                try {
+                    const cb = document.getElementById('cautionBoard');
+                    if (cb) {
+                        cb.style.display = 'none';
+                        cb.classList.add('hidden');
+                        localStorage.setItem('caution_dismissed', 'true');
+                        console.log('Caution board dismissed');
+                        return true;
+                    }
+                } catch(e) {
+                    console.error('Error:', e);
+                }
+                return false;
+            }
+            
+            function closeMemoryWarningNow() {
+                try {
+                    const mw = document.getElementById('memory-warning-modal');
+                    if (mw) {
+                        mw.style.display = 'none';
+                        mw.classList.add('hidden');
+                        console.log('Memory warning dismissed');
+                        return true;
+                    }
+                } catch(e) {
+                    console.error('Error:', e);
+                }
+                return false;
+            }
+            
+            // Make available immediately
+            window.dismissCautionBoard = dismissCautionBoardNow;
+            window.closeMemoryWarning = closeMemoryWarningNow;
+            
+            // Also set up buttons immediately if they exist
+            function setupButtons() {
+                const proceedBtn = document.getElementById('proceedBtn');
+                if (proceedBtn) {
+                    proceedBtn.onclick = function() { dismissCautionBoardNow(); return false; };
+                }
+                
+                const memoryBtn = document.getElementById('memory-warning-btn');
+                if (memoryBtn) {
+                    memoryBtn.onclick = function() { closeMemoryWarningNow(); return false; };
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupButtons);
+            } else {
+                setupButtons();
+            }
+        })();
+    </script>
+
     <!-- FLOATING GHOST COMMS BUTTON -->
     <button onclick="openGhostComms()" id="ghost-float-btn" 
         class="fixed bottom-6 right-6 w-16 h-16 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-2xl shadow-emerald-900/50 hover:shadow-emerald-900/70 transition-all flex items-center justify-center z-50 group">
@@ -743,10 +887,13 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
+                            <button onclick="initiateCall()" id="ghost-call-btn" class="hidden text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+                                <i data-lucide="phone" class="w-4 h-4"></i> Call
+                            </button>
                             <button onclick="copyRoomLink()" id="ghost-share-btn" class="hidden text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
                                 <i data-lucide="share-2" class="w-4 h-4"></i> Share Link
                             </button>
-                            <button onclick="disconnectGhost()" id="ghost-disconnect-btn" class="hidden text-xs text-rose-500 hover:text-rose-400 transition-colors">
+                            <button onclick="disconnectGhostWithCleanup()" id="ghost-disconnect-btn" class="hidden text-xs text-rose-500 hover:text-rose-400 transition-colors">
                                 <i data-lucide="log-out" class="w-4 h-4"></i> Leave
                             </button>
                             <div id="ghost-encryption-indicator" class="w-2 h-2 rounded-full bg-zinc-700"></div>
@@ -755,7 +902,7 @@
                     </div>
                     
                     <!-- Messages Container -->
-                    <div id="ghost-messages" class="flex-1 min-h-[400px] overflow-y-auto bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 space-y-3">
+                    <div id="ghost-messages" class="flex-1 min-h-[400px] overflow-y-auto bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 space-y-3" style="overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth;">
                         <div class="text-center text-zinc-600 text-sm py-12">
                             <div class="w-16 h-16 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-600/20">
                                 <i data-lucide="message-square-lock" class="w-8 h-8 text-emerald-500/50"></i>
@@ -781,6 +928,16 @@
                                 disabled>
                                 <i data-lucide="image" class="w-5 h-5"></i>
                             </button>
+                            
+                            <!-- Audio Record Button -->
+                            <button onclick="toggleAudioRecord()" id="ghost-audio-btn" 
+                                class="w-10 h-10 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-700 text-zinc-400 rounded-full transition-all flex items-center justify-center disabled:cursor-not-allowed"
+                                disabled>
+                                <i data-lucide="mic" class="w-5 h-5"></i>
+                            </button>
+                            
+                            <!-- Hidden file input for GIF upload -->
+                            <input type="file" id="ghost-gif-upload" accept="image/gif,video/*" style="display: none;" onchange="handleGifUpload(event)">
                             
                             <div class="flex-1 relative">
                                 <textarea id="ghost-message-input" placeholder="Type a message..." 
@@ -830,9 +987,15 @@
                         </div>
                         <div class="mt-2 flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <p class="text-[10px] text-zinc-700 font-mono">🔒 Encrypted with AES-GCM</p>
+                            <p class="text-[10px] text-zinc-700 font-mono">🔒 Encrypted with AES-GCM</p>
                                 <button onclick="downloadChatHistory()" id="ghost-download-btn" class="hidden text-[10px] text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1">
                                     <i data-lucide="download" class="w-3 h-3"></i> Download History
+                                </button>
+                                <button onclick="toggleChaosMode()" id="ghost-chaos-btn" class="hidden text-[10px] text-rose-500 hover:text-rose-400 transition-colors flex items-center gap-1">
+                                    <i data-lucide="zap" class="w-3 h-3"></i> Gravity
+                                </button>
+                                <button onclick="toggleSonicPulse()" id="ghost-sonic-btn" class="hidden text-[10px] text-cyan-500 hover:text-cyan-400 transition-colors flex items-center gap-1">
+                                    <i data-lucide="radio" class="w-3 h-3"></i> Visualize
                                 </button>
                             </div>
                             <p class="text-[10px] text-zinc-700" id="ghost-char-count">0</p>
@@ -843,15 +1006,913 @@
         </div>
     </div>
 
+    <!-- SECURITY BREACH MODAL -->
+    <div id="security-breach-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
+        <div class="breach-warning rounded-2xl p-8 max-w-md text-center shadow-2xl">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="shield-alert" class="w-10 h-10 text-white"></i>
+                </div>
+                <h2 class="text-3xl font-black text-white mb-2 tracking-wider">UNAUTHORIZED ACCESS</h2>
+                <h3 class="text-xl font-bold text-red-200 mb-4">SYSTEM COMPROMISED</h3>
+                <p class="text-red-100 text-sm">Intrusion detected. Security protocols activated.</p>
+            </div>
+            <button onclick="closeBreachModal()" class="bg-white text-red-600 font-bold px-8 py-3 rounded-lg hover:bg-red-50 transition-colors">
+                ACKNOWLEDGE
+            </button>
+        </div>
+    </div>
+
+    <!-- INCOMING CALL MODAL (The Uplink) -->
+    <div id="incoming-call-modal" class="hidden fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
+        <div class="bg-zinc-900 border-2 border-cyan-600 rounded-2xl p-8 max-w-md text-center shadow-2xl">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-cyan-600/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="phone-incoming" class="w-10 h-10 text-cyan-500"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white mb-2 tracking-wider">INCOMING TRANSMISSION...</h2>
+                <p class="text-cyan-300 text-sm" id="caller-name-display">Unknown Caller</p>
+            </div>
+            <div class="flex gap-4 justify-center">
+                <button onclick="acceptCall()" id="accept-call-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="phone" class="w-5 h-5"></i> ACCEPT
+                </button>
+                <button onclick="denyCall()" id="deny-call-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="phone-off" class="w-5 h-5"></i> DENY
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE CALL INTERFACE (The Uplink) -->
+    <div id="active-call-interface" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10000] bg-zinc-900 border-2 border-cyan-600 rounded-xl px-6 py-4 shadow-2xl">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-bold text-white">ACTIVE CALL</span>
+                <div id="call-visualizer" class="flex items-center gap-1 h-6">
+                    <div class="w-1 bg-cyan-500 rounded-full" style="height: 4px; animation: pulse 1s ease-in-out infinite;"></div>
+                    <div class="w-1 bg-cyan-500 rounded-full" style="height: 8px; animation: pulse 1s ease-in-out infinite 0.2s;"></div>
+                    <div class="w-1 bg-cyan-500 rounded-full" style="height: 12px; animation: pulse 1s ease-in-out infinite 0.4s;"></div>
+                    <div class="w-1 bg-cyan-500 rounded-full" style="height: 8px; animation: pulse 1s ease-in-out infinite 0.6s;"></div>
+                </div>
+            </div>
+            <button onclick="hangupCall()" id="hangup-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                <i data-lucide="phone-off" class="w-4 h-4"></i> HANG UP
+            </button>
+        </div>
+    </div>
+
+    <!-- MEMORY WARNING MODAL -->
+    <div id="memory-warning-modal" class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" style="pointer-events: auto;">
+        <div class="bg-zinc-900 border-2 border-amber-600 rounded-2xl p-8 max-w-md text-center shadow-2xl" style="pointer-events: auto;">
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-amber-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="eye" class="w-8 h-8 text-amber-500"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white mb-2">I REMEMBER YOU</h2>
+                <p class="text-zinc-300 mb-2">You tried to break me last time.</p>
+                <p class="text-amber-400 font-bold" id="memory-warning-text">Don't try it again.</p>
+            </div>
+            <button type="button" id="memory-warning-btn" onclick="if(typeof closeMemoryWarning === 'function') { closeMemoryWarning(); } else { const mw = document.getElementById('memory-warning-modal'); if(mw) { mw.style.display = 'none'; mw.classList.add('hidden'); } } return false;" class="bg-amber-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors cursor-pointer" style="pointer-events: auto; z-index: 10001;">
+                PROCEED WITH CAUTION
+            </button>
+        </div>
+    </div>
+
     <!-- LOGIC -->
     <script>
-        // --- ANTI-INSPECT ---
-        document.addEventListener('contextmenu', e => e.preventDefault());
+        // ============================================
+        // HACKER TRAP - DEFENSE & MEMORY SYSTEM
+        // ============================================
+        let breachDetected = false;
+        let breachAudio = null;
+
+        // Initialize breach audio
+        function initBreachAudio() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.warn('Audio not available');
+            }
+        }
+
+
+        // ============================================
+        // SELF-DEFENDING WEBSITE SYSTEM
+        // ============================================
+        // CONFIGURATION
+        const ALLOWED_DOMAIN = "localhost"; // REPLACE with your actual domain (e.g., "endeavour.com") when deploying
+        const SECURITY_KEY = "endeavour_security_log"; // The name in browser memory
+
+        // Caution Board Functions (Define early - MUST be available immediately)
+        function showCautionBoard() {
+            const cautionBoard = document.getElementById('cautionBoard');
+            if (cautionBoard) {
+                cautionBoard.classList.remove('hidden');
+                cautionBoard.style.display = 'flex';
+            }
+        }
+
+        function dismissCautionBoard() {
+            try {
+                const cautionBoard = document.getElementById('cautionBoard');
+                if (cautionBoard) {
+                    cautionBoard.classList.add('hidden');
+                    cautionBoard.style.display = 'none';
+                    // Store dismissal in localStorage
+                    localStorage.setItem('caution_dismissed', 'true');
+                    console.log('Caution board dismissed');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error dismissing caution board:', e);
+            }
+            return false;
+        }
+
+        // Make dismissCautionBoard globally available IMMEDIATELY
+        window.dismissCautionBoard = dismissCautionBoard;
+        window.showCautionBoard = showCautionBoard;
+        
+        // Also add as direct property for maximum compatibility
+        if (typeof window.dismissCautionBoard === 'undefined') {
+            window.dismissCautionBoard = dismissCautionBoard;
+        }
+
+        // Memory Warning Modal Functions
+        function closeMemoryWarning() {
+            try {
+                const modal = document.getElementById('memory-warning-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                    console.log('Memory warning dismissed');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error closing memory warning:', e);
+            }
+            return false;
+        }
+
+        // Make closeMemoryWarning globally available
+        window.closeMemoryWarning = closeMemoryWarning;
+
+        // 1. THE MEMORY CHECK (Runs immediately on load)
+        window.addEventListener('DOMContentLoaded', function() {
+            checkMemory();
+            checkDomainIntegrity();
+            
+            // Set up proceed button click handler (backup method)
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (proceedBtn) {
+                // Remove any existing handlers and add fresh one
+                proceedBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (typeof dismissCautionBoard === 'function') {
+                        dismissCautionBoard();
+                    } else {
+                        // Fallback if function not available
+                        const cb = document.getElementById('cautionBoard');
+                        if (cb) {
+                            cb.style.display = 'none';
+                            cb.classList.add('hidden');
+                            localStorage.setItem('caution_dismissed', 'true');
+                        }
+                    }
+                    return false;
+                };
+                
+                // Also add event listener as backup
+                proceedBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof dismissCautionBoard === 'function') {
+                        dismissCautionBoard();
+                    } else {
+                        const cb = document.getElementById('cautionBoard');
+                        if (cb) {
+                            cb.style.display = 'none';
+                            cb.classList.add('hidden');
+                            localStorage.setItem('caution_dismissed', 'true');
+                        }
+                    }
+                }, true);
+            }
+            
+            // Set up memory warning button click handler
+            const memoryWarningBtn = document.getElementById('memory-warning-btn');
+            if (memoryWarningBtn) {
+                memoryWarningBtn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (typeof closeMemoryWarning === 'function') {
+                        closeMemoryWarning();
+                    } else {
+                        // Fallback if function not available
+                        const mw = document.getElementById('memory-warning-modal');
+                        if (mw) {
+                            mw.style.display = 'none';
+                            mw.classList.add('hidden');
+                        }
+                    }
+                    return false;
+                };
+                
+                // Also add event listener as backup
+                memoryWarningBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof closeMemoryWarning === 'function') {
+                        closeMemoryWarning();
+                    } else {
+                        const mw = document.getElementById('memory-warning-modal');
+                        if (mw) {
+                            mw.style.display = 'none';
+                            mw.classList.add('hidden');
+                        }
+                    }
+                }, true);
+            }
+            
+            // Show caution board if not previously dismissed
+            const wasDismissed = localStorage.getItem('caution_dismissed');
+            if (!wasDismissed || wasDismissed !== 'true') {
+                setTimeout(() => {
+                    showCautionBoard();
+                }, 500);
+            } else {
+                // Ensure it's hidden if already dismissed
+                const cautionBoard = document.getElementById('cautionBoard');
+                if (cautionBoard) {
+                    cautionBoard.classList.add('hidden');
+                    cautionBoard.style.display = 'none';
+                }
+            }
+        });
+
+        // 2. THE DOMAIN LOCK (Anti-Cloning/Kill Switch)
+        function checkDomainIntegrity() {
+            const hostname = window.location.hostname;
+            
+            // Allow localhost and 127.0.0.1 for development
+            const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+            
+            // If we are NOT on the allowed domain AND not local, NUKE IT
+            if (!isLocal && !hostname.includes(ALLOWED_DOMAIN)) {
+                // KILL SWITCH - Wipe the page
+                document.body.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: red; display: flex; align-items: center; justify-content: center; font-family: 'Courier New', monospace; font-size: 2rem; text-align: center; z-index: 99999;">
+                        <div>
+                            <h1 style="color: red; margin-bottom: 20px;">⚠ PIRACY DETECTED ⚠</h1>
+                            <p style="color: #ff4444; font-size: 1.5rem;">SYSTEM SELF-DESTRUCTED.</p>
+                            <p style="color: #ff6666; font-size: 1rem; margin-top: 20px;">This website can only run on authorized domains.</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Optional: Crash the tab (Use with caution - commented out)
+                // while(true){}
+                
+                return false;
+            }
+        }
+
+        // 3. ENHANCED TRAP WITH REASON TRACKING & FIRESTORE LOGGING
+        async function triggerSecurityBreach(reason) {
+            // Prevent multiple rapid triggers (debounce)
+            const now = Date.now();
+            const lastTrigger = parseInt(localStorage.getItem('last_breach_trigger') || '0');
+            if (now - lastTrigger < 2000) return;
+            
+            localStorage.setItem('last_breach_trigger', now.toString());
+            
+            if (breachDetected) {
+                document.body.classList.add('system-breach');
+                setTimeout(() => {
+                    document.body.classList.remove('system-breach');
+                }, 3000);
+                return;
+            }
+            
+            breachDetected = true;
+            
+            // Store breach in memory with reason
+            localStorage.setItem(SECURITY_KEY, "breached");
+            localStorage.setItem('security_breach', 'level_1');
+            localStorage.setItem('breach_timestamp', Date.now().toString());
+            localStorage.setItem('breach_count', (parseInt(localStorage.getItem('breach_count') || '0') + 1).toString());
+            localStorage.setItem('breach_reason', reason);
+            
+            // Log to Firestore (The Sentinel - Evidence Collection)
+            try {
+                if (window.firebaseDB && window.firebaseAddDoc && window.firebaseCollection && window.firebaseServerTimestamp) {
+                    await window.firebaseAddDoc(
+                        window.firebaseCollection(window.firebaseDB, 'security_logs'),
+                        {
+                            ip: 'anonymous', // Could be enhanced with actual IP detection
+                            timestamp: window.firebaseServerTimestamp(),
+                            violationType: reason,
+                            userAgent: navigator.userAgent,
+                            url: window.location.href,
+                            breachCount: parseInt(localStorage.getItem('breach_count') || '0')
+                        }
+                    );
+                }
+            } catch (error) {
+                console.warn('Firestore logging failed:', error);
+            }
+            
+            // A. Visual Chaos
+            document.body.classList.add('system-breach');
+            
+            // B. Create/Show the Overlay Warning
+            let overlay = document.getElementById('glitch-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'glitch-overlay';
+                overlay.className = 'glitch-overlay';
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'block';
+            overlay.innerHTML = `
+                <h1 style="color: red; font-size: 3rem; margin-bottom: 20px;">⚠ INTRUSION DETECTED ⚠</h1>
+                <p style="color: #ff4444; font-size: 1.5rem; margin: 10px 0;">UNAUTHORIZED ACCESS DETECTED</p>
+                <p style="color: #ff6666; font-size: 1.2rem; margin: 10px 0;">${reason}</p>
+                <p style="color: #ff8888; font-size: 1rem; margin: 20px 0;">YOUR IP HAS BEEN LOGGED.</p>
+                <p style="color: #ffaaaa; font-size: 1rem;">DO NOT RESIST.</p>
+                <button onclick="closeGlitchOverlay()" style="margin-top: 30px; padding: 15px 30px; background: red; color: white; border: none; font-size: 1rem; cursor: pointer; border-radius: 5px;">ACKNOWLEDGE</button>
+            `;
+            
+            // C. Play Sound
+            initBreachAudio();
+            
+            // D. Console scare
+            console.clear();
+            console.log("%c STOP! ", "color: red; font-size: 50px; font-weight: bold;");
+            console.log("%c System has recorded your intrusion attempt.", "color: red; font-size: 16px;");
+            console.log("%c Reason: " + reason, "color: orange; font-size: 14px;");
+            
+            // Remove glitch after 5 seconds
+            setTimeout(() => {
+                document.body.classList.remove('system-breach');
+                breachDetected = false;
+            }, 5000);
+        }
+
+        function closeGlitchOverlay() {
+            const overlay = document.getElementById('glitch-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            document.body.classList.remove('system-breach');
+        }
+
+        // Update checkMemory to use new security key
+        function checkMemory() {
+            const breach = localStorage.getItem(SECURITY_KEY) || localStorage.getItem('security_breach');
+            const breachCount = parseInt(localStorage.getItem('breach_count') || '0');
+            
+            if (breach === 'level_1' || breach === 'breached') {
+                // Show memory warning with breach count
+                setTimeout(() => {
+                    const modal = document.getElementById('memory-warning-modal');
+                    if (modal) {
+                        const warningText = document.getElementById('memory-warning-text');
+                        if (warningText && breachCount > 1) {
+                            warningText.innerHTML = `You tried to break me ${breachCount} time${breachCount > 1 ? 's' : ''} before.<br><span class="text-amber-400 font-bold">DO NOT ATTEMPT TO BREACH ME AGAIN.</span>`;
+                        } else if (warningText) {
+                            warningText.innerHTML = 'DO NOT ATTEMPT TO BREACH ME AGAIN.';
+                        }
+                        modal.classList.remove('hidden');
+                    }
+                }, 1500);
+            }
+        }
+
+        // Right-click counter for breach detection
+        let rightClickCount = 0;
+        let rightClickResetTimeout = null;
+        const RIGHT_CLICK_THRESHOLD = 10;
+
+        // Update trigger functions to use new system
+        document.addEventListener('contextmenu', function(e) {
+            // Check if clicking on caution board - allow dismiss
+            const cautionBoard = document.getElementById('cautionBoard');
+            if (cautionBoard && !cautionBoard.classList.contains('hidden') && window.getComputedStyle(cautionBoard).display !== 'none') {
+                // Right-click on caution board dismisses it
+                if (typeof dismissCautionBoard === 'function') {
+                    dismissCautionBoard();
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            // Check if clicking on memory warning modal - allow dismiss
+            const memoryModal = document.getElementById('memory-warning-modal');
+            if (memoryModal && !memoryModal.classList.contains('hidden') && window.getComputedStyle(memoryModal).display !== 'none') {
+                // Right-click on memory modal dismisses it
+                if (typeof closeMemoryWarning === 'function') {
+                    closeMemoryWarning();
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            
+            // Increment right-click counter
+            rightClickCount++;
+            
+            // Reset counter after 3 seconds of no right-clicks
+            if (rightClickResetTimeout) {
+                clearTimeout(rightClickResetTimeout);
+            }
+            rightClickResetTimeout = setTimeout(() => {
+                rightClickCount = 0;
+            }, 3000);
+            
+            // Only trigger breach after 10 consecutive right-clicks
+            if (rightClickCount >= RIGHT_CLICK_THRESHOLD) {
+                triggerSecurityBreach("Right Click Attempt (10+ times)");
+                rightClickCount = 0; // Reset after triggering
+            }
+            
+            // Always prevent right-click menu (but don't trigger breach until threshold)
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }, true);
+
+        document.addEventListener('keydown', function(e) {
+            let shouldTrigger = false;
+            let reason = '';
+            
+            if(e.keyCode == 123 || e.key === 'F12') {
+                shouldTrigger = true;
+                reason = "F12 Inspector Tool";
+            }
+            else if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.key === 'I' || e.key === 'i')) {
+                shouldTrigger = true;
+                reason = "DevTools Shortcut (Ctrl+Shift+I)";
+            }
+            else if(e.ctrlKey && e.shiftKey && (e.keyCode == 'C'.charCodeAt(0) || e.key === 'C' || e.key === 'c')) {
+                shouldTrigger = true;
+                reason = "Inspect Element Shortcut (Ctrl+Shift+C)";
+            }
+            else if(e.ctrlKey && e.shiftKey && (e.keyCode == 'J'.charCodeAt(0) || e.key === 'J' || e.key === 'j')) {
+                shouldTrigger = true;
+                reason = "Console Shortcut (Ctrl+Shift+J)";
+            }
+            else if(e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.key === 'U' || e.key === 'u')) {
+                shouldTrigger = true;
+                reason = "Source Code Theft Attempt (Ctrl+U)";
+            }
+            else if(e.ctrlKey && e.shiftKey && (e.keyCode == 'K'.charCodeAt(0) || e.key === 'K' || e.key === 'k')) {
+                shouldTrigger = true;
+                reason = "Firefox Console Shortcut";
+            }
+            else if(e.ctrlKey && e.shiftKey && (e.keyCode == 'E'.charCodeAt(0) || e.key === 'E' || e.key === 'e')) {
+                shouldTrigger = true;
+                reason = "Chrome Network Panel";
+            }
+            
+            if (shouldTrigger) {
+                triggerSecurityBreach(reason);
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }, true);
+
+        // Backup prevention
         document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false;
-            if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if(e.keyCode == 123 || 
+               (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'K'.charCodeAt(0) || e.keyCode == 'E'.charCodeAt(0))) ||
+               (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                triggerSecurityBreach("Keyboard Shortcut Detected");
+                return false;
+            }
         };
+
+        // Detect DevTools by window size change
+        let lastWidth = window.innerWidth;
+        let lastHeight = window.innerHeight;
+        let devToolsOpen = false;
+        
+        setInterval(() => {
+            const currentWidth = window.innerWidth;
+            const currentHeight = window.innerHeight;
+            
+            if (Math.abs(currentWidth - lastWidth) > 150 || Math.abs(currentHeight - lastHeight) > 150) {
+                if (!devToolsOpen) {
+                    devToolsOpen = true;
+                    triggerSecurityBreach("DevTools Window Detected");
+                }
+            } else {
+                devToolsOpen = false;
+            }
+            
+            lastWidth = currentWidth;
+            lastHeight = currentHeight;
+        }, 300);
+
+        // Detect DevTools by console detection
+        let devtools = {open: false};
+        const element = new Image();
+        Object.defineProperty(element, 'id', {
+            get: function() {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    triggerSecurityBreach("Console Access Detected");
+                }
+            }
+        });
+        
+        setInterval(() => {
+            devtools.open = false;
+            console.log(element);
+            console.clear();
+        }, 1000);
+
+        // Detect if DevTools is already open on page load
+        function checkDevToolsOnLoad() {
+            const widthThreshold = window.outerWidth - window.innerWidth > 160;
+            const heightThreshold = window.outerHeight - window.innerHeight > 160;
+            
+            if (widthThreshold || heightThreshold) {
+                triggerSecurityBreach("DevTools Already Open");
+            }
+        }
+        
+        setTimeout(checkDevToolsOnLoad, 1000);
+
+        // ============================================
+        // CHAOS MODE - PHYSICS ENGINE
+        // ============================================
+        let chaosModeActive = false;
+        let engine = null;
+        let world = null;
+        let bodies = [];
+
+        function toggleChaosMode() {
+            if (chaosModeActive) {
+                disableChaosMode();
+                        } else {
+                enableChaosMode();
+            }
+        }
+
+        function enableChaosMode() {
+            if (typeof Matter === 'undefined') {
+                alert('Physics engine not loaded. Please refresh the page.');
+                return;
+            }
+
+            chaosModeActive = true;
+            const btn = document.getElementById('ghost-chaos-btn');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="zap-off" class="w-3 h-3"></i> Stop';
+                btn.classList.remove('text-rose-500');
+                btn.classList.add('text-red-600');
+                lucide.createIcons();
+            }
+
+            const messagesDiv = document.getElementById('ghost-messages');
+            if (!messagesDiv) return;
+
+            // Ensure messages container has proper positioning
+            messagesDiv.style.position = 'relative';
+            messagesDiv.style.overflow = 'hidden';
+
+            // Create Matter.js engine with gentle gravity
+            engine = Matter.Engine.create();
+            world = engine.world;
+            engine.world.gravity.y = 0.3; // Gentle gravity
+            engine.world.gravity.scale = 0.001;
+
+            // Get all message bubbles
+            const messageBubbles = messagesDiv.querySelectorAll('.message-bubble');
+            
+            bodies = [];
+            const messagesRect = messagesDiv.getBoundingClientRect();
+            
+            messageBubbles.forEach((bubble) => {
+                const rect = bubble.getBoundingClientRect();
+                const relativeX = rect.left - messagesRect.left + rect.width / 2;
+                const relativeY = rect.top - messagesRect.top + rect.height / 2;
+                
+                // Create physics body with gentle properties
+                const body = Matter.Bodies.rectangle(
+                    relativeX,
+                    relativeY,
+                    Math.min(rect.width, messagesDiv.offsetWidth - 20), // Constrain width
+                    rect.height,
+                    {
+                        restitution: 0.2, // Less bouncy
+                        friction: 0.8, // More friction
+                        frictionAir: 0.05, // Air resistance
+                        density: 0.0005, // Lighter
+                        chamfer: { radius: 8 } // Rounded corners
+                    }
+                );
+                
+                Matter.World.add(world, body);
+                
+                // Store original position and style
+                const originalLeft = rect.left - messagesRect.left;
+                const originalTop = rect.top - messagesRect.top;
+                
+                bodies.push({ 
+                    body, 
+                    element: bubble, 
+                    originalStyle: bubble.style.cssText,
+                    originalLeft,
+                    originalTop,
+                    maxWidth: Math.min(rect.width, messagesDiv.offsetWidth - 20)
+                });
+                
+                // Make element position absolute within container
+                bubble.style.position = 'absolute';
+                bubble.style.left = originalLeft + 'px';
+                bubble.style.top = originalTop + 'px';
+                bubble.style.width = Math.min(rect.width, messagesDiv.offsetWidth - 20) + 'px';
+                bubble.style.margin = '0';
+                bubble.style.transition = 'none';
+            });
+
+            // Add invisible boundaries within the messages container
+            const padding = 5;
+            const floor = Matter.Bodies.rectangle(
+                messagesDiv.offsetWidth / 2,
+                messagesDiv.offsetHeight - padding,
+                messagesDiv.offsetWidth,
+                10,
+                { isStatic: true, label: 'floor' }
+            );
+            
+            const leftWall = Matter.Bodies.rectangle(
+                padding,
+                messagesDiv.offsetHeight / 2,
+                10,
+                messagesDiv.offsetHeight,
+                { isStatic: true, label: 'leftWall' }
+            );
+            
+            const rightWall = Matter.Bodies.rectangle(
+                messagesDiv.offsetWidth - padding,
+                messagesDiv.offsetHeight / 2,
+                10,
+                messagesDiv.offsetHeight,
+                { isStatic: true, label: 'rightWall' }
+            );
+            
+            const ceiling = Matter.Bodies.rectangle(
+                messagesDiv.offsetWidth / 2,
+                padding,
+                messagesDiv.offsetWidth,
+                10,
+                { isStatic: true, label: 'ceiling' }
+            );
+            
+            Matter.World.add(world, [floor, leftWall, rightWall, ceiling]);
+
+            // Gentle mouse constraint for dragging
+            const mouse = Matter.Mouse.create(messagesDiv);
+            const mouseConstraint = Matter.MouseConstraint.create(engine, {
+                mouse: mouse,
+                constraint: {
+                    stiffness: 0.1,
+                    render: { visible: false }
+                }
+            });
+            Matter.World.add(world, mouseConstraint);
+
+            // Run engine with slower updates for smoother motion
+            const runner = Matter.Runner.create();
+            runner.delta = 1000 / 60; // 60 FPS
+            Matter.Runner.run(runner, engine);
+
+            // Sync physics to HTML with boundary constraints
+            function syncPhysics() {
+                if (!chaosModeActive) return;
+                
+                const currentRect = messagesDiv.getBoundingClientRect();
+                const maxX = messagesDiv.offsetWidth;
+                const maxY = messagesDiv.offsetHeight;
+                
+                bodies.forEach(({ body, element, maxWidth }) => {
+                    // Constrain position within boundaries
+                    let x = body.position.x - body.bounds.min.x;
+                    let y = body.position.y - body.bounds.min.y;
+                    
+                    // Keep within container bounds
+                    x = Math.max(5, Math.min(x, maxX - body.bounds.max.x + body.bounds.min.x - 5));
+                    y = Math.max(5, Math.min(y, maxY - body.bounds.max.y + body.bounds.min.y - 5));
+                    
+                    element.style.left = x + 'px';
+                    element.style.top = y + 'px';
+                    element.style.width = Math.min(maxWidth, maxX - x - 10) + 'px';
+                    
+                    // Gentle rotation
+                    const rotation = body.angle * (180 / Math.PI);
+                    element.style.transform = `rotate(${rotation * 0.3}deg)`; // Reduced rotation
+                });
+                
+                requestAnimationFrame(syncPhysics);
+            }
+            syncPhysics();
+        }
+
+        function disableChaosMode() {
+            chaosModeActive = false;
+            
+            const btn = document.getElementById('ghost-chaos-btn');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="zap" class="w-3 h-3"></i> Gravity';
+                btn.classList.add('text-rose-500');
+                btn.classList.remove('text-red-600');
+            lucide.createIcons();
+        }
+
+            // Restore original positions
+            bodies.forEach(({ element, originalStyle }) => {
+                element.style.cssText = originalStyle;
+            });
+
+            // Clean up
+            if (engine) {
+                Matter.Engine.clear(engine);
+                engine = null;
+            }
+            bodies = [];
+        }
+
+        // ============================================
+        // SONIC PULSE - AUDIO VISUALIZATION
+        // ============================================
+        let sonicPulseActive = false;
+        let sonicAudioContext = null;
+        let sonicAnalyser = null;
+        let sonicMicrophone = null;
+        let sonicAnimationFrame = null;
+
+        function toggleSonicPulse() {
+            if (sonicPulseActive) {
+                disableSonicPulse();
+            } else {
+                enableSonicPulse();
+            }
+        }
+
+        async function enableSonicPulse() {
+            try {
+                sonicPulseActive = true;
+                const btn = document.getElementById('ghost-sonic-btn');
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="radio-off" class="w-3 h-3"></i> Stop';
+                    btn.classList.remove('text-cyan-500');
+                    btn.classList.add('text-red-600');
+                    lucide.createIcons();
+                }
+
+                // Prevent chat container from shifting
+                const messagesDiv = document.getElementById('ghost-messages');
+                if (messagesDiv) {
+                    messagesDiv.style.position = 'relative';
+                    messagesDiv.style.overflow = 'hidden';
+                }
+
+                // Create audio context
+                sonicAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                sonicAnalyser = sonicAudioContext.createAnalyser();
+                sonicAnalyser.fftSize = 256;
+                sonicAnalyser.smoothingTimeConstant = 0.9; // Increased for smoother visualization
+
+                // Try to get microphone with echo cancellation and noise suppression
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+                    sonicMicrophone = sonicAudioContext.createMediaStreamSource(stream);
+                    sonicMicrophone.connect(sonicAnalyser);
+                } catch (e) {
+                    // If mic not available, use system audio simulation
+                    console.log('Microphone not available, using system audio simulation');
+                    simulateAudio();
+                }
+
+                visualizeAudio();
+            } catch (error) {
+                console.error('Error enabling sonic pulse:', error);
+                alert('Could not access audio. Please allow microphone permissions.');
+                disableSonicPulse();
+            }
+        }
+
+        function simulateAudio() {
+            // Simulate audio for demo
+            setInterval(() => {
+                if (!sonicPulseActive) return;
+                const randomVolume = Math.random() * 255;
+                updatePulseVisualization(randomVolume);
+            }, 100);
+        }
+
+        function visualizeAudio() {
+            if (!sonicPulseActive) return;
+
+            const dataArray = new Uint8Array(sonicAnalyser.frequencyBinCount);
+            sonicAnalyser.getByteFrequencyData(dataArray);
+
+            // Get average volume
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            updatePulseVisualization(average);
+
+            sonicAnimationFrame = requestAnimationFrame(visualizeAudio);
+        }
+
+        function updatePulseVisualization(volume) {
+            // Gentle pulse strength (much smaller values)
+            const pulseStrength = Math.min(volume * 0.3, 15); // Reduced from 50 to 15
+            const glowIntensity = Math.min(volume * 0.1, 8); // Gentle glow
+            
+            document.documentElement.style.setProperty('--pulse-strength', `${pulseStrength}px`);
+            
+            // Apply gentle glow to all message bubbles without shifting layout
+            const messageBubbles = document.querySelectorAll('.message-bubble');
+            messageBubbles.forEach(bubble => {
+                bubble.classList.add('pulse-active');
+                // Gentle cyan glow that doesn't affect layout
+                bubble.style.boxShadow = `0 0 ${glowIntensity}px rgba(8, 145, 178, 0.6), 0 0 ${glowIntensity * 2}px rgba(8, 145, 178, 0.3)`;
+                // Very subtle scale that won't shift other elements
+                bubble.style.transform = `scale(${1 + pulseStrength / 500})`; // Reduced from 200 to 500
+                bubble.style.transition = 'box-shadow 0.1s ease-out, transform 0.1s ease-out';
+                // Ensure transform origin is center to prevent shifting
+                bubble.style.transformOrigin = 'center center';
+            });
+        }
+
+        function disableSonicPulse() {
+            sonicPulseActive = false;
+            
+            const btn = document.getElementById('ghost-sonic-btn');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="radio" class="w-3 h-3"></i> Visualize';
+                btn.classList.add('text-cyan-500');
+                btn.classList.remove('text-red-600');
+                lucide.createIcons();
+        }
+
+            if (sonicAnimationFrame) {
+                cancelAnimationFrame(sonicAnimationFrame);
+                sonicAnimationFrame = null;
+            }
+
+            if (sonicMicrophone) {
+                sonicMicrophone.disconnect();
+                sonicMicrophone = null;
+            }
+
+            if (sonicAudioContext) {
+                sonicAudioContext.close();
+                sonicAudioContext = null;
+            }
+
+            // Reset styles
+            const messageBubbles = document.querySelectorAll('.message-bubble');
+            messageBubbles.forEach(bubble => {
+                bubble.classList.remove('pulse-active');
+                bubble.style.boxShadow = '';
+                bubble.style.transform = '';
+            });
+        }
+
 
         // --- INIT ---
         try { lucide.createIcons(); } catch(e){}
@@ -901,441 +1962,6 @@
         }
 
         // --- 1. DOWNLOADER LOGIC ---
-        function isYouTubeURL(url) {
-            const patterns = [
-                /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/,
-                /youtube\.com\/watch\?v=([^"&?\/\s]{11})/,
-                /youtu\.be\/([^"&?\/\s]{11})/
-            ];
-            return patterns.some(pattern => pattern.test(url));
-        }
-
-        function extractVideoID(url) {
-            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            return match ? match[1] : null;
-        }
-
-        async function fetchYouTubeVideoInfo(videoId) {
-            try {
-                const apiUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error('Failed to fetch video info');
-                const data = await response.json();
-                return {
-                    title: data.title,
-                    thumbnail: data.thumbnail_url,
-                    author: data.author_name
-                };
-            } catch (e) {
-                console.error('Error fetching video info:', e);
-                return {
-                    title: 'YouTube Video',
-                    thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-                    author: 'Unknown'
-                };
-            }
-        }
-
-        async function getYouTubeDownloadLinks(videoId) {
-            try {
-                const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                
-                // Return available formats - we'll use Cobalt API to get download links
-                return {
-                    success: true,
-                    formats: [
-                        { quality: 'max', type: 'Video', ext: 'mp4', label: 'Maximum Quality (Best Available)', videoId: videoId },
-                        { quality: '1080', type: 'Video', ext: 'mp4', label: '1080p MP4 (HD)', videoId: videoId },
-                        { quality: '720', type: 'Video', ext: 'mp4', label: '720p MP4 (HD)', videoId: videoId },
-                        { quality: '480', type: 'Video', ext: 'mp4', label: '480p MP4 (SD)', videoId: videoId },
-                        { quality: '360', type: 'Video', ext: 'mp4', label: '360p MP4 (SD)', videoId: videoId },
-                        { quality: 'Audio', type: 'Audio', ext: 'mp3', label: 'MP3 Audio (Best Quality)', videoId: videoId }
-                    ],
-                    videoUrl: videoUrl
-                };
-            } catch (e) {
-                console.error('Error fetching download links:', e);
-                return { success: false, error: e.message };
-            }
-        }
-
-        // Backend proxy URL - UPDATE THIS with your deployed backend URL
-        // If you deploy the backend-proxy.js, set this to your backend URL
-        // Example: 'http://localhost:3000' for local testing
-        // Example: 'https://your-backend.herokuapp.com' for production
-        const BACKEND_PROXY_URL = null; // Set this if you deploy the backend
-        
-        // YouTube Downloader API - using CORS-enabled services with backend fallback
-        async function Cobalt(videoUrl, audioOnly = false, quality = 'max') {
-            // Method 0: Try backend proxy first (if configured)
-            if (BACKEND_PROXY_URL) {
-                try {
-                    const response = await fetch(`${BACKEND_PROXY_URL}/api/youtube-download`, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            url: videoUrl,
-                            vQuality: quality,
-                            isAudioOnly: audioOnly
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data?.url) {
-                            return data.url;
-                        }
-                        if (data?.status === 'error') {
-                            throw new Error(data.text || 'Backend API error');
-                        }
-                    }
-                } catch (error) {
-                    console.log('Backend proxy failed, trying direct APIs:', error);
-                }
-            }
-            const videoId = extractVideoID(videoUrl) || videoUrl.split('v=')[1]?.split('&')[0];
-            
-            // Method 1: Try yt-dlp API (CORS-enabled)
-            try {
-                const ytdlpApi = `https://yt-dlp-api.herokuapp.com/api/info?url=${encodeURIComponent(videoUrl)}`;
-                const response = await fetch(ytdlpApi, { 
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.formats && data.formats.length > 0) {
-                        let selectedFormat;
-                        
-                        if (audioOnly) {
-                            // Get best audio format
-                            selectedFormat = data.formats
-                                .filter(f => f.acodec && f.acodec !== 'none' && !f.vcodec)
-                                .sort((a, b) => (b.abr || 0) - (a.abr || 0))[0];
-                        } else {
-                            // Get video format based on quality
-                            const qualityMap = {
-                                'max': 9999,
-                                '1080': 1080,
-                                '720': 720,
-                                '480': 480,
-                                '360': 360
-                            };
-                            const targetHeight = qualityMap[quality] || 720;
-                            
-                            selectedFormat = data.formats
-                                .filter(f => f.vcodec && f.vcodec !== 'none')
-                                .sort((a, b) => {
-                                    const aDiff = Math.abs((a.height || 0) - targetHeight);
-                                    const bDiff = Math.abs((b.height || 0) - targetHeight);
-                                    return aDiff - bDiff;
-                                })[0];
-                        }
-                        
-                        if (selectedFormat?.url) {
-                            return selectedFormat.url;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.log('yt-dlp API failed:', error);
-            }
-            
-            // Method 2: Try loader.to API (CORS-enabled alternative)
-            try {
-                const format = audioOnly ? 'mp3' : 'mp4';
-                const loaderApi = `https://loader.to/ajax/download.php?format=${format}&url=${encodeURIComponent(videoUrl)}`;
-                
-                const response = await fetch(loaderApi, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success' && data.downloadUrl) {
-                        return data.downloadUrl;
-                    }
-                }
-            } catch (error) {
-                console.log('loader.to API failed:', error);
-            }
-            
-            // Method 3: Try Cobalt API with CORS proxy
-            try {
-                const cobaltData = {
-                    url: encodeURI(videoUrl),
-                    vQuality: quality,
-                    filenamePattern: 'basic',
-                    isAudioOnly: audioOnly,
-                    disableMetadata: true,
-                };
-                
-                // Use a CORS proxy that supports POST
-                const proxyUrl = `https://api.allorigins.win/post?url=${encodeURIComponent('https://api.cobalt.tools/api/json')}`;
-                
-                const response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(cobaltData)
-                    })
-                });
-
-                if (response.ok) {
-                    const proxyData = await response.json();
-                    const data = JSON.parse(proxyData.contents);
-                    
-                    if (data?.url) {
-                        return data.url;
-                    }
-                    if (data?.status === 'error') {
-                        throw new Error(data.text || 'Cobalt API error');
-                    }
-                }
-            } catch (error) {
-                console.log('Cobalt with proxy failed:', error);
-            }
-            
-            // Method 4: Try alternative yt-dlp service
-            try {
-                const altApi = `https://www.youtubeinmp3.com/fetch/?format=JSON&video=${encodeURIComponent(videoUrl)}`;
-                const response = await fetch(altApi, { mode: 'cors' });
-                
-                if (response.ok && audioOnly) {
-                    const data = await response.json();
-                    if (data.link) {
-                        return data.link;
-                    }
-                }
-            } catch (error) {
-                console.log('Alternative API failed:', error);
-            }
-            
-            // If all methods fail
-            throw new Error('All download methods failed. The APIs may be temporarily unavailable or blocked. Please try again later.');
-        }
-
-        async function handleYouTubeDownload(videoId) {
-            const ytResult = document.getElementById('yt-result');
-            const ytLoading = document.getElementById('yt-loading');
-            const formatsList = document.getElementById('yt-formats-list');
-            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-            
-            ytResult.classList.remove('hidden');
-            document.getElementById('dl-error').classList.add('hidden');
-            document.getElementById('media-result').classList.add('hidden');
-            document.getElementById('dl-result').classList.add('hidden');
-            
-            ytLoading.classList.remove('hidden');
-            formatsList.innerHTML = '';
-            
-            // Fetch video info
-            const videoInfo = await fetchYouTubeVideoInfo(videoId);
-            document.getElementById('yt-title').textContent = videoInfo.title;
-            document.getElementById('yt-thumbnail-img').src = videoInfo.thumbnail;
-            document.getElementById('yt-channel').innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> ${videoInfo.author}`;
-            
-            // Get download formats
-            const downloadData = await getYouTubeDownloadLinks(videoId);
-            
-            if (downloadData.success && downloadData.formats) {
-                formatsList.innerHTML = '';
-                
-                downloadData.formats.forEach((format, index) => {
-                    const formatCard = document.createElement('div');
-                    formatCard.className = 'bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 hover:bg-zinc-800 transition-colors';
-                    
-                    const isAudio = format.type === 'Audio';
-                    const iconType = isAudio ? 'music' : 'video';
-                    const qualityColor = format.quality.includes('1080') || format.quality === 'Best' ? 'text-emerald-400' : 
-                                       format.quality.includes('720') ? 'text-blue-400' :
-                                       format.quality.includes('480') || format.quality.includes('360') ? 'text-yellow-400' : 'text-rose-400';
-                    
-                    formatCard.innerHTML = `
-                        <div class="flex items-center gap-4 flex-1 min-w-0">
-                            <div class="w-12 h-12 bg-rose-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i data-lucide="${iconType}" class="w-6 h-6 text-rose-500"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-sm font-semibold text-white mb-1">${format.label}</div>
-                                <div class="text-xs ${qualityColor} font-medium">${format.quality === 'max' ? 'Best Available' : format.quality} Quality • ${format.ext.toUpperCase()}</div>
-                            </div>
-                        </div>
-                        <button onclick="downloadYouTubeVideo('${videoId}', '${format.quality}', '${format.ext}', '${format.type}')" 
-                           class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg hover:shadow-rose-600/50 flex-shrink-0">
-                            <i data-lucide="download" class="w-4 h-4"></i> Download
-                        </button>
-                    `;
-                    formatsList.appendChild(formatCard);
-                });
-                
-            } else {
-                formatsList.innerHTML = `
-                    <div class="text-center py-8">
-                        <i data-lucide="alert-circle" class="w-12 h-12 text-rose-500 mx-auto mb-3"></i>
-                        <p class="text-zinc-400 mb-4">Unable to fetch download options. Please try again.</p>
-                        <button onclick="handleYouTubeDownload('${videoId}')" 
-                           class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Retry
-                        </button>
-                    </div>
-                `;
-            }
-            
-            ytLoading.classList.add('hidden');
-            lucide.createIcons();
-        }
-
-        async function downloadYouTubeVideo(videoId, quality, ext, type) {
-            const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-            const isAudioOnly = type === 'Audio';
-            const vQuality = isAudioOnly ? 'max' : (quality === 'max' ? 'max' : quality);
-            
-            // Show loading state
-            const loadingToast = document.createElement('div');
-            loadingToast.id = 'yt-download-toast';
-            loadingToast.className = 'fixed top-20 right-4 bg-zinc-900 border border-zinc-800 rounded-lg p-4 shadow-xl z-50 flex items-center gap-3 min-w-[280px]';
-            loadingToast.innerHTML = `
-                <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-rose-500"></i>
-                <div class="flex-1">
-                    <div class="text-white text-sm font-semibold">Processing Download</div>
-                    <div class="text-zinc-400 text-xs">Getting ${quality} ${ext.toUpperCase()} link from Cobalt API...</div>
-                </div>
-            `;
-            document.body.appendChild(loadingToast);
-            lucide.createIcons();
-            
-            try {
-                // Use Cobalt API (same as the userscript)
-                const downloadUrl = await Cobalt(videoUrl, isAudioOnly, vQuality);
-                
-                // Update toast to show success
-                loadingToast.innerHTML = `
-                    <i data-lucide="check" class="w-5 h-5 text-emerald-500"></i>
-                    <div class="flex-1">
-                        <div class="text-white text-sm font-semibold">Download Ready!</div>
-                        <div class="text-zinc-400 text-xs">Starting download...</div>
-                    </div>
-                `;
-                lucide.createIcons();
-                
-                // Start download directly - no redirect needed!
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = `youtube_${videoId}_${quality}.${ext}`;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Show success message
-                setTimeout(() => {
-                    loadingToast.innerHTML = `
-                        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
-                        <div class="flex-1">
-                            <div class="text-white text-sm font-semibold">Download Started!</div>
-                            <div class="text-zinc-400 text-xs">Check your downloads folder</div>
-                        </div>
-                    `;
-                    lucide.createIcons();
-                    setTimeout(() => loadingToast.remove(), 3000);
-                }, 500);
-                
-            } catch (error) {
-                console.error('Cobalt API error:', error);
-                
-                // Extract error message
-                let errorMessage = 'Unknown error occurred';
-                if (error?.message) {
-                    errorMessage = error.message;
-                } else if (error?.text) {
-                    errorMessage = error.text;
-                } else if (typeof error === 'string') {
-                    errorMessage = error;
-                }
-                
-                // Show detailed error message
-                loadingToast.innerHTML = `
-                    <i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>
-                    <div class="flex-1">
-                        <div class="text-white text-sm font-semibold">Download Failed</div>
-                        <div class="text-zinc-400 text-xs break-words">${errorMessage.length > 60 ? errorMessage.substring(0, 60) + '...' : errorMessage}</div>
-                    </div>
-                `;
-                lucide.createIcons();
-                
-                // Add retry and alternative options
-                setTimeout(() => {
-                    const buttonContainer = document.createElement('div');
-                    buttonContainer.className = 'flex flex-col gap-2 mt-3';
-                    
-                    const retryBtn = document.createElement('button');
-                    retryBtn.className = 'bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded text-xs font-semibold transition-colors';
-                    retryBtn.textContent = 'Retry Download';
-                    retryBtn.onclick = () => {
-                        loadingToast.remove();
-                        downloadYouTubeVideo(videoId, quality, ext, type);
-                    };
-                    
-                    const altBtn = document.createElement('button');
-                    altBtn.className = 'bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded text-xs font-semibold transition-colors';
-                    altBtn.textContent = 'Try Different Quality';
-                    altBtn.onclick = () => {
-                        loadingToast.remove();
-                        // Try with max quality
-                        downloadYouTubeVideo(videoId, 'max', ext, type);
-                    };
-                    
-                    buttonContainer.appendChild(retryBtn);
-                    buttonContainer.appendChild(altBtn);
-                    loadingToast.appendChild(buttonContainer);
-                }, 1000);
-                
-                // Log full error for debugging
-                console.error('Full error details:', {
-                    error: error,
-                    videoId: videoId,
-                    quality: quality,
-                    type: type,
-                    audioOnly: isAudioOnly
-                });
-                
-                // Show helpful message if it's a CORS error
-                if (errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch')) {
-                    const infoDiv = document.createElement('div');
-                    infoDiv.className = 'mt-3 p-3 bg-zinc-800/50 border border-zinc-700 rounded text-xs text-zinc-400';
-                    infoDiv.innerHTML = `
-                        <strong class="text-yellow-400 block mb-1">Why this happens:</strong>
-                        <p>The Cobalt API blocks direct browser requests due to CORS restrictions. 
-                        To fix this, you need a backend server that proxies the API requests.</p>
-                    `;
-                    loadingToast.appendChild(infoDiv);
-                }
-            }
-        }
-
         function handleDownload(e) {
             e.preventDefault();
             const url = document.getElementById('dl-input').value.trim();
@@ -1350,26 +1976,6 @@
             document.getElementById('dl-error').classList.add('hidden');
             document.getElementById('media-result').classList.add('hidden');
             document.getElementById('dl-result').classList.add('hidden');
-            document.getElementById('yt-result').classList.add('hidden');
-
-            // Check if it's a YouTube URL
-            if (isYouTubeURL(url)) {
-                const videoId = extractVideoID(url);
-                if (videoId) {
-                    btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i> Processing`;
-                    lucide.createIcons();
-                    handleYouTubeDownload(videoId).then(() => {
-                        btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Extract`;
-                        lucide.createIcons();
-                    }).catch(() => {
-                        btn.innerHTML = `<i data-lucide="download" class="w-5 h-5"></i> Extract`;
-                        document.getElementById('dl-error').classList.remove('hidden');
-                        document.getElementById('dl-error-text').innerText = "Failed to process YouTube video. Please try again.";
-                        lucide.createIcons();
-                    });
-                    return;
-                }
-            }
 
             const isMedia = /\.(mp4|m3u8|mkv|avi|mov|webm|flv)(\?|$)/i.test(url);
             
@@ -1588,26 +2194,26 @@
                             return trimmed && isUrl(trimmed);
                         });
                         
-                        const container = document.getElementById('launch-buttons-container');
-                        container.innerHTML = '';
-                        
-                        hiddenTargetUrls.forEach((url, index) => {
-                            let safeUrl = url.trim();
-                            if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
-                                safeUrl = 'https://' + safeUrl;
-                            }
+                    const container = document.getElementById('launch-buttons-container');
+                    container.innerHTML = '';
+                    
+                    hiddenTargetUrls.forEach((url, index) => {
+                        let safeUrl = url.trim();
+                        if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
+                            safeUrl = 'https://' + safeUrl;
+                        }
 
-                            const btn = document.createElement('button');
-                            btn.type = "button";
-                            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
-                            btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
-                            btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
-                            container.appendChild(btn);
-                        });
-                        
-                        lucide.createIcons();
-                        document.getElementById('result-launch').classList.remove('hidden');
-                        resultBox.innerText = decrypted;
+                        const btn = document.createElement('button');
+                        btn.type = "button";
+                        btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
+                        btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
+                        btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                        container.appendChild(btn);
+                    });
+                    
+                    lucide.createIcons();
+                    document.getElementById('result-launch').classList.remove('hidden');
+                    resultBox.innerText = decrypted;
                     } else {
                         // Plain text - display directly
                         document.getElementById('result-launch').classList.add('hidden');
@@ -1911,9 +2517,9 @@
                     } else {
                         contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all" style="unicode-bidi: plaintext;">${finalText}</p>`;
                     }
-                    } else {
+                } else {
                         contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all bg-zinc-900 p-1 rounded" style="unicode-bidi: plaintext;">${finalText}</p>`;
-                    }
+                }
             }
             card.classList.replace('border-zinc-700', cardColor);
             statusDiv.innerHTML = statusHtml;
@@ -2625,17 +3231,24 @@
                 document.getElementById('ghost-message-input').disabled = false;
                 document.getElementById('ghost-send-btn').disabled = false;
                 document.getElementById('ghost-emoji-btn').disabled = false;
+                document.getElementById('ghost-audio-btn').disabled = false;
                 
                 // Enable download button if feature is enabled
                 if (ghostRoomSettings.enableDownload) {
                     document.getElementById('ghost-download-btn').classList.remove('hidden');
                 }
                 
-                // Enable GIF button if feature is enabled
-                if (ghostRoomSettings.enableGifs) {
-                    document.getElementById('ghost-gif-btn').classList.remove('hidden');
-                    document.getElementById('ghost-gif-btn').disabled = false;
-                }
+                // Enable GIF button (always show, allows file upload even if feature disabled)
+                document.getElementById('ghost-gif-btn').classList.remove('hidden');
+                document.getElementById('ghost-gif-btn').disabled = false;
+                
+                // Always show Chaos and Sonic buttons (they're fun features)
+                document.getElementById('ghost-chaos-btn').classList.remove('hidden');
+                document.getElementById('ghost-sonic-btn').classList.remove('hidden');
+                
+                // Enable call button and listen for incoming calls
+                document.getElementById('ghost-call-btn').classList.remove('hidden');
+                listenForIncomingCalls();
                 
                 // Initialize emoji picker
                 initializeEmojiPicker();
@@ -2725,6 +3338,7 @@
                 const dateStr = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const isToday = new Date().toDateString() === timestamp.toDateString();
                 const isGif = msgData.isGif || false;
+                const isAudio = msgData.isAudio || false;
                 const mediaType = msgData.mediaType || 'gif';
                 
                 const userColor = getUserColor(senderName);
@@ -2749,6 +3363,10 @@
                     } else {
                         messageContent = `<img src="${decrypted}" alt="GIF" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;">`;
                     }
+                } else if (isAudio && mediaType === 'audio') {
+                    messageContent = `<audio src="${decrypted}" controls class="w-full max-w-sm" style="outline: none;">
+                        <p class="text-xs text-zinc-500">Your browser does not support audio playback.</p>
+                    </audio>`;
                 } else {
                     messageContent = `<p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>`;
                 }
@@ -2838,15 +3456,18 @@
                 const encrypted = await encryptMessage(message, ghostCryptoKey);
 
                 const messageData = {
-                    sender: ghostHandle,
-                    timestamp: window.firebaseServerTimestamp(),
-                    iv: encrypted.iv,
-                    data: encrypted.data
+                        sender: ghostHandle,
+                        timestamp: window.firebaseServerTimestamp(),
+                        iv: encrypted.iv,
+                        data: encrypted.data
                 };
 
                 if (isGif) {
                     messageData.isGif = true;
                     messageData.mediaType = mediaType; // 'gif' or 'video'
+                } else if (mediaType === 'audio') {
+                    messageData.isAudio = true;
+                    messageData.mediaType = 'audio';
                 }
 
                 await window.firebaseAddDoc(
@@ -2855,7 +3476,7 @@
                 );
 
                 if (!messageText) {
-                    messageInput.value = '';
+                messageInput.value = '';
                     messageInput.style.height = 'auto';
                 }
                 const charCount = document.getElementById('ghost-char-count');
@@ -3083,7 +3704,8 @@
 
         function toggleGifPicker() {
             if (!ghostRoomSettings.enableGifs) {
-                alert("GIF feature is not enabled in this room.");
+                // If GIFs not enabled, allow file upload
+                document.getElementById('ghost-gif-upload').click();
                 return;
             }
             
@@ -3102,12 +3724,128 @@
         }
 
         function sendGif(gifUrl, videoUrl = null) {
-            if (!ghostRoomSettings.enableGifs) return;
+            if (!ghostRoomSettings.enableGifs) {
+                alert("GIF feature is not enabled in this room.");
+                return;
+            }
             
             // Prefer video URL if available, otherwise use GIF
             const mediaUrl = videoUrl || gifUrl;
             sendGhostMessage(mediaUrl, true, videoUrl ? 'video' : 'gif');
             document.getElementById('ghost-gif-picker').classList.add('hidden');
+        }
+
+        // Handle GIF file upload
+        function handleGifUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!ghostRoomSettings.enableGifs) {
+                alert("GIF feature is not enabled in this room.");
+                return;
+            }
+            
+            // Check if it's a GIF or video
+            const isVideo = file.type.startsWith('video/');
+            const isGif = file.type === 'image/gif';
+            
+            if (!isGif && !isVideo) {
+                alert("Please select a GIF or video file.");
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                sendGhostMessage(dataUrl, true, isVideo ? 'video' : 'gif');
+            };
+            reader.readAsDataURL(file);
+            
+            // Reset input
+            event.target.value = '';
+        }
+
+        // Audio Recording Functions
+        let audioRecorder = null;
+        let audioStream = null;
+        let isRecording = false;
+
+        async function toggleAudioRecord() {
+            if (isRecording) {
+                stopAudioRecording();
+            } else {
+                await startAudioRecording();
+            }
+        }
+
+        async function startAudioRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                });
+                
+                audioStream = stream;
+                audioRecorder = new MediaRecorder(stream);
+                const chunks = [];
+                
+                audioRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        chunks.push(e.data);
+                    }
+                };
+                
+                audioRecorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        const audioDataUrl = e.target.result;
+                        // Send as base64 encoded audio
+                        await sendGhostMessage(audioDataUrl, false, 'audio');
+                    };
+                    reader.readAsDataURL(blob);
+                    
+                    // Stop all tracks
+                    if (audioStream) {
+                        audioStream.getTracks().forEach(track => track.stop());
+                        audioStream = null;
+                    }
+                };
+                
+                audioRecorder.start();
+                isRecording = true;
+                
+                // Update button
+                const btn = document.getElementById('ghost-audio-btn');
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="mic-off" class="w-5 h-5"></i>';
+                    btn.classList.add('bg-red-600', 'animate-pulse');
+                    btn.classList.remove('bg-zinc-800');
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                alert('Could not access microphone. Please allow permissions.');
+            }
+        }
+
+        function stopAudioRecording() {
+            if (audioRecorder && isRecording) {
+                audioRecorder.stop();
+                isRecording = false;
+                
+                // Update button
+                const btn = document.getElementById('ghost-audio-btn');
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="mic" class="w-5 h-5"></i>';
+                    btn.classList.remove('bg-red-600', 'animate-pulse');
+                    btn.classList.add('bg-zinc-800');
+                    lucide.createIcons();
+                }
+            }
         }
 
         // Setup GIF search
@@ -3216,6 +3954,18 @@
         document.addEventListener('DOMContentLoaded', () => {
             const messageInput = document.getElementById('ghost-message-input');
             const charCount = document.getElementById('ghost-char-count');
+            const messagesDiv = document.getElementById('ghost-messages');
+            
+            // Fix scroll in messages area
+            if (messagesDiv) {
+                messagesDiv.addEventListener('wheel', (e) => {
+                    e.stopPropagation();
+                }, { passive: true });
+                
+                // Ensure scroll works
+                messagesDiv.style.overflowY = 'auto';
+                messagesDiv.style.overflowX = 'hidden';
+            }
             
             if (messageInput) {
                 // Auto-resize textarea
@@ -3240,10 +3990,324 @@
                         }
                     }
                 });
+                
+                // Windows Emoji Picker Support (Win + . or Win + ;)
+                messageInput.addEventListener('keydown', (e) => {
+                    // Note: Windows emoji picker is handled by OS, but we ensure the input accepts it
+                    // The OS will insert emojis directly into the input field
+                });
             }
         });
+
+        // ============================================
+        // THE UPLINK - WebRTC Voice Calling Module
+        // ============================================
+        let peerConnection = null;
+        let localStream = null;
+        let callId = null;
+        let callUnsubscribe = null;
+        let isCaller = false;
+        let callActive = false;
+
+        // ICE Servers Configuration (Google's free STUN servers)
+        const iceServers = {
+            iceServers: [
+                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+            ],
+            iceCandidatePoolSize: 10
+        };
+
+        // Media Constraints with Echo Cancellation and Noise Suppression
+        const mediaConstraints = {
+            video: false,
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        };
+
+        // Initialize call
+        async function initiateCall() {
+            if (!ghostRoomId) {
+                alert("Please join a room first.");
+                return;
+            }
+
+            try {
+                // Get user media
+                localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+                
+                // Create call ID
+                callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                isCaller = true;
+                
+                // Create peer connection
+                peerConnection = new RTCPeerConnection(iceServers);
+                
+                // Add local tracks
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+                
+                // Handle ICE candidates
+                peerConnection.onicecandidate = async (event) => {
+                    if (event.candidate) {
+                        await window.firebaseAddDoc(
+                            window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`),
+                            { candidate: event.candidate.candidate, sdpMLineIndex: event.candidate.sdpMLineIndex, sdpMid: event.candidate.sdpMid }
+                        );
+                    }
+                };
+                
+                // Handle remote stream
+                peerConnection.ontrack = (event) => {
+                    const remoteAudio = new Audio();
+                    remoteAudio.srcObject = event.streams[0];
+                    remoteAudio.play();
+                };
+                
+                // Create offer
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                // Save offer to Firestore
+                await window.firebaseAddDoc(
+                    window.firebaseCollection(window.firebaseDB, 'calls'),
+                    {
+                        callId: callId,
+                        offer: {
+                            type: offer.type,
+                            sdp: offer.sdp
+                        },
+                        roomId: ghostRoomId,
+                        caller: ghostHandle,
+                        timestamp: window.firebaseServerTimestamp()
+                    }
+                );
+                
+                // Listen for answer
+                listenForAnswer();
+                
+                // Show active call interface
+                showActiveCall();
+                
+            } catch (error) {
+                console.error('Call initiation error:', error);
+                alert('Could not start call. Please allow microphone permissions.');
+                cleanupCall();
+            }
+        }
+
+        // Listen for incoming calls
+        function listenForIncomingCalls() {
+            if (!ghostRoomId || !window.firebaseDB) return;
+            
+            const callsRef = window.firebaseCollection(window.firebaseDB, 'calls');
+            const q = window.firebaseQuery(callsRef, window.firebaseOrderBy('timestamp', 'desc'));
+            
+            callUnsubscribe = window.firebaseOnSnapshot(q, async (snapshot) => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === 'added' && !isCaller && !callActive) {
+                        const callData = change.doc.data();
+                        if (callData.roomId === ghostRoomId && callData.caller !== ghostHandle) {
+                            callId = change.doc.id;
+                            document.getElementById('caller-name-display').textContent = callData.caller || 'Unknown';
+                            document.getElementById('incoming-call-modal').classList.remove('hidden');
+                        }
+                    }
+                });
+            });
+        }
+
+        // Accept incoming call
+        async function acceptCall() {
+            if (!callId || !window.firebaseDB) return;
+            
+            try {
+                // Get user media
+                localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+                
+                // Create peer connection
+                peerConnection = new RTCPeerConnection(iceServers);
+                
+                // Add local tracks
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+                
+                // Handle ICE candidates
+                peerConnection.onicecandidate = async (event) => {
+                    if (event.candidate) {
+                        await window.firebaseAddDoc(
+                            window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`),
+                            { candidate: event.candidate.candidate, sdpMLineIndex: event.candidate.sdpMLineIndex, sdpMid: event.candidate.sdpMid }
+                        );
+                    }
+                };
+                
+                // Handle remote stream
+                peerConnection.ontrack = (event) => {
+                    const remoteAudio = new Audio();
+                    remoteAudio.srcObject = event.streams[0];
+                    remoteAudio.play();
+                };
+                
+                // Get offer from Firestore
+                const callDocRef = window.firebaseDoc(window.firebaseDB, 'calls', callId);
+                const callDocSnap = await new Promise((resolve) => {
+                    const unsubscribe = window.firebaseOnSnapshot(callDocRef, (doc) => {
+                        unsubscribe();
+                        resolve(doc);
+                    });
+                });
+                
+                const offerData = callDocSnap.data();
+                if (!offerData || !offerData.offer) {
+                    throw new Error('Offer not found');
+                }
+                
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
+                
+                // Create answer
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                // Save answer to Firestore
+                await window.firebaseUpdateDoc(
+                    window.firebaseDoc(window.firebaseDB, 'calls', callId),
+                    {
+                        answer: {
+                            type: answer.type,
+                            sdp: answer.sdp
+                        }
+                    }
+                );
+                
+                // Listen for ICE candidates from caller
+                listenForOfferCandidates();
+                
+                // Hide incoming modal, show active call
+                document.getElementById('incoming-call-modal').classList.add('hidden');
+                showActiveCall();
+                
+            } catch (error) {
+                console.error('Accept call error:', error);
+                alert('Could not accept call. Please allow microphone permissions.');
+                cleanupCall();
+            }
+        }
+
+        // Deny call
+        function denyCall() {
+            document.getElementById('incoming-call-modal').classList.add('hidden');
+            callId = null;
+        }
+
+        // Listen for answer (caller side)
+        async function listenForAnswer() {
+            if (!callId) return;
+            
+            const callDocRef = window.firebaseDoc(window.firebaseDB, 'calls', callId);
+            const unsubscribe = window.firebaseOnSnapshot(callDocRef, async (doc) => {
+                const data = doc.data();
+                if (data?.answer && peerConnection.remoteDescription === null) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    listenForAnswerCandidates();
+                }
+            });
+        }
+
+        // Listen for answer candidates (caller side)
+        async function listenForAnswerCandidates() {
+            if (!callId) return;
+            
+            const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`);
+            window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === 'added') {
+                        const candidate = change.doc.data();
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                });
+            });
+        }
+
+        // Listen for offer candidates (receiver side)
+        async function listenForOfferCandidates() {
+            if (!callId) return;
+            
+            const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`);
+            window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
+                snapshot.docChanges().forEach(async (change) => {
+                    if (change.type === 'added') {
+                        const candidate = change.doc.data();
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                });
+            });
+        }
+
+        // Show active call interface
+        function showActiveCall() {
+            callActive = true;
+            document.getElementById('active-call-interface').classList.remove('hidden');
+            document.getElementById('ghost-call-btn').classList.add('hidden');
+        }
+
+        // Hangup call
+        async function hangupCall() {
+            cleanupCall();
+        }
+
+        // Cleanup call resources
+        async function cleanupCall() {
+            callActive = false;
+            
+            // Stop all tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Close peer connection
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            // Delete call document from Firestore
+            if (callId && window.firebaseDB) {
+                try {
+                    await window.firebaseUpdateDoc(
+                        window.firebaseDoc(window.firebaseDB, 'calls', callId),
+                        { ended: true, endedAt: window.firebaseServerTimestamp() }
+                    );
+                } catch (e) {
+                    console.warn('Could not update call document:', e);
+                }
+            }
+            
+            // Hide UI
+            document.getElementById('active-call-interface').classList.add('hidden');
+            document.getElementById('incoming-call-modal').classList.add('hidden');
+            document.getElementById('ghost-call-btn').classList.remove('hidden');
+            
+            callId = null;
+            isCaller = false;
+        }
+
+        // Cleanup on disconnect
+        function disconnectGhostWithCleanup() {
+            cleanupCall();
+            if (callUnsubscribe) {
+                callUnsubscribe();
+                callUnsubscribe = null;
+            }
+            disconnectGhost();
+        }
 
     </script>
 </body>
 </html>
-    </html>
+</html>
