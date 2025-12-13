@@ -14,7 +14,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // ============================================
         // FIREBASE CONFIGURATION
@@ -42,6 +42,9 @@
             window.firebaseOrderBy = orderBy;
             window.firebaseOnSnapshot = onSnapshot;
             window.firebaseServerTimestamp = serverTimestamp;
+            window.firebaseDoc = doc;
+            window.firebaseUpdateDoc = updateDoc;
+            window.firebaseGetDocs = getDocs;
             
             console.log('Firebase initialized successfully');
         } catch (error) {
@@ -227,7 +230,7 @@
                         Extract <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-600">Remote</span> Content
                     </h1>
                     <p class="text-zinc-500 max-w-xl mx-auto text-lg">
-                        Download YouTube videos or bypass restrictions and access your files directly via our secure tunnel.
+                        Bypass restrictions and access your files directly via our secure tunnel.
                     </p>
                 </div>
 
@@ -655,6 +658,35 @@
                                         class="w-full bg-black border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white focus:border-emerald-600 outline-none">
                                 </div>
                                 
+                                <!-- Room Settings -->
+                                <div class="bg-zinc-950/50 border border-zinc-800 rounded-lg p-4 space-y-3">
+                                    <label class="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Room Features</label>
+                                    
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox" id="ghost-enable-download" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-600 focus:ring-emerald-600 focus:ring-offset-0 focus:ring-2">
+                                        <div class="flex-1">
+                                            <div class="text-sm text-zinc-300 group-hover:text-white transition-colors">Download Chat History</div>
+                                            <div class="text-[10px] text-zinc-600">Allow participants to download chat history</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox" id="ghost-enable-delete" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-600 focus:ring-emerald-600 focus:ring-offset-0 focus:ring-2">
+                                        <div class="flex-1">
+                                            <div class="text-sm text-zinc-300 group-hover:text-white transition-colors">Delete Messages</div>
+                                            <div class="text-[10px] text-zinc-600">Allow participants to delete their messages (for everyone)</div>
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox" id="ghost-enable-gifs" class="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-600 focus:ring-emerald-600 focus:ring-offset-0 focus:ring-2">
+                                        <div class="flex-1">
+                                            <div class="text-sm text-zinc-300 group-hover:text-white transition-colors">Send GIFs</div>
+                                            <div class="text-[10px] text-zinc-600">Allow participants to send GIF images</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                
                                 <button onclick="createGhostRoom()" id="ghost-create-btn" 
                                     class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20">
                                     <i data-lucide="shield-check" class="w-4 h-4"></i> Create & Join Room
@@ -735,10 +767,39 @@
                     <!-- Input Area -->
                     <div class="bg-zinc-950 border-t border-zinc-800 p-4">
                         <div class="flex items-end gap-2">
+                            <!-- Emoji Picker Button -->
+                            <button onclick="toggleEmojiPicker()" id="ghost-emoji-btn" 
+                                class="w-10 h-10 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-700 text-zinc-400 rounded-full transition-all flex items-center justify-center disabled:cursor-not-allowed"
+                                disabled>
+                                <i data-lucide="smile" class="w-5 h-5"></i>
+                            </button>
+                            
+                            <!-- GIF Picker Button (if enabled) -->
+                            <button onclick="toggleGifPicker()" id="ghost-gif-btn" 
+                                class="hidden w-10 h-10 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-700 text-zinc-400 rounded-full transition-all flex items-center justify-center disabled:cursor-not-allowed"
+                                disabled>
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </button>
+                            
                             <div class="flex-1 relative">
                                 <textarea id="ghost-message-input" placeholder="Type a message..." 
-                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 pr-12 text-sm text-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none resize-none min-h-[48px] max-h-[120px] placeholder:text-zinc-600"
+                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 pl-12 pr-12 text-sm text-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none resize-none min-h-[48px] max-h-[400px] placeholder:text-zinc-600"
                                     disabled rows="1"></textarea>
+                                
+                                <!-- Emoji Picker Popup -->
+                                <div id="ghost-emoji-picker" class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 w-80 max-h-64 overflow-y-auto z-50">
+                                    <div class="grid grid-cols-8 gap-2" id="ghost-emoji-grid"></div>
+                                </div>
+                                
+                                <!-- GIF Picker Popup -->
+                                <div id="ghost-gif-picker" class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 w-96 max-h-96 overflow-y-auto z-50">
+                                    <div class="mb-3">
+                                        <input type="text" id="ghost-gif-search" placeholder="Search GIFs..." 
+                                            class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-600">
+                                    </div>
+                                    <div id="ghost-gif-results" class="grid grid-cols-2 gap-2"></div>
+                                </div>
+                                
                                 <button onclick="sendGhostMessage()" id="ghost-send-btn" 
                                     class="absolute right-2 bottom-2 w-8 h-8 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-full transition-all flex items-center justify-center shadow-lg hover:shadow-emerald-600/50 disabled:shadow-none"
                                     disabled>
@@ -747,8 +808,13 @@
                             </div>
                         </div>
                         <div class="mt-2 flex items-center justify-between">
-                            <p class="text-[10px] text-zinc-700 font-mono">🔒 Encrypted with AES-GCM</p>
-                            <p class="text-[10px] text-zinc-700" id="ghost-char-count">0/1000</p>
+                            <div class="flex items-center gap-3">
+                                <p class="text-[10px] text-zinc-700 font-mono">🔒 Encrypted with AES-GCM</p>
+                                <button onclick="downloadChatHistory()" id="ghost-download-btn" class="hidden text-[10px] text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                                    <i data-lucide="download" class="w-3 h-3"></i> Download History
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-zinc-700" id="ghost-char-count">0</p>
                         </div>
                     </div>
                 </div>
@@ -2142,6 +2208,11 @@
         let ghostUnsubscribe = null;
         let ghostRoomPassword = null;
         let isRoomCreator = false;
+        let ghostRoomSettings = {
+            enableDownload: false,
+            enableDelete: false,
+            enableGifs: false
+        };
 
         // MASTER KEYS (100 Lifetime Keys)
         const MASTER_KEYS = [
@@ -2336,8 +2407,15 @@
                 return;
             }
 
+            // Get room settings
+            ghostRoomSettings = {
+                enableDownload: document.getElementById('ghost-enable-download').checked,
+                enableDelete: document.getElementById('ghost-enable-delete').checked,
+                enableGifs: document.getElementById('ghost-enable-gifs').checked
+            };
+
             isRoomCreator = true;
-            await joinGhostRoomDirect(roomId, password, handle);
+            await joinGhostRoomDirect(roomId, password, handle, true);
         }
 
         // PBKDF2 Key Derivation (100,000 iterations) - Global scope
@@ -2415,7 +2493,7 @@
         }
 
         // Direct join function
-        async function joinGhostRoomDirect(roomId, password, handle) {
+        async function joinGhostRoomDirect(roomId, password, handle, isCreating = false) {
 
             // Wait a moment for Firebase to initialize if needed
             if (!window.firebaseDB) {
@@ -2433,6 +2511,40 @@
                 ghostHandle = handle;
                 ghostRoomPassword = password;
 
+                // Save or load room settings
+                if (isCreating) {
+                    // Save room settings when creating
+                    const roomSettingsRef = window.firebaseCollection(window.firebaseDB, `rooms/${roomId}/settings`);
+                    await window.firebaseAddDoc(roomSettingsRef, {
+                        ...ghostRoomSettings,
+                        createdAt: window.firebaseServerTimestamp(),
+                        creator: handle
+                    });
+                } else {
+                    // Load room settings when joining
+                    try {
+                        const roomSettingsRef = window.firebaseCollection(window.firebaseDB, `rooms/${roomId}/settings`);
+                        const roomSettingsQuery = window.firebaseQuery(roomSettingsRef, window.firebaseOrderBy('createdAt', 'desc'));
+                        const roomSnapshot = await new Promise((resolve) => {
+                            const unsubscribe = window.firebaseOnSnapshot(roomSettingsQuery, (snapshot) => {
+                                unsubscribe();
+                                resolve(snapshot);
+                            });
+                        });
+                        
+                        if (!roomSnapshot.empty) {
+                            const roomData = roomSnapshot.docs[0].data();
+                            ghostRoomSettings = {
+                                enableDownload: roomData.enableDownload || false,
+                                enableDelete: roomData.enableDelete || false,
+                                enableGifs: roomData.enableGifs || false
+                            };
+                        }
+                    } catch (e) {
+                        console.warn('Could not load room settings:', e);
+                    }
+                }
+
                 // Hide join panel, show share button and disconnect
                 document.getElementById('ghost-join-panel').classList.add('hidden');
                 if (isRoomCreator) {
@@ -2445,9 +2557,24 @@
                 document.getElementById('ghost-room-status').textContent = `Connected as ${handle}${isRoomCreator ? ' (Creator)' : ''}`;
                 document.getElementById('ghost-encryption-indicator').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
                 
-                // Enable messaging
+                // Enable messaging and features based on settings
                 document.getElementById('ghost-message-input').disabled = false;
                 document.getElementById('ghost-send-btn').disabled = false;
+                document.getElementById('ghost-emoji-btn').disabled = false;
+                
+                // Enable download button if feature is enabled
+                if (ghostRoomSettings.enableDownload) {
+                    document.getElementById('ghost-download-btn').classList.remove('hidden');
+                }
+                
+                // Enable GIF button if feature is enabled
+                if (ghostRoomSettings.enableGifs) {
+                    document.getElementById('ghost-gif-btn').classList.remove('hidden');
+                    document.getElementById('ghost-gif-btn').disabled = false;
+                }
+                
+                // Initialize emoji picker
+                initializeEmojiPicker();
 
                 // Clear messages
                 document.getElementById('ghost-messages').innerHTML = '';
@@ -2460,7 +2587,13 @@
                     snapshot.docChanges().forEach(async (change) => {
                         if (change.type === 'added') {
                             const msgData = change.doc.data();
-                            await displayGhostMessage(msgData);
+                            await displayGhostMessage(msgData, change.doc.id);
+                        } else if (change.type === 'modified') {
+                            // Handle message updates (for deleted messages)
+                            const msgData = change.doc.data();
+                            if (msgData.deleted) {
+                                updateMessageDisplay(change.doc.id, true);
+                            }
                         }
                     });
                 });
@@ -2496,8 +2629,24 @@
         }
 
         // Display encrypted message
-        async function displayGhostMessage(msgData) {
+        async function displayGhostMessage(msgData, messageId) {
             try {
+                // Check if message is deleted
+                if (msgData.deleted) {
+                    const messagesDiv = document.getElementById('ghost-messages');
+                    const existingMsg = document.getElementById(`msg-${messageId}`);
+                    if (existingMsg) {
+                        existingMsg.innerHTML = `
+                            <div class="flex items-center gap-2 text-zinc-600 italic text-sm py-2">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <span>This message was deleted</span>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    }
+                    return;
+                }
+
                 const decrypted = await decryptMessage(msgData.data, msgData.iv, ghostCryptoKey);
                 const messagesDiv = document.getElementById('ghost-messages');
                 
@@ -2511,6 +2660,7 @@
                 const timeStr = timestamp.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 const dateStr = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const isToday = new Date().toDateString() === timestamp.toDateString();
+                const isGif = msgData.isGif || false;
                 
                 const userColor = getUserColor(senderName);
                 const colorClasses = {
@@ -2524,7 +2674,15 @@
                 };
 
                 const msgDiv = document.createElement('div');
-                msgDiv.className = `message-bubble flex gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} max-w-[85%]`;
+                msgDiv.id = `msg-${messageId}`;
+                msgDiv.className = `message-bubble flex gap-2 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} max-w-[85%] group`;
+                
+                let messageContent = '';
+                if (isGif) {
+                    messageContent = `<img src="${decrypted}" alt="GIF" class="max-w-full rounded-lg" style="max-height: 300px; object-fit: contain;">`;
+                } else {
+                    messageContent = `<p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>`;
+                }
                 
                 if (!isOwnMessage) {
                     // Avatar for other users
@@ -2538,18 +2696,24 @@
                                 <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
                             </div>
                             <div class="message-other rounded-2xl px-4 py-2.5 shadow-lg">
-                                <p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>
+                                ${messageContent}
                             </div>
                         </div>
                     `;
                 } else {
                     // Own message (no avatar, right-aligned)
+                    const deleteBtn = ghostRoomSettings.enableDelete ? 
+                        `<button onclick="deleteGhostMessage('${messageId}')" class="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>` : '';
+                    
                     msgDiv.innerHTML = `
                         <div class="flex flex-col gap-1 flex-1 min-w-0 items-end">
-                            <div class="message-own rounded-2xl px-4 py-2.5 shadow-lg max-w-full">
-                                <p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>
+                            <div class="message-own rounded-2xl px-4 py-2.5 shadow-lg max-w-full relative">
+                                ${messageContent}
                             </div>
                             <div class="flex items-center gap-1.5">
+                                ${deleteBtn}
                                 <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
                                 <i data-lucide="check-check" class="w-3 h-3 text-emerald-500"></i>
                             </div>
@@ -2566,10 +2730,24 @@
             }
         }
 
+        // Update message display (for deleted messages)
+        function updateMessageDisplay(messageId, isDeleted) {
+            const msgDiv = document.getElementById(`msg-${messageId}`);
+            if (msgDiv && isDeleted) {
+                msgDiv.innerHTML = `
+                    <div class="flex items-center gap-2 text-zinc-600 italic text-sm py-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>This message was deleted</span>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
         // Send encrypted message
-        async function sendGhostMessage() {
+        async function sendGhostMessage(messageText = null, isGif = false) {
             const messageInput = document.getElementById('ghost-message-input');
-            const message = messageInput.value.trim();
+            const message = messageText || messageInput.value.trim();
 
             if (!message || !ghostCryptoKey) {
                 console.warn('Cannot send: no message or crypto key');
@@ -2590,20 +2768,31 @@
 
                 const encrypted = await encryptMessage(message, ghostCryptoKey);
 
+                const messageData = {
+                    sender: ghostHandle,
+                    timestamp: window.firebaseServerTimestamp(),
+                    iv: encrypted.iv,
+                    data: encrypted.data
+                };
+
+                if (isGif) {
+                    messageData.isGif = true;
+                }
+
                 await window.firebaseAddDoc(
                     window.firebaseCollection(window.firebaseDB, `rooms/${ghostRoomId}/messages`),
-                    {
-                        sender: ghostHandle,
-                        timestamp: window.firebaseServerTimestamp(),
-                        iv: encrypted.iv,
-                        data: encrypted.data
-                    }
+                    messageData
                 );
 
-                messageInput.value = '';
-                messageInput.style.height = 'auto';
+                if (!messageText) {
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                }
                 const charCount = document.getElementById('ghost-char-count');
-                if (charCount) charCount.textContent = '0/1000';
+                if (charCount) {
+                    const currentLength = messageText ? messageText.length : 0;
+                    charCount.textContent = currentLength;
+                }
                 
                 // Re-enable send button
                 sendBtn.disabled = false;
@@ -2620,6 +2809,188 @@
                 lucide.createIcons();
             }
         }
+
+        // Delete message (for everyone)
+        async function deleteGhostMessage(messageId) {
+            if (!ghostRoomSettings.enableDelete) {
+                alert("Delete messages feature is not enabled in this room.");
+                return;
+            }
+
+            if (!confirm("Delete this message for everyone?")) {
+                return;
+            }
+
+            try {
+                const messageDocRef = window.firebaseDoc(window.firebaseDB, 'rooms', ghostRoomId, 'messages', messageId);
+                await window.firebaseUpdateDoc(messageDocRef, { 
+                    deleted: true,
+                    deletedBy: ghostHandle,
+                    deletedAt: window.firebaseServerTimestamp()
+                });
+                
+                // Update display immediately
+                updateMessageDisplay(messageId, true);
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert("Error deleting message: " + error.message);
+            }
+        }
+
+        // Download chat history
+        async function downloadChatHistory() {
+            if (!ghostRoomSettings.enableDownload) {
+                alert("Download chat history feature is not enabled in this room.");
+                return;
+            }
+
+            try {
+                const messagesRef = window.firebaseCollection(window.firebaseDB, `rooms/${ghostRoomId}/messages`);
+                const q = window.firebaseQuery(messagesRef, window.firebaseOrderBy('timestamp', 'asc'));
+                
+                const messagesSnapshot = await window.firebaseGetDocs(q);
+
+                let chatHistory = `Ghost Comms Chat History - Room: ${ghostRoomId}\n`;
+                chatHistory += `Exported on: ${new Date().toLocaleString()}\n`;
+                chatHistory += `==========================================\n\n`;
+
+                for (const doc of messagesSnapshot.docs) {
+                    const msgData = doc.data();
+                    if (msgData.deleted) {
+                        chatHistory += `[DELETED] ${msgData.sender || 'Unknown'}: This message was deleted\n`;
+                        continue;
+                    }
+
+                    try {
+                        const decrypted = await decryptMessage(msgData.data, msgData.iv, ghostCryptoKey);
+                        const timestamp = msgData.timestamp?.toDate() || new Date();
+                        const timeStr = timestamp.toLocaleString();
+                        chatHistory += `[${timeStr}] ${msgData.sender || 'Unknown'}: ${decrypted}\n`;
+                    } catch (e) {
+                        chatHistory += `[ERROR] ${msgData.sender || 'Unknown'}: Failed to decrypt message\n`;
+                    }
+                }
+
+                // Download as file
+                const blob = new Blob([chatHistory], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `ghost-comms-${ghostRoomId}-${Date.now()}.txt`;
+                link.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Download error:', error);
+                alert("Error downloading chat history: " + error.message);
+            }
+        }
+
+        // Emoji picker functions
+        const commonEmojis = ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😶‍🌫️', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
+
+        function initializeEmojiPicker() {
+            const emojiGrid = document.getElementById('ghost-emoji-grid');
+            if (!emojiGrid) return;
+            
+            emojiGrid.innerHTML = '';
+            commonEmojis.forEach(emoji => {
+                const emojiBtn = document.createElement('button');
+                emojiBtn.className = 'w-8 h-8 text-xl hover:bg-zinc-800 rounded transition-colors flex items-center justify-center';
+                emojiBtn.textContent = emoji;
+                emojiBtn.onclick = () => insertEmoji(emoji);
+                emojiGrid.appendChild(emojiBtn);
+            });
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('ghost-emoji-picker');
+            const gifPicker = document.getElementById('ghost-gif-picker');
+            if (gifPicker) gifPicker.classList.add('hidden');
+            if (picker) picker.classList.toggle('hidden');
+        }
+
+        function insertEmoji(emoji) {
+            const messageInput = document.getElementById('ghost-message-input');
+            const cursorPos = messageInput.selectionStart;
+            const textBefore = messageInput.value.substring(0, cursorPos);
+            const textAfter = messageInput.value.substring(cursorPos);
+            messageInput.value = textBefore + emoji + textAfter;
+            messageInput.selectionStart = messageInput.selectionEnd = cursorPos + emoji.length;
+            messageInput.focus();
+            
+            // Update character count
+            const charCount = document.getElementById('ghost-char-count');
+            if (charCount) charCount.textContent = messageInput.value.length;
+            
+            // Close picker
+            document.getElementById('ghost-emoji-picker').classList.add('hidden');
+        }
+
+        // GIF picker functions
+        let gifSearchTimeout = null;
+        const GIPHY_API_KEY = 'YOUR_GIPHY_API_KEY'; // Users need to add their own API key
+
+        async function searchGifs(query) {
+            if (!query || query.length < 2) return;
+            
+            try {
+                // Using a public GIPHY endpoint (no API key required for trending)
+                const url = query ? 
+                    `https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&q=${encodeURIComponent(query)}&limit=20` :
+                    `https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=20`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                const resultsDiv = document.getElementById('ghost-gif-results');
+                resultsDiv.innerHTML = '';
+                
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(gif => {
+                        const gifItem = document.createElement('div');
+                        gifItem.className = 'cursor-pointer hover:opacity-80 transition-opacity';
+                        gifItem.innerHTML = `<img src="${gif.images.fixed_height.url}" alt="GIF" class="w-full rounded">`;
+                        gifItem.onclick = () => sendGif(gif.images.original.url);
+                        resultsDiv.appendChild(gifItem);
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p class="text-zinc-500 text-sm text-center py-4">No GIFs found</p>';
+                }
+            } catch (error) {
+                console.error('GIF search error:', error);
+                document.getElementById('ghost-gif-results').innerHTML = '<p class="text-red-500 text-sm text-center py-4">Error loading GIFs</p>';
+            }
+        }
+
+        function toggleGifPicker() {
+            const picker = document.getElementById('ghost-gif-picker');
+            const emojiPicker = document.getElementById('ghost-emoji-picker');
+            if (emojiPicker) emojiPicker.classList.add('hidden');
+            if (picker) {
+                picker.classList.toggle('hidden');
+                if (!picker.classList.contains('hidden')) {
+                    searchGifs(''); // Load trending GIFs
+                }
+            }
+        }
+
+        function sendGif(gifUrl) {
+            sendGhostMessage(gifUrl, true);
+            document.getElementById('ghost-gif-picker').classList.add('hidden');
+        }
+
+        // Setup GIF search
+        document.addEventListener('DOMContentLoaded', () => {
+            const gifSearch = document.getElementById('ghost-gif-search');
+            if (gifSearch) {
+                gifSearch.addEventListener('input', (e) => {
+                    clearTimeout(gifSearchTimeout);
+                    gifSearchTimeout = setTimeout(() => {
+                        searchGifs(e.target.value);
+                    }, 500);
+                });
+            }
+        });
 
         // Disconnect from room
         function disconnectGhost() {
@@ -2703,17 +3074,11 @@
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                     
-                    // Update character count
+                    // Update character count (no limit)
                     if (charCount) {
                         const count = e.target.value.length;
-                        charCount.textContent = `${count}/1000`;
-                        if (count > 1000) {
-                            charCount.className = 'text-[10px] text-rose-500';
-                        } else if (count > 800) {
-                            charCount.className = 'text-[10px] text-amber-500';
-                        } else {
-                            charCount.className = 'text-[10px] text-zinc-700';
-                        }
+                        charCount.textContent = count;
+                        charCount.className = 'text-[10px] text-zinc-700';
                     }
                 });
 
