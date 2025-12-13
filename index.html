@@ -271,6 +271,164 @@
             padding-top: 20%;
             font-size: 2rem;
         }
+
+        /* MOBILE RESPONSIVE FIXES */
+        @media (max-width: 768px) {
+            /* Fix container padding on mobile */
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            /* Fix navigation on mobile */
+            nav {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            /* Fix ghost modal on mobile */
+            #ghost-modal {
+                padding: 0;
+                align-items: stretch;
+            }
+
+            #ghost-modal > div {
+                max-width: 100%;
+                max-height: 100vh;
+                height: 100vh;
+                border-radius: 0;
+                margin: 0;
+            }
+
+            /* Fix ghost join panel on mobile */
+            #ghost-join-panel {
+                width: 100%;
+                max-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgb(39 39 42);
+            }
+
+            /* Stack ghost modal content on mobile */
+            #ghost-modal > div > div.flex {
+                flex-direction: column;
+            }
+
+            /* Fix chat area on mobile */
+            #ghost-modal .flex-1.flex.flex-col {
+                min-height: 0;
+            }
+
+            /* Fix messages container on mobile */
+            #ghost-messages {
+                min-height: 300px;
+                padding: 1rem;
+            }
+
+            /* Fix input area on mobile */
+            .input-area {
+                padding: 0.75rem;
+            }
+
+            /* Fix message bubbles on mobile */
+            .message-bubble {
+                max-width: 90% !important;
+                font-size: 0.875rem;
+            }
+
+            /* Fix buttons on mobile */
+            button, .icon-btn {
+                min-height: 44px; /* Touch target size */
+                min-width: 44px;
+            }
+
+            /* Fix floating button on mobile */
+            #ghost-float-btn {
+                width: 56px;
+                height: 56px;
+                bottom: 1rem;
+                right: 1rem;
+            }
+
+            /* Fix modals on mobile */
+            .call-modal, #incoming-call-modal, #memory-warning-modal {
+                padding: 1rem;
+            }
+
+            .call-modal > div, #incoming-call-modal > div, #memory-warning-modal > div {
+                max-width: 95%;
+                padding: 1.5rem;
+            }
+
+            /* Fix active call interface on mobile */
+            #active-call-interface {
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 2rem);
+                max-width: 100%;
+                padding: 0.75rem;
+            }
+
+            /* Fix text sizes on mobile */
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            /* Fix tabs on mobile */
+            .tab-content {
+                padding: 1rem 0;
+            }
+
+            /* Fix form inputs on mobile */
+            input, textarea, select {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            /* Fix ghost message input on mobile */
+            #ghost-message-input {
+                font-size: 16px;
+                padding: 0.75rem;
+            }
+
+            /* Fix emoji and GIF pickers on mobile */
+            #ghost-emoji-picker, #ghost-gif-picker {
+                width: calc(100vw - 2rem);
+                max-width: 100%;
+                left: 1rem;
+                right: 1rem;
+            }
+
+            /* Fix GIF grid on mobile */
+            #ghost-gif-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Extra small mobile fixes */
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .message-bubble {
+                max-width: 95% !important;
+                padding: 0.5rem;
+            }
+
+            #ghost-float-btn {
+                width: 48px;
+                height: 48px;
+            }
+
+            /* Stack header controls on very small screens */
+            .header-controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body class="selection:bg-rose-900 selection:text-white min-h-screen flex flex-col no-select">
@@ -663,42 +821,9 @@
         </div>
     </footer>
 
-    <!-- CAUTION BOARD -->
-    <div id="cautionBoard" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" style="pointer-events: auto;">
-        <div class="bg-amber-950/90 border-2 border-amber-600 rounded-2xl p-8 max-w-md text-center shadow-2xl" style="pointer-events: auto;">
-            <div class="mb-6">
-                <div class="w-20 h-20 bg-amber-600/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                    <i data-lucide="alert-triangle" class="w-10 h-10 text-amber-500"></i>
-                </div>
-                <h2 class="text-2xl font-black text-white mb-2 tracking-wider">⚠️ PROCEED WITH CAUTION ⚠️</h2>
-                <p class="text-amber-200 text-sm mb-2">This system is monitored.</p>
-                <p class="text-amber-300 text-xs">Unauthorized access is prohibited.</p>
-            </div>
-            <button type="button" id="proceedBtn" onclick="if(typeof dismissCautionBoard === 'function') { dismissCautionBoard(); } else { const cb = document.getElementById('cautionBoard'); if(cb) { cb.style.display = 'none'; cb.classList.add('hidden'); localStorage.setItem('caution_dismissed', 'true'); } } return false;" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-8 py-3 rounded-lg transition-colors shadow-lg cursor-pointer" style="pointer-events: auto; z-index: 101;">
-                I UNDERSTAND
-            </button>
-        </div>
-    </div>
-    
     <script>
         // Immediate function definitions for modals
         (function() {
-            function dismissCautionBoardNow() {
-                try {
-                    const cb = document.getElementById('cautionBoard');
-                    if (cb) {
-                        cb.style.display = 'none';
-                        cb.classList.add('hidden');
-                        localStorage.setItem('caution_dismissed', 'true');
-                        console.log('Caution board dismissed');
-                        return true;
-                    }
-                } catch(e) {
-                    console.error('Error:', e);
-                }
-                return false;
-            }
-            
             function closeMemoryWarningNow() {
                 try {
                     const mw = document.getElementById('memory-warning-modal');
@@ -715,16 +840,10 @@
             }
             
             // Make available immediately
-            window.dismissCautionBoard = dismissCautionBoardNow;
             window.closeMemoryWarning = closeMemoryWarningNow;
             
             // Also set up buttons immediately if they exist
             function setupButtons() {
-                const proceedBtn = document.getElementById('proceedBtn');
-                if (proceedBtn) {
-                    proceedBtn.onclick = function() { dismissCautionBoardNow(); return false; };
-                }
-                
                 const memoryBtn = document.getElementById('memory-warning-btn');
                 if (memoryBtn) {
                     memoryBtn.onclick = function() { closeMemoryWarningNow(); return false; };
@@ -766,9 +885,9 @@
             </div>
 
             <!-- Modal Content -->
-            <div class="flex-1 overflow-hidden flex">
+            <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
                 <!-- LEFT SIDE: Join/Create Room (Hidden when in room) -->
-                <div id="ghost-join-panel" class="w-96 bg-zinc-950 border-r border-zinc-800 p-6 overflow-y-auto">
+                <div id="ghost-join-panel" class="w-full md:w-96 bg-zinc-950 border-r border-zinc-800 p-4 md:p-6 overflow-y-auto">
                     <div class="space-y-6">
                         <!-- Create Room Section -->
                         <div>
@@ -1119,40 +1238,7 @@
         // CONFIGURATION
         const SECURITY_KEY = "endeavour_security_log"; // The name in browser memory
 
-        // Caution Board Functions (Define early - MUST be available immediately)
-        function showCautionBoard() {
-            const cautionBoard = document.getElementById('cautionBoard');
-            if (cautionBoard) {
-                cautionBoard.classList.remove('hidden');
-                cautionBoard.style.display = 'flex';
-            }
-        }
-
-        function dismissCautionBoard() {
-            try {
-                const cautionBoard = document.getElementById('cautionBoard');
-                if (cautionBoard) {
-                    cautionBoard.classList.add('hidden');
-                    cautionBoard.style.display = 'none';
-                    // Store dismissal in localStorage
-                    localStorage.setItem('caution_dismissed', 'true');
-                    console.log('Caution board dismissed');
-                    return true;
-                }
-            } catch (e) {
-                console.error('Error dismissing caution board:', e);
-            }
-            return false;
-        }
-
-        // Make dismissCautionBoard globally available IMMEDIATELY
-        window.dismissCautionBoard = dismissCautionBoard;
-        window.showCautionBoard = showCautionBoard;
-        
-        // Also add as direct property for maximum compatibility
-        if (typeof window.dismissCautionBoard === 'undefined') {
-            window.dismissCautionBoard = dismissCautionBoard;
-        }
+        // Caution Board removed - no longer needed
 
         // Memory Warning Modal Functions
         function closeMemoryWarning() {
@@ -1177,45 +1263,6 @@
         window.addEventListener('DOMContentLoaded', function() {
             checkMemory();
             
-            // Set up proceed button click handler (backup method)
-            const proceedBtn = document.getElementById('proceedBtn');
-            if (proceedBtn) {
-                // Remove any existing handlers and add fresh one
-                proceedBtn.onclick = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    if (typeof dismissCautionBoard === 'function') {
-                        dismissCautionBoard();
-                    } else {
-                        // Fallback if function not available
-                        const cb = document.getElementById('cautionBoard');
-                        if (cb) {
-                            cb.style.display = 'none';
-                            cb.classList.add('hidden');
-                            localStorage.setItem('caution_dismissed', 'true');
-                        }
-                    }
-                    return false;
-                };
-                
-                // Also add event listener as backup
-                proceedBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (typeof dismissCautionBoard === 'function') {
-                        dismissCautionBoard();
-                    } else {
-                        const cb = document.getElementById('cautionBoard');
-                        if (cb) {
-                            cb.style.display = 'none';
-                            cb.classList.add('hidden');
-                            localStorage.setItem('caution_dismissed', 'true');
-                        }
-                    }
-                }, true);
-            }
-            
             // Set up memory warning button click handler
             const memoryWarningBtn = document.getElementById('memory-warning-btn');
             if (memoryWarningBtn) {
@@ -1233,7 +1280,7 @@
                             mw.classList.add('hidden');
                         }
                     }
-                    return false;
+                return false;
                 };
                 
                 // Also add event listener as backup
@@ -1252,20 +1299,7 @@
                 }, true);
             }
             
-            // Show caution board if not previously dismissed
-            const wasDismissed = localStorage.getItem('caution_dismissed');
-            if (!wasDismissed || wasDismissed !== 'true') {
-                setTimeout(() => {
-                    showCautionBoard();
-                }, 500);
-            } else {
-                // Ensure it's hidden if already dismissed
-                const cautionBoard = document.getElementById('cautionBoard');
-                if (cautionBoard) {
-                    cautionBoard.classList.add('hidden');
-                    cautionBoard.style.display = 'none';
-                }
-            }
+            // Caution board removed - no longer showing
         });
 
         // 2. ENHANCED TRAP WITH REASON TRACKING & FIRESTORE LOGGING
@@ -1387,18 +1421,6 @@
 
         // Update trigger functions to use new system
         document.addEventListener('contextmenu', function(e) {
-            // Check if clicking on caution board - allow dismiss
-            const cautionBoard = document.getElementById('cautionBoard');
-            if (cautionBoard && !cautionBoard.classList.contains('hidden') && window.getComputedStyle(cautionBoard).display !== 'none') {
-                // Right-click on caution board dismisses it
-                if (typeof dismissCautionBoard === 'function') {
-                    dismissCautionBoard();
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-            
             // Check if clicking on memory warning modal - allow dismiss
             const memoryModal = document.getElementById('memory-warning-modal');
             if (memoryModal && !memoryModal.classList.contains('hidden') && window.getComputedStyle(memoryModal).display !== 'none') {
@@ -1765,7 +1787,7 @@
                     btn.innerHTML = '<i data-lucide="radio-off" class="w-3 h-3"></i> Stop';
                     btn.classList.remove('text-cyan-500');
                     btn.classList.add('text-red-600');
-                    lucide.createIcons();
+                lucide.createIcons();
                 }
 
                 // Prevent chat container from shifting
@@ -3210,16 +3232,19 @@
                 }
                 
                 // Enable GIF button (always show, allows file upload even if feature disabled)
-                document.getElementById('ghost-gif-btn').classList.remove('hidden');
-                document.getElementById('ghost-gif-btn').disabled = false;
+                    document.getElementById('ghost-gif-btn').classList.remove('hidden');
+                    document.getElementById('ghost-gif-btn').disabled = false;
                 
                 // Always show Chaos and Sonic buttons (they're fun features)
                 document.getElementById('ghost-chaos-btn').classList.remove('hidden');
                 document.getElementById('ghost-sonic-btn').classList.remove('hidden');
                 
                 // Enable call button and listen for incoming calls
-                document.getElementById('ghost-call-btn').classList.remove('hidden');
-                listenForIncomingCalls();
+                // Wait a bit before starting to listen to avoid showing old calls
+                setTimeout(() => {
+                    document.getElementById('ghost-call-btn').classList.remove('hidden');
+                    listenForIncomingCalls();
+                }, 2000);
                 
                 // Initialize emoji picker
                 initializeEmojiPicker();
@@ -3439,7 +3464,7 @@
                 } else if (mediaType === 'audio') {
                     messageData.isAudio = true;
                     messageData.mediaType = 'audio';
-                }
+                    }
 
                 await window.firebaseAddDoc(
                     window.firebaseCollection(window.firebaseDB, `rooms/${ghostRoomId}/messages`),
@@ -3948,7 +3973,7 @@
                     if (charCount) {
                         const count = e.target.value.length;
                         charCount.textContent = count;
-                        charCount.className = 'text-[10px] text-zinc-700';
+                            charCount.className = 'text-[10px] text-zinc-700';
                     }
                 });
 
@@ -4014,16 +4039,22 @@
                 return;
             }
 
+            // Clean up any existing call first
+            await cleanupCall();
+
             try {
                 // Get user media
                 localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
                 
-                // Create call ID
-                callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 isCaller = true;
                 
                 // Create peer connection
                 peerConnection = new RTCPeerConnection(iceServers);
+                
+                // Handle errors
+                peerConnection.onerror = (error) => {
+                    console.error('Peer connection error:', error);
+                };
                 
                 // Add local tracks
                 localStream.getTracks().forEach(track => {
@@ -4048,19 +4079,52 @@
                     }
                 };
                 
+                // Handle connection state changes
+                peerConnection.onconnectionstatechange = () => {
+                    console.log('Connection state:', peerConnection.connectionState);
+                    if (peerConnection.connectionState === 'failed' || 
+                        peerConnection.connectionState === 'disconnected' ||
+                        peerConnection.connectionState === 'closed') {
+                        // Auto cleanup on connection failure
+                        setTimeout(() => {
+                            if (peerConnection && (peerConnection.connectionState === 'failed' || 
+                                peerConnection.connectionState === 'disconnected')) {
+                                cleanupCall();
+                            }
+                        }, 2000);
+                    }
+                };
+                
+                // Handle ICE connection state
+                peerConnection.oniceconnectionstatechange = () => {
+                    console.log('ICE connection state:', peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed' || 
+                        peerConnection.iceConnectionState === 'disconnected') {
+                        setTimeout(() => {
+                            if (peerConnection && (peerConnection.iceConnectionState === 'failed' || 
+                                peerConnection.iceConnectionState === 'disconnected')) {
+                                cleanupCall();
+                            }
+                        }, 2000);
+                    }
+                };
+                
                 // Handle remote stream
                 peerConnection.ontrack = (event) => {
                     console.log('Received remote track');
                     if (event.streams && event.streams[0]) {
-                        if (!remoteAudioElement) {
-                            remoteAudioElement = new Audio();
-                            remoteAudioElement.autoplay = true;
+                        try {
+                            if (!remoteAudioElement) {
+                                remoteAudioElement = new Audio();
+                                remoteAudioElement.autoplay = true;
+                                remoteAudioElement.volume = 1.0;
+                            }
                             remoteAudioElement.srcObject = event.streams[0];
                             remoteAudioElement.play().catch(e => {
                                 console.error('Error playing remote audio:', e);
                             });
-                        } else {
-                            remoteAudioElement.srcObject = event.streams[0];
+                        } catch (e) {
+                            console.error('Error handling remote track:', e);
                         }
                     }
                 };
@@ -4085,7 +4149,7 @@
                 );
                 callId = callDocRef.id; // Use actual document ID
                 
-                // Listen for answer
+                // Listen for answer and call state changes
                 listenForAnswer();
                 
                 // Show active call interface
@@ -4094,27 +4158,58 @@
             } catch (error) {
                 console.error('Call initiation error:', error);
                 alert('Could not start call. Please allow microphone permissions.');
-                cleanupCall();
+                await cleanupCall();
             }
         }
+
+        // Track processed call IDs to prevent duplicate notifications
+        const processedCallIds = new Set();
+        let lastCallCheckTime = 0;
 
         // Listen for incoming calls
         function listenForIncomingCalls() {
             if (!ghostRoomId || !window.firebaseDB) return;
+            
+            // Clear processed calls older than 30 seconds
+            const now = Date.now();
+            if (now - lastCallCheckTime > 30000) {
+                processedCallIds.clear();
+                lastCallCheckTime = now;
+            }
             
             const callsRef = window.firebaseCollection(window.firebaseDB, 'calls');
             const q = window.firebaseQuery(callsRef, window.firebaseOrderBy('timestamp', 'desc'));
             
             callUnsubscribe = window.firebaseOnSnapshot(q, async (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
+                    // Only process new calls that haven't been seen
                     if (change.type === 'added' && !isCaller && !callActive) {
                         const callData = change.doc.data();
-                        // Check if call is for this room, not from this user, and not ended
+                        const callDocId = change.doc.id;
+                        
+                        // Skip if already processed
+                        if (processedCallIds.has(callDocId)) {
+                            return;
+                        }
+                        
+                        // Only show calls that are:
+                        // 1. For this room
+                        // 2. Not from this user
+                        // 3. Status is 'calling' (actively calling, not ended or active)
+                        // 4. Created in the last 30 seconds (prevent old calls from showing)
+                        const callTimestamp = callData.timestamp?.toMillis ? callData.timestamp.toMillis() : 
+                                             (callData.timestamp?.seconds ? callData.timestamp.seconds * 1000 : Date.now());
+                        const callAge = Date.now() - callTimestamp;
+                        
                         if (callData.roomId === ghostRoomId && 
                             callData.caller !== ghostHandle && 
-                            callData.status !== 'ended' &&
-                            !callData.ended) {
-                            callId = change.doc.id;
+                            callData.status === 'calling' &&
+                            !callData.ended &&
+                            callAge < 30000) { // Only show calls less than 30 seconds old
+                            
+                            processedCallIds.add(callDocId);
+                            callId = callDocId;
+                            
                             const callerNameEl = document.getElementById('caller-name-display');
                             if (callerNameEl) {
                                 callerNameEl.textContent = callData.caller || 'Unknown';
@@ -4122,6 +4217,17 @@
                             const incomingModal = document.getElementById('incoming-call-modal');
                             if (incomingModal) {
                                 incomingModal.classList.remove('hidden');
+                            }
+                        }
+                    }
+                    
+                    // Handle call updates (ended calls)
+                    if (change.type === 'modified') {
+                        const callData = change.doc.data();
+                        if (callData.status === 'ended' || callData.ended) {
+                            // If we're in a call that just ended, cleanup
+                            if (change.doc.id === callId && callActive) {
+                                cleanupCall();
                             }
                         }
                     }
@@ -4138,12 +4244,20 @@
                 return;
             }
             
+            // Clean up any existing call first
+            await cleanupCall();
+            
             try {
                 // Get user media
                 localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
                 
                 // Create peer connection
                 peerConnection = new RTCPeerConnection(iceServers);
+                
+                // Handle errors
+                peerConnection.onerror = (error) => {
+                    console.error('Peer connection error:', error);
+                };
                 
                 // Add local tracks
                 localStream.getTracks().forEach(track => {
@@ -4168,19 +4282,52 @@
                     }
                 };
                 
+                // Handle connection state changes
+                peerConnection.onconnectionstatechange = () => {
+                    console.log('Connection state:', peerConnection.connectionState);
+                    if (peerConnection.connectionState === 'failed' || 
+                        peerConnection.connectionState === 'disconnected' ||
+                        peerConnection.connectionState === 'closed') {
+                        // Auto cleanup on connection failure
+                        setTimeout(() => {
+                            if (peerConnection && (peerConnection.connectionState === 'failed' || 
+                                peerConnection.connectionState === 'disconnected')) {
+                                cleanupCall();
+                            }
+                        }, 2000);
+                    }
+                };
+                
+                // Handle ICE connection state
+                peerConnection.oniceconnectionstatechange = () => {
+                    console.log('ICE connection state:', peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed' || 
+                        peerConnection.iceConnectionState === 'disconnected') {
+                        setTimeout(() => {
+                            if (peerConnection && (peerConnection.iceConnectionState === 'failed' || 
+                                peerConnection.iceConnectionState === 'disconnected')) {
+                                cleanupCall();
+                            }
+                        }, 2000);
+                    }
+                };
+                
                 // Handle remote stream
                 peerConnection.ontrack = (event) => {
                     console.log('Received remote track');
                     if (event.streams && event.streams[0]) {
-                        if (!remoteAudioElement) {
-                            remoteAudioElement = new Audio();
-                            remoteAudioElement.autoplay = true;
+                        try {
+                            if (!remoteAudioElement) {
+                                remoteAudioElement = new Audio();
+                                remoteAudioElement.autoplay = true;
+                                remoteAudioElement.volume = 1.0;
+                            }
                             remoteAudioElement.srcObject = event.streams[0];
                             remoteAudioElement.play().catch(e => {
                                 console.error('Error playing remote audio:', e);
                             });
-                        } else {
-                            remoteAudioElement.srcObject = event.streams[0];
+                        } catch (e) {
+                            console.error('Error handling remote track:', e);
                         }
                     }
                 };
@@ -4191,6 +4338,14 @@
                     const timeout = setTimeout(() => reject(new Error('Timeout waiting for call document')), 10000);
                     const unsubscribe = window.firebaseOnSnapshot(callDocRef, (doc) => {
                         if (doc.exists()) {
+                            const data = doc.data();
+                            // Check if call was already ended
+                            if (data.status === 'ended' || data.ended) {
+                                clearTimeout(timeout);
+                                unsubscribe();
+                                reject(new Error('Call was already ended'));
+                                return;
+                            }
                             clearTimeout(timeout);
                             unsubscribe();
                             resolve(doc);
@@ -4228,12 +4383,24 @@
             } catch (error) {
                 console.error('Accept call error:', error);
                 alert('Could not accept call. Please allow microphone permissions.');
-                cleanupCall();
+                await cleanupCall();
             }
         }
 
         // Deny call
-        function denyCall() {
+        async function denyCall() {
+            if (callId && window.firebaseDB) {
+                try {
+                    const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                    await window.firebaseUpdateDoc(callDocRef, {
+                        status: 'rejected',
+                        rejectedAt: window.firebaseServerTimestamp(),
+                        rejectedBy: ghostHandle
+                    });
+                } catch (e) {
+                    console.error('Error rejecting call:', e);
+                }
+            }
             document.getElementById('incoming-call-modal').classList.add('hidden');
             callId = null;
         }
@@ -4246,6 +4413,13 @@
             answerUnsubscribe = window.firebaseOnSnapshot(callDocRef, async (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
+                    
+                    // Check if call was ended by other side
+                    if (data.status === 'ended' || data.ended || data.status === 'rejected') {
+                        cleanupCall();
+                        return;
+                    }
+                    
                     if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
                         try {
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -4265,16 +4439,20 @@
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`);
             answerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added' && peerConnection) {
+                    if (change.type === 'added' && peerConnection && peerConnection.remoteDescription) {
                         try {
                             const candidate = change.doc.data();
-                            await peerConnection.addIceCandidate(new RTCIceCandidate({
+                            const iceCandidate = new RTCIceCandidate({
                                 candidate: candidate.candidate,
                                 sdpMLineIndex: candidate.sdpMLineIndex,
                                 sdpMid: candidate.sdpMid
-                            }));
+                            });
+                            await peerConnection.addIceCandidate(iceCandidate);
                         } catch (e) {
-                            console.error('Error adding ICE candidate:', e);
+                            // Ignore errors for duplicate candidates
+                            if (!e.message.includes('duplicate')) {
+                                console.error('Error adding ICE candidate:', e);
+                            }
                         }
                     }
                 });
@@ -4288,16 +4466,20 @@
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`);
             offerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added' && peerConnection) {
+                    if (change.type === 'added' && peerConnection && peerConnection.remoteDescription) {
                         try {
                             const candidate = change.doc.data();
-                            await peerConnection.addIceCandidate(new RTCIceCandidate({
+                            const iceCandidate = new RTCIceCandidate({
                                 candidate: candidate.candidate,
                                 sdpMLineIndex: candidate.sdpMLineIndex,
                                 sdpMid: candidate.sdpMid
-                            }));
+                            });
+                            await peerConnection.addIceCandidate(iceCandidate);
                         } catch (e) {
-                            console.error('Error adding ICE candidate:', e);
+                            // Ignore errors for duplicate candidates
+                            if (!e.message.includes('duplicate')) {
+                                console.error('Error adding ICE candidate:', e);
+                            }
                         }
                     }
                 });
@@ -4309,6 +4491,24 @@
             callActive = true;
             document.getElementById('active-call-interface').classList.remove('hidden');
             document.getElementById('ghost-call-btn').classList.add('hidden');
+            
+            // Listen for call end from other side
+            if (callId && window.firebaseDB) {
+                const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                const endListener = window.firebaseOnSnapshot(callDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        if (data.status === 'ended' || data.ended) {
+                            // Other side hung up
+                            cleanupCall();
+                        }
+                    }
+                });
+                // Store this listener to cleanup later
+                if (!answerUnsubscribe) {
+                    answerUnsubscribe = endListener;
+                }
+            }
         }
 
         // Hangup call
@@ -4318,80 +4518,138 @@
 
         // Cleanup call resources
         async function cleanupCall() {
-            callActive = false;
-            
-            // Unsubscribe from all listeners
-            if (callUnsubscribe) {
-                callUnsubscribe();
-                callUnsubscribe = null;
-            }
-            if (answerUnsubscribe) {
-                answerUnsubscribe();
-                answerUnsubscribe = null;
-            }
-            if (offerCandidatesUnsubscribe) {
-                offerCandidatesUnsubscribe();
-                offerCandidatesUnsubscribe = null;
-            }
-            if (answerCandidatesUnsubscribe) {
-                answerCandidatesUnsubscribe();
-                answerCandidatesUnsubscribe = null;
-            }
-            
-            // Stop all tracks
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            
-            // Stop remote audio
-            if (remoteAudioElement) {
-                remoteAudioElement.pause();
-                remoteAudioElement.srcObject = null;
-                remoteAudioElement = null;
-            }
-            
-            // Close peer connection
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            
-            // Update call document in Firestore
-            if (callId && window.firebaseDB) {
-                try {
-                    const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
-                    await window.firebaseUpdateDoc(callDocRef, { 
-                        ended: true, 
-                        endedAt: window.firebaseServerTimestamp(),
-                        status: 'ended'
-                    });
-                } catch (e) {
-                    console.warn('Could not update call document:', e);
+            try {
+                callActive = false;
+                
+                // Unsubscribe from all listeners
+                if (callUnsubscribe) {
+                    callUnsubscribe();
+                    callUnsubscribe = null;
                 }
+                if (answerUnsubscribe) {
+                    answerUnsubscribe();
+                    answerUnsubscribe = null;
+                }
+                if (offerCandidatesUnsubscribe) {
+                    offerCandidatesUnsubscribe();
+                    offerCandidatesUnsubscribe = null;
+                }
+                if (answerCandidatesUnsubscribe) {
+                    answerCandidatesUnsubscribe();
+                    answerCandidatesUnsubscribe = null;
+                }
+                
+                // Stop all tracks
+                if (localStream) {
+                    try {
+                        localStream.getTracks().forEach(track => {
+                            track.stop();
+                            track.enabled = false;
+                        });
+                    } catch (e) {
+                        console.warn('Error stopping tracks:', e);
+                    }
+                    localStream = null;
+                }
+                
+                // Stop remote audio
+                if (remoteAudioElement) {
+                    try {
+                        remoteAudioElement.pause();
+                        remoteAudioElement.srcObject = null;
+                        if (remoteAudioElement.src) {
+                            remoteAudioElement.src = '';
+                        }
+                    } catch (e) {
+                        console.warn('Error stopping remote audio:', e);
+                    }
+                    remoteAudioElement = null;
+                }
+                
+                // Close peer connection
+                if (peerConnection) {
+                    try {
+                        // Remove all tracks before closing
+                        peerConnection.getSenders().forEach(sender => {
+                            if (sender.track) {
+                                sender.track.stop();
+                            }
+                        });
+                        peerConnection.close();
+                    } catch (e) {
+                        console.warn('Error closing peer connection:', e);
+                    }
+                    peerConnection = null;
+                }
+                
+                // Update call document in Firestore to notify other side
+                if (callId && window.firebaseDB) {
+                    try {
+                        const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                        await window.firebaseUpdateDoc(callDocRef, { 
+                            ended: true, 
+                            endedAt: window.firebaseServerTimestamp(),
+                            status: 'ended',
+                            endedBy: ghostHandle
+                        });
+                    } catch (e) {
+                        console.warn('Could not update call document:', e);
+                    }
+                }
+                
+                // Hide UI
+                const activeCallUI = document.getElementById('active-call-interface');
+                if (activeCallUI) activeCallUI.classList.add('hidden');
+                const incomingModal = document.getElementById('incoming-call-modal');
+                if (incomingModal) incomingModal.classList.add('hidden');
+                const callBtn = document.getElementById('ghost-call-btn');
+                if (callBtn) callBtn.classList.remove('hidden');
+                
+                callId = null;
+                isCaller = false;
+                
+            } catch (error) {
+                console.error('Error in cleanupCall:', error);
+                // Force cleanup even if there's an error
+                callActive = false;
+                callId = null;
+                isCaller = false;
             }
-            
-            // Hide UI
-            const activeCallUI = document.getElementById('active-call-interface');
-            if (activeCallUI) activeCallUI.classList.add('hidden');
-            const incomingModal = document.getElementById('incoming-call-modal');
-            if (incomingModal) incomingModal.classList.add('hidden');
-            const callBtn = document.getElementById('ghost-call-btn');
-            if (callBtn) callBtn.classList.remove('hidden');
-            
-            callId = null;
-            isCaller = false;
         }
 
         // Cleanup on disconnect
-        function disconnectGhostWithCleanup() {
-            cleanupCall();
+        async function disconnectGhostWithCleanup() {
+            await cleanupCall();
             if (callUnsubscribe) {
                 callUnsubscribe();
                 callUnsubscribe = null;
             }
             disconnectGhost();
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', async () => {
+            if (callActive) {
+                await cleanupCall();
+            }
+        });
+
+        // Cleanup on page visibility change (mobile tab switch)
+        document.addEventListener('visibilitychange', async () => {
+            if (document.hidden && callActive) {
+                // Page is hidden, but don't cleanup - just pause
+                if (remoteAudioElement) {
+                    remoteAudioElement.pause();
+                }
+            } else if (!document.hidden && callActive && remoteAudioElement) {
+                // Page is visible again, resume audio
+                try {
+                    await remoteAudioElement.play();
+                } catch (e) {
+                    console.warn('Could not resume audio:', e);
+                }
+            }
+        });
 
     </script>
 </body>
