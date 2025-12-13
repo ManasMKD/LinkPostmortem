@@ -1733,6 +1733,7 @@
                 finalText = unlockResult;
             }
 
+            // Try complex decrypt, but if it fails, use the text as-is (for password-only protected text)
             const autoDecrypt = complexDecrypt(finalText);
             if (autoDecrypt) {
                  if(autoDecrypt.includes(TIME_MARKER)) {
@@ -1750,6 +1751,7 @@
                     finalText = autoDecrypt;
                 }
             }
+            // If complexDecrypt returns null, keep finalText as-is (password-only protected text)
 
             icon.classList.remove('animate-spin');
             
@@ -1777,11 +1779,11 @@
                             contentDiv.appendChild(btn);
                         });
                     } else {
-                        contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all">${finalText}</p>`;
+                        contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all" style="unicode-bidi: plaintext;">${finalText}</p>`;
                     }
-                } else {
-                    contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all bg-zinc-900 p-1 rounded">${finalText}</p>`;
-                }
+                    } else {
+                        contentDiv.innerHTML = `<p class="text-[10px] text-zinc-400 break-all bg-zinc-900 p-1 rounded" style="unicode-bidi: plaintext;">${finalText}</p>`;
+                    }
             }
             card.classList.replace('border-zinc-700', cardColor);
             statusDiv.innerHTML = statusHtml;
@@ -2338,10 +2340,7 @@
             await joinGhostRoomDirect(roomId, password, handle);
         }
 
-        // Direct join function
-        async function joinGhostRoomDirect(roomId, password, handle) {
-
-        // PBKDF2 Key Derivation (100,000 iterations)
+        // PBKDF2 Key Derivation (100,000 iterations) - Global scope
         async function deriveKey(password, salt) {
             const encoder = new TextEncoder();
             const passwordKey = await crypto.subtle.importKey(
@@ -2368,10 +2367,10 @@
             return key;
         }
 
-        // AES-GCM Encryption
+        // AES-GCM Encryption - Global scope (with emoji support via UTF-8)
         async function encryptMessage(text, key) {
             const encoder = new TextEncoder();
-            const data = encoder.encode(text);
+            const data = encoder.encode(text); // UTF-8 encoding handles emojis properly
             
             // Generate random IV (12 bytes for GCM)
             const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -2393,7 +2392,7 @@
             };
         }
 
-        // AES-GCM Decryption
+        // AES-GCM Decryption - Global scope (with emoji support via UTF-8)
         async function decryptMessage(encryptedData, ivHex, key) {
             try {
                 const iv = new Uint8Array(ivHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
@@ -2408,12 +2407,15 @@
                     encrypted
                 );
 
-                const decoder = new TextDecoder();
+                const decoder = new TextDecoder('utf-8'); // Explicit UTF-8 for emoji support
                 return decoder.decode(decrypted);
             } catch (error) {
                 throw new Error('Decryption failed - wrong password or corrupted data');
             }
         }
+
+        // Direct join function
+        async function joinGhostRoomDirect(roomId, password, handle) {
 
             // Wait a moment for Firebase to initialize if needed
             if (!window.firebaseDB) {
@@ -2536,7 +2538,7 @@
                                 <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
                             </div>
                             <div class="message-other rounded-2xl px-4 py-2.5 shadow-lg">
-                                <p class="text-sm break-words whitespace-pre-wrap">${decrypted}</p>
+                                <p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>
                             </div>
                         </div>
                     `;
@@ -2545,7 +2547,7 @@
                     msgDiv.innerHTML = `
                         <div class="flex flex-col gap-1 flex-1 min-w-0 items-end">
                             <div class="message-own rounded-2xl px-4 py-2.5 shadow-lg max-w-full">
-                                <p class="text-sm break-words whitespace-pre-wrap">${decrypted}</p>
+                                <p class="text-sm break-words whitespace-pre-wrap" style="unicode-bidi: plaintext;">${decrypted}</p>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-zinc-600">${isToday ? timeStr : dateStr + ' ' + timeStr}</span>
@@ -2569,9 +2571,23 @@
             const messageInput = document.getElementById('ghost-message-input');
             const message = messageInput.value.trim();
 
-            if (!message || !ghostCryptoKey) return;
+            if (!message || !ghostCryptoKey) {
+                console.warn('Cannot send: no message or crypto key');
+                return;
+            }
+
+            if (!ghostRoomId) {
+                alert("Not connected to a room. Please join or create a room first.");
+                return;
+            }
 
             try {
+                // Disable input while sending
+                const sendBtn = document.getElementById('ghost-send-btn');
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
+                lucide.createIcons();
+
                 const encrypted = await encryptMessage(message, ghostCryptoKey);
 
                 await window.firebaseAddDoc(
@@ -2585,9 +2601,23 @@
                 );
 
                 messageInput.value = '';
+                messageInput.style.height = 'auto';
+                const charCount = document.getElementById('ghost-char-count');
+                if (charCount) charCount.textContent = '0/1000';
+                
+                // Re-enable send button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i>';
+                lucide.createIcons();
             } catch (error) {
                 console.error('Send error:', error);
                 alert("Error sending message: " + error.message);
+                
+                // Re-enable send button on error
+                const sendBtn = document.getElementById('ghost-send-btn');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i>';
+                lucide.createIcons();
             }
         }
 
