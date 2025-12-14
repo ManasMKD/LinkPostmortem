@@ -4253,17 +4253,25 @@
                 peerConnection.onconnectionstatechange = () => {
                     console.log('Connection state:', peerConnection.connectionState);
                     // Only cleanup on actual failures, not on 'disconnected' which is normal during connection
-                    if (peerConnection.connectionState === 'failed' || 
-                        peerConnection.connectionState === 'closed') {
+                    if (peerConnection.connectionState === 'failed') {
                         // Give it more time before cleanup - connection might recover
                         setTimeout(() => {
-                            if (peerConnection && peerConnection.connectionState === 'failed') {
-                                console.warn('Connection failed, cleaning up');
+                            if (peerConnection && peerConnection.connectionState === 'failed' && callActive) {
+                                console.warn('Connection failed after timeout, cleaning up');
                                 cleanupCall();
                             }
-                        }, 5000); // Increased timeout to allow reconnection
+                        }, 10000); // Increased timeout to 10 seconds to allow reconnection
+                    } else if (peerConnection.connectionState === 'closed') {
+                        // Only cleanup if we're still in a call (not already cleaned up)
+                        if (callActive) {
+                            console.warn('Connection closed unexpectedly');
+                            cleanupCall();
+                        }
                     } else if (peerConnection.connectionState === 'connected') {
                         console.log('Connection established successfully');
+                    } else if (peerConnection.connectionState === 'disconnected') {
+                        // 'disconnected' is normal during connection establishment - don't cleanup
+                        console.log('Connection disconnected (may reconnect)');
                     }
                 };
                 
@@ -4273,70 +4281,133 @@
                     // Only cleanup on actual failures - 'disconnected' can be temporary during connection
                     if (peerConnection.iceConnectionState === 'failed') {
                         setTimeout(() => {
-                            if (peerConnection && peerConnection.iceConnectionState === 'failed') {
-                                console.warn('ICE connection failed, cleaning up');
+                            if (peerConnection && peerConnection.iceConnectionState === 'failed' && callActive) {
+                                console.warn('ICE connection failed after timeout, cleaning up');
                                 cleanupCall();
                             }
-                        }, 5000); // Increased timeout to allow reconnection
+                        }, 10000); // Increased timeout to 10 seconds
                     } else if (peerConnection.iceConnectionState === 'connected' || 
                                peerConnection.iceConnectionState === 'completed') {
                         console.log('ICE connection established successfully');
+                    } else if (peerConnection.iceConnectionState === 'disconnected') {
+                        // 'disconnected' is normal during connection - don't cleanup
+                        console.log('ICE disconnected (may reconnect)');
                     }
                 };
                 
                 // Handle remote stream with Web Audio API for echo cancellation
                 peerConnection.ontrack = async (event) => {
-                    console.log('Received remote track');
+                    console.log('Received remote track', event);
+                    console.log('Track kind:', event.track.kind);
+                    console.log('Track enabled:', event.track.enabled);
+                    console.log('Track readyState:', event.track.readyState);
+                    
                     if (event.streams && event.streams[0]) {
+                        const remoteStream = event.streams[0];
+                        const audioTracks = remoteStream.getAudioTracks();
+                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        
+                        if (audioTracks.length === 0) {
+                            console.error('No audio tracks in remote stream!');
+                            return;
+                        }
+                        
+                        audioTracks.forEach((track, index) => {
+                            console.log(`Audio track ${index}:`, {
+                                enabled: track.enabled,
+                                readyState: track.readyState,
+                                muted: track.muted,
+                                label: track.label
+                            });
+                        });
                         try {
-                            // Ensure audio context is initialized
+                            // Ensure audio context is initialized and nodes exist
                             if (!callAudioContext || callAudioContext.state === 'closed') {
                                 await initializeAudioContext();
                             }
 
-                            if (callAudioContext && callAudioContext.state === 'suspended') {
+                            if (!callAudioContext) {
+                                throw new Error('Audio context not initialized');
+                            }
+
+                            if (callAudioContext.state === 'suspended') {
                                 await callAudioContext.resume();
+                            }
+
+                            // Ensure audio nodes are created
+                            if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                console.log('Reinitializing audio nodes...');
+                                await initializeAudioContext();
                             }
 
                             // Create media stream source from remote stream
                             if (remoteAudioSource) {
-                                remoteAudioSource.disconnect();
+                                try {
+                                    remoteAudioSource.disconnect();
+                                } catch (e) {
+                                    console.warn('Error disconnecting old source:', e);
+                                }
                             }
 
                             remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
                             
                             // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                            remoteAudioSource.connect(remoteGainNode);
+                            if (remoteGainNode) {
+                                remoteAudioSource.connect(remoteGainNode);
+                                console.log('Remote audio connected to Web Audio API processing chain');
+                            } else {
+                                console.error('remoteGainNode not available, using fallback');
+                                throw new Error('Audio nodes not initialized');
+                            }
                             
                             // Also create a fallback Audio element for compatibility
+                            // Use fallback as backup in case Web Audio API has issues
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.7; // Lower volume to prevent feedback
+                                remoteAudioElement.volume = 0.8; // Set volume for fallback
                                 remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                                remoteAudioElement.muted = false;
                             }
                             
-                            // Set remote stream as fallback
+                            // Set remote stream as fallback (will be used if Web Audio fails)
                             remoteAudioElement.srcObject = event.streams[0];
                             
-                            // Try to play fallback (may be needed on some devices)
-                            remoteAudioElement.play().catch(e => {
-                                console.warn('Fallback audio play failed (using Web Audio):', e);
-                            });
+                            // Try to play fallback (as backup)
+                            try {
+                                await remoteAudioElement.play();
+                                console.log('Fallback audio element ready as backup');
+                            } catch (e) {
+                                console.warn('Fallback audio play failed:', e);
+                            }
+                            
+                            // Verify Web Audio API connection
+                            if (remoteAudioSource && remoteGainNode) {
+                                console.log('Web Audio API: Remote audio source connected to gain node');
+                                console.log('Web Audio API: Gain value:', remoteGainNode.gain.value);
+                                console.log('Web Audio API: Audio context state:', callAudioContext.state);
+                            } else {
+                                console.warn('Web Audio API nodes not properly initialized, using fallback only');
+                            }
 
-                            console.log('Remote audio connected through Web Audio API');
+                            console.log('Remote audio fully connected - Web Audio API and fallback both active');
                         } catch (e) {
-                            console.error('Error handling remote track:', e);
-                            // Fallback to basic audio element
-                            if (!remoteAudioElement) {
-                                remoteAudioElement = new Audio();
-                                remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.7;
+                            console.error('Error handling remote track with Web Audio API:', e);
+                            // Fallback to basic audio element only
+                            try {
+                                if (!remoteAudioElement) {
+                                    remoteAudioElement = new Audio();
+                                    remoteAudioElement.autoplay = true;
+                                    remoteAudioElement.volume = 0.7;
+                                    remoteAudioElement.setAttribute('playsinline', 'true');
+                                }
+                                remoteAudioElement.srcObject = event.streams[0];
+                                await remoteAudioElement.play();
+                                console.log('Using fallback audio element only');
+                            } catch (err) {
+                                console.error('Error with fallback audio element:', err);
+                                alert('Could not play remote audio. Please check your audio settings.');
                             }
-                            remoteAudioElement.srcObject = event.streams[0];
-                            remoteAudioElement.play().catch(err => {
-                                console.error('Error playing remote audio:', err);
-                            });
                         }
                     }
                 };
@@ -4399,12 +4470,20 @@
         function listenForIncomingCalls() {
             if (!ghostRoomId || !window.firebaseDB) return;
             
+            // Unsubscribe from existing listener if any
+            if (callUnsubscribe) {
+                callUnsubscribe();
+                callUnsubscribe = null;
+            }
+            
             // Clear processed calls older than 30 seconds
             const now = Date.now();
             if (now - lastCallCheckTime > 30000) {
                 processedCallIds.clear();
                 lastCallCheckTime = now;
             }
+            
+            console.log('Setting up incoming call listener for room:', ghostRoomId);
             
             const callsRef = window.firebaseCollection(window.firebaseDB, 'calls');
             const q = window.firebaseQuery(callsRef, window.firebaseOrderBy('timestamp', 'desc'));
@@ -4546,17 +4625,25 @@
                 peerConnection.onconnectionstatechange = () => {
                     console.log('Connection state:', peerConnection.connectionState);
                     // Only cleanup on actual failures, not on 'disconnected' which is normal during connection
-                    if (peerConnection.connectionState === 'failed' || 
-                        peerConnection.connectionState === 'closed') {
+                    if (peerConnection.connectionState === 'failed') {
                         // Give it more time before cleanup - connection might recover
                         setTimeout(() => {
-                            if (peerConnection && peerConnection.connectionState === 'failed') {
-                                console.warn('Connection failed, cleaning up');
+                            if (peerConnection && peerConnection.connectionState === 'failed' && callActive) {
+                                console.warn('Connection failed after timeout, cleaning up');
                                 cleanupCall();
                             }
-                        }, 5000); // Increased timeout to allow reconnection
+                        }, 10000); // Increased timeout to 10 seconds to allow reconnection
+                    } else if (peerConnection.connectionState === 'closed') {
+                        // Only cleanup if we're still in a call (not already cleaned up)
+                        if (callActive) {
+                            console.warn('Connection closed unexpectedly');
+                            cleanupCall();
+                        }
                     } else if (peerConnection.connectionState === 'connected') {
                         console.log('Connection established successfully');
+                    } else if (peerConnection.connectionState === 'disconnected') {
+                        // 'disconnected' is normal during connection establishment - don't cleanup
+                        console.log('Connection disconnected (may reconnect)');
                     }
                 };
                 
@@ -4566,70 +4653,133 @@
                     // Only cleanup on actual failures - 'disconnected' can be temporary during connection
                     if (peerConnection.iceConnectionState === 'failed') {
                         setTimeout(() => {
-                            if (peerConnection && peerConnection.iceConnectionState === 'failed') {
-                                console.warn('ICE connection failed, cleaning up');
+                            if (peerConnection && peerConnection.iceConnectionState === 'failed' && callActive) {
+                                console.warn('ICE connection failed after timeout, cleaning up');
                                 cleanupCall();
                             }
-                        }, 5000); // Increased timeout to allow reconnection
+                        }, 10000); // Increased timeout to 10 seconds
                     } else if (peerConnection.iceConnectionState === 'connected' || 
                                peerConnection.iceConnectionState === 'completed') {
                         console.log('ICE connection established successfully');
+                    } else if (peerConnection.iceConnectionState === 'disconnected') {
+                        // 'disconnected' is normal during connection - don't cleanup
+                        console.log('ICE disconnected (may reconnect)');
                     }
                 };
                 
                 // Handle remote stream with Web Audio API for echo cancellation
                 peerConnection.ontrack = async (event) => {
-                    console.log('Received remote track');
+                    console.log('Received remote track', event);
+                    console.log('Track kind:', event.track.kind);
+                    console.log('Track enabled:', event.track.enabled);
+                    console.log('Track readyState:', event.track.readyState);
+                    
                     if (event.streams && event.streams[0]) {
+                        const remoteStream = event.streams[0];
+                        const audioTracks = remoteStream.getAudioTracks();
+                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        
+                        if (audioTracks.length === 0) {
+                            console.error('No audio tracks in remote stream!');
+                            return;
+                        }
+                        
+                        audioTracks.forEach((track, index) => {
+                            console.log(`Audio track ${index}:`, {
+                                enabled: track.enabled,
+                                readyState: track.readyState,
+                                muted: track.muted,
+                                label: track.label
+                            });
+                        });
                         try {
-                            // Ensure audio context is initialized
+                            // Ensure audio context is initialized and nodes exist
                             if (!callAudioContext || callAudioContext.state === 'closed') {
                                 await initializeAudioContext();
                             }
 
-                            if (callAudioContext && callAudioContext.state === 'suspended') {
+                            if (!callAudioContext) {
+                                throw new Error('Audio context not initialized');
+                            }
+
+                            if (callAudioContext.state === 'suspended') {
                                 await callAudioContext.resume();
+                            }
+
+                            // Ensure audio nodes are created
+                            if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                console.log('Reinitializing audio nodes...');
+                                await initializeAudioContext();
                             }
 
                             // Create media stream source from remote stream
                             if (remoteAudioSource) {
-                                remoteAudioSource.disconnect();
+                                try {
+                                    remoteAudioSource.disconnect();
+                                } catch (e) {
+                                    console.warn('Error disconnecting old source:', e);
+                                }
                             }
 
                             remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
                             
                             // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                            remoteAudioSource.connect(remoteGainNode);
+                            if (remoteGainNode) {
+                                remoteAudioSource.connect(remoteGainNode);
+                                console.log('Remote audio connected to Web Audio API processing chain');
+                            } else {
+                                console.error('remoteGainNode not available, using fallback');
+                                throw new Error('Audio nodes not initialized');
+                            }
                             
                             // Also create a fallback Audio element for compatibility
+                            // Use fallback as backup in case Web Audio API has issues
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.7; // Lower volume to prevent feedback
+                                remoteAudioElement.volume = 0.8; // Set volume for fallback
                                 remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                                remoteAudioElement.muted = false;
                             }
                             
-                            // Set remote stream as fallback
+                            // Set remote stream as fallback (will be used if Web Audio fails)
                             remoteAudioElement.srcObject = event.streams[0];
                             
-                            // Try to play fallback (may be needed on some devices)
-                            remoteAudioElement.play().catch(e => {
-                                console.warn('Fallback audio play failed (using Web Audio):', e);
-                            });
+                            // Try to play fallback (as backup)
+                            try {
+                                await remoteAudioElement.play();
+                                console.log('Fallback audio element ready as backup');
+                            } catch (e) {
+                                console.warn('Fallback audio play failed:', e);
+                            }
+                            
+                            // Verify Web Audio API connection
+                            if (remoteAudioSource && remoteGainNode) {
+                                console.log('Web Audio API: Remote audio source connected to gain node');
+                                console.log('Web Audio API: Gain value:', remoteGainNode.gain.value);
+                                console.log('Web Audio API: Audio context state:', callAudioContext.state);
+                            } else {
+                                console.warn('Web Audio API nodes not properly initialized, using fallback only');
+                            }
 
-                            console.log('Remote audio connected through Web Audio API');
+                            console.log('Remote audio fully connected - Web Audio API and fallback both active');
                         } catch (e) {
-                            console.error('Error handling remote track:', e);
-                            // Fallback to basic audio element
-                            if (!remoteAudioElement) {
-                                remoteAudioElement = new Audio();
-                                remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.7;
+                            console.error('Error handling remote track with Web Audio API:', e);
+                            // Fallback to basic audio element only
+                            try {
+                                if (!remoteAudioElement) {
+                                    remoteAudioElement = new Audio();
+                                    remoteAudioElement.autoplay = true;
+                                    remoteAudioElement.volume = 0.7;
+                                    remoteAudioElement.setAttribute('playsinline', 'true');
+                                }
+                                remoteAudioElement.srcObject = event.streams[0];
+                                await remoteAudioElement.play();
+                                console.log('Using fallback audio element only');
+                            } catch (err) {
+                                console.error('Error with fallback audio element:', err);
+                                alert('Could not play remote audio. Please check your audio settings.');
                             }
-                            remoteAudioElement.srcObject = event.streams[0];
-                            remoteAudioElement.play().catch(err => {
-                                console.error('Error playing remote audio:', err);
-                            });
                         }
                     }
                 };
@@ -4851,7 +5001,14 @@
         // Cleanup call resources
         async function cleanupCall() {
             try {
+                const wasActive = callActive;
                 callActive = false;
+                
+                // Remove current callId from processedCallIds to allow new calls
+                if (callId) {
+                    processedCallIds.delete(callId);
+                    console.log('Removed callId from processedCallIds:', callId);
+                }
                 
                 // Unsubscribe from all listeners
                 if (callUnsubscribe) {
@@ -4869,6 +5026,16 @@
                 if (answerCandidatesUnsubscribe) {
                     answerCandidatesUnsubscribe();
                     answerCandidatesUnsubscribe = null;
+                }
+                
+                // Re-enable incoming call listener if call was active
+                if (wasActive && ghostRoomId && window.firebaseDB) {
+                    // Small delay to ensure cleanup is complete
+                    setTimeout(() => {
+                        if (!callActive) {
+                            listenForIncomingCalls();
+                        }
+                    }, 1000);
                 }
                 
                 // Disconnect Web Audio API nodes
@@ -4968,13 +5135,23 @@
                 const callBtn = document.getElementById('ghost-call-btn');
                 if (callBtn) callBtn.classList.remove('hidden');
                 
+                const endedCallId = callId;
                 callId = null;
                 isCaller = false;
+                
+                // Ensure ended call is removed from processedCallIds
+                if (endedCallId) {
+                    processedCallIds.delete(endedCallId);
+                    console.log('Removed ended callId from processedCallIds:', endedCallId);
+                }
                 
             } catch (error) {
                 console.error('Error in cleanupCall:', error);
                 // Force cleanup even if there's an error
                 callActive = false;
+                if (callId) {
+                    processedCallIds.delete(callId);
+                }
                 callId = null;
                 isCaller = false;
             }
