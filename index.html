@@ -4599,8 +4599,10 @@
         });
 
         // Initialize Firebase
-        const app = window.firebaseInitializeApp(firebaseConfig);
-        window.firebaseDB = window.firebaseGetFirestore(app);
+        window.addEventListener('DOMContentLoaded', () => {
+            const app = window.firebaseInitializeApp(firebaseConfig);
+            window.firebaseDB = window.firebaseGetFirestore(app);
+        });
         function disconnectGhost() {
             if (ghostUnsubscribe) {
                 ghostUnsubscribe();
@@ -5131,12 +5133,13 @@
                 return;
             }
 
-            // Set mode from parameter
+            // Clean up any existing call first
+            await cleanupCall();
+
+            // Set mode from parameter (AFTER cleanup, as cleanup resets it to 'audio')
             currentCallMode = mode;
             console.log('Initiating call with mode:', mode);
 
-            // Clean up any existing call first
-            await cleanupCall();
 
             try {
                 // Check microphone permission first
@@ -5148,9 +5151,52 @@
                     throw new Error('Could not initialize audio context');
                 }
 
-                // Get user media with enhanced constraints and optimal device
-                const constraints = await getEnhancedMediaConstraints();
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                // Get user media based on mode
+                if (currentCallMode === 'screen') {
+                    // Check if screen sharing is supported
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                        alert("Screen sharing is not supported on this device/browser.");
+                        currentCallMode = 'audio';
+                        cleanupCall();
+                        initiateCall('audio');
+                        return;
+                    }
+
+                    // For screen share: Get display media + mic audio
+                    try {
+                        const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                        const micConstraints = await getEnhancedMediaConstraints();
+                        // Ensure we only get audio for mic
+                        micConstraints.video = false;
+                        const micStream = await navigator.mediaDevices.getUserMedia(micConstraints);
+
+                        // Combine tracks: Mic audio + Screen video
+                        // Note: displayStream might have its own audio (system audio), but we usually prioritize mic for calls
+                        localStream = new MediaStream([
+                            ...micStream.getAudioTracks(),
+                            ...displayStream.getVideoTracks()
+                        ]);
+
+                        isScreenSharing = true;
+
+                        // Handle user stopping screen share via browser UI
+                        displayStream.getVideoTracks()[0].onended = () => {
+                            switchCallMode('video');
+                        };
+                    } catch (err) {
+                        console.error("Error getting screen share:", err);
+                        // Fallback to audio if screen share cancelled/failed
+                        alert("Screen share failed or cancelled. Falling back to audio.");
+                        currentCallMode = 'audio';
+                        cleanupCall(); // Cleanup partial streams
+                        initiateCall('audio');
+                        return;
+                    }
+                } else {
+                    // Standard Audio/Video Call
+                    const constraints = await getEnhancedMediaConstraints();
+                    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                }
 
                 // Setup local audio monitoring for echo detection
                 setupLocalAudioMonitoring(localStream);
@@ -6395,6 +6441,19 @@
             const popup = document.getElementById('call-options-popup');
             if (popup) {
                 popup.classList.toggle('hidden');
+
+                // Hide screen share on mobile or if unsupported
+                const screenBtn = popup.querySelector('button[onclick="startCallWithMode(\'screen\')"]');
+                if (screenBtn) {
+                    if (isMobile || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                        screenBtn.classList.add('hidden');
+                        screenBtn.classList.remove('md:flex'); // Remove responsive class that might force it to show
+                    } else {
+                        screenBtn.classList.remove('hidden');
+                        screenBtn.classList.add('md:flex');
+                    }
+                }
+
                 if (typeof lucide !== 'undefined' && lucide.createIcons) {
                     lucide.createIcons();
                 }
@@ -7190,4 +7249,3 @@
 </body>
 
 </html>
-
