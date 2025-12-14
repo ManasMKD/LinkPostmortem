@@ -5526,6 +5526,7 @@
                         },
                         roomId: ghostRoomId,
                         caller: ghostHandle,
+                        callMode: currentCallMode, // Pass call mode to receiver
                         timestamp: window.firebaseServerTimestamp(),
                         status: 'calling'
                     }
@@ -5542,6 +5543,9 @@
 
                 // Show active call interface
                 showActiveCall();
+
+                // Start outgoing ring sound (caller hears this while waiting for answer)
+                startRingSound(true);
 
                 console.log('Call initiated, waiting for answer');
 
@@ -5627,6 +5631,8 @@
                             const incomingModal = document.getElementById('incoming-call-modal');
                             if (incomingModal) {
                                 incomingModal.classList.remove('hidden');
+                                // Start incoming ring sound (receiver hears this)
+                                startRingSound(false);
                             }
                         }
                     }
@@ -5703,6 +5709,9 @@
                 incomingModal.classList.add('hidden');
             }
 
+            // Stop incoming ring sound
+            stopRingSound();
+
             // Don't cleanup here - we need to preserve the callId and existing listeners
             // Only cleanup if there's actually a conflicting call
             if (peerConnection && peerConnection.connectionState !== 'closed') {
@@ -5711,6 +5720,18 @@
             }
 
             try {
+                // First, fetch the call document to get the caller's mode
+                const acceptCallDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                const callSnap = await window.firebaseGetDoc(acceptCallDocRef);
+                if (callSnap.exists()) {
+                    const callData = callSnap.data();
+                    // Set our mode to match the caller's mode
+                    if (callData.callMode) {
+                        currentCallMode = callData.callMode;
+                        console.log('Receiver: Setting call mode to match caller:', currentCallMode);
+                    }
+                }
+
                 // Check microphone permission first
                 await requestMicrophoneAccess();
 
@@ -5720,9 +5741,11 @@
                     throw new Error('Could not initialize audio context');
                 }
 
-                // Get user media with enhanced constraints and optimal device
+                // Get user media with enhanced constraints based on call mode
                 const constraints = await getEnhancedMediaConstraints();
+                console.log('Receiver: Requesting media with constraints:', JSON.stringify(constraints));
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log('Receiver: Got local stream with tracks:', localStream.getTracks().map(t => t.kind + ':' + t.label));
 
                 // Setup local audio monitoring for echo detection
                 setupLocalAudioMonitoring(localStream);
@@ -6138,6 +6161,10 @@
                         try {
                             console.log('Setting remote description from answer');
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+
+                            // Stop outgoing ring sound (caller side - callee has answered)
+                            stopRingSound();
+
                             listenForAnswerCandidates();
 
                             // After setting remote description, ensure audio will play when track arrives
@@ -6438,6 +6465,93 @@
         let isCameraOff = false;
         let isScreenSharing = false;
         let cameraStream = null; // Store camera stream for swap-back
+
+        // ============================================
+        // RING SOUND SYSTEM
+        // ============================================
+        let ringAudioCtx = null;
+        let ringOscillator = null;
+        let ringGainNode = null;
+        let ringInterval = null;
+        let isRinging = false;
+
+        // Start ring sound (outgoing = caller, incoming = receiver)
+        function startRingSound(isOutgoing = false) {
+            if (isRinging) return; // Already ringing
+
+            try {
+                stopRingSound(); // Cleanup any existing
+
+                ringAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                ringOscillator = ringAudioCtx.createOscillator();
+                ringGainNode = ringAudioCtx.createGain();
+
+                // Different tones for outgoing vs incoming
+                ringOscillator.type = 'sine';
+                ringOscillator.frequency.value = isOutgoing ? 440 : 480;
+                ringGainNode.gain.value = 0;
+
+                ringOscillator.connect(ringGainNode);
+                ringGainNode.connect(ringAudioCtx.destination);
+                ringOscillator.start();
+
+                isRinging = true;
+
+                // Ring pattern: 1s on, 2s off
+                let ringOn = false;
+                const pulseRing = () => {
+                    if (!isRinging || !ringGainNode) return;
+
+                    ringOn = !ringOn;
+                    ringGainNode.gain.setTargetAtTime(
+                        ringOn ? 0.3 : 0,
+                        ringAudioCtx.currentTime,
+                        0.05
+                    );
+                };
+
+                pulseRing(); // Start with ring on
+                ringInterval = setInterval(pulseRing, 1000);
+
+                console.log(`Ring sound started (${isOutgoing ? 'outgoing' : 'incoming'})`);
+            } catch (e) {
+                console.warn('Could not start ring sound:', e);
+            }
+        }
+
+        // Stop ring sound
+        function stopRingSound() {
+            if (ringInterval) {
+                clearInterval(ringInterval);
+                ringInterval = null;
+            }
+
+            if (ringOscillator) {
+                try {
+                    ringOscillator.stop();
+                } catch (e) { }
+                ringOscillator = null;
+            }
+
+            if (ringGainNode) {
+                try {
+                    ringGainNode.disconnect();
+                } catch (e) { }
+                ringGainNode = null;
+            }
+
+            if (ringAudioCtx && ringAudioCtx.state !== 'closed') {
+                try {
+                    ringAudioCtx.close();
+                } catch (e) { }
+                ringAudioCtx = null;
+            }
+
+            if (isRinging) {
+                console.log('Ring sound stopped');
+                isRinging = false;
+            }
+        }
         let callTimerInterval = null;
         let callStartTime = null;
 
@@ -6825,6 +6939,9 @@
         // Cleanup call resources - SECURE HANGUP with recursive deletion
         async function cleanupCall() {
             try {
+                // Stop any ring sound immediately
+                stopRingSound();
+
                 const wasActive = callActive;
                 const currentCallId = callId; // Store callId before cleanup
                 callActive = false;
