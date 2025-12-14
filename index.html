@@ -4020,6 +4020,9 @@
         let compressorNode = null;
         let limiterNode = null;
         let destinationNode = null;
+        
+        // Mobile audio check interval
+        let mobileAudioCheckInterval = null;
 
         // Device detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -4369,20 +4372,49 @@
                                 console.log('Enabled audio track:', track.label);
                             });
                             
-                            // Play the audio element
-                            try {
-                                await remoteAudioElement.play();
-                                console.log('Remote audio element playing successfully');
-                                console.log('Audio element volume:', remoteAudioElement.volume);
-                                console.log('Audio element muted:', remoteAudioElement.muted);
-                                console.log('Audio element paused:', remoteAudioElement.paused);
-                            } catch (playError) {
-                                console.error('Failed to play remote audio element:', playError);
-                                // Try user interaction workaround
-                                if (playError.name === 'NotAllowedError') {
-                                    console.warn('Autoplay blocked, user interaction required');
+                            // Play the audio element with retry for mobile
+                            let playAttempts = 0;
+                            const maxPlayAttempts = 5;
+                            
+                            const tryPlayAudio = async () => {
+                                try {
+                                    await remoteAudioElement.play();
+                                    console.log('Remote audio element playing successfully');
+                                    console.log('Audio element volume:', remoteAudioElement.volume);
+                                    console.log('Audio element muted:', remoteAudioElement.muted);
+                                    console.log('Audio element paused:', remoteAudioElement.paused);
+                                    return true;
+                                } catch (playError) {
+                                    playAttempts++;
+                                    console.warn(`Play attempt ${playAttempts} failed:`, playError);
+                                    
+                                    if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
+                                        // Autoplay blocked - wait a bit and retry (user might interact)
+                                        console.log('Autoplay blocked, will retry...');
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 1000);
+                                    } else if (playAttempts < maxPlayAttempts) {
+                                        // Other error - retry after short delay
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 500);
+                                    } else {
+                                        console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
+                                        // On mobile, try to show a message or use a workaround
+                                        if (isMobile) {
+                                            console.warn('Mobile autoplay blocked - audio may need user interaction');
+                                        }
+                                    }
+                                    return false;
                                 }
-                            }
+                            };
+                            
+                            await tryPlayAudio();
                             
                             // SECONDARY METHOD: Also try Web Audio API for echo cancellation
                             try {
@@ -4778,20 +4810,49 @@
                                 console.log('Enabled audio track:', track.label);
                             });
                             
-                            // Play the audio element
-                            try {
-                                await remoteAudioElement.play();
-                                console.log('Remote audio element playing successfully');
-                                console.log('Audio element volume:', remoteAudioElement.volume);
-                                console.log('Audio element muted:', remoteAudioElement.muted);
-                                console.log('Audio element paused:', remoteAudioElement.paused);
-                            } catch (playError) {
-                                console.error('Failed to play remote audio element:', playError);
-                                // Try user interaction workaround
-                                if (playError.name === 'NotAllowedError') {
-                                    console.warn('Autoplay blocked, user interaction required');
+                            // Play the audio element with retry for mobile
+                            let playAttempts = 0;
+                            const maxPlayAttempts = 5;
+                            
+                            const tryPlayAudio = async () => {
+                                try {
+                                    await remoteAudioElement.play();
+                                    console.log('Remote audio element playing successfully');
+                                    console.log('Audio element volume:', remoteAudioElement.volume);
+                                    console.log('Audio element muted:', remoteAudioElement.muted);
+                                    console.log('Audio element paused:', remoteAudioElement.paused);
+                                    return true;
+                                } catch (playError) {
+                                    playAttempts++;
+                                    console.warn(`Play attempt ${playAttempts} failed:`, playError);
+                                    
+                                    if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
+                                        // Autoplay blocked - wait a bit and retry (user might interact)
+                                        console.log('Autoplay blocked, will retry...');
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 1000);
+                                    } else if (playAttempts < maxPlayAttempts) {
+                                        // Other error - retry after short delay
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 500);
+                                    } else {
+                                        console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
+                                        // On mobile, try to show a message or use a workaround
+                                        if (isMobile) {
+                                            console.warn('Mobile autoplay blocked - audio may need user interaction');
+                                        }
+                                    }
+                                    return false;
                                 }
-                            }
+                            };
+                            
+                            await tryPlayAudio();
                             
                             // SECONDARY METHOD: Also try Web Audio API for echo cancellation
                             try {
@@ -4985,6 +5046,20 @@
                             console.log('Setting remote description from answer');
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                             listenForAnswerCandidates();
+                            
+                            // After setting remote description, ensure audio will play when track arrives
+                            // This is especially important for mobile devices
+                            if (isMobile) {
+                                // On mobile, try to play audio after a delay (when track should arrive)
+                                setTimeout(() => {
+                                    if (callActive && remoteAudioElement && remoteAudioElement.paused) {
+                                        console.log('Mobile: Attempting to play remote audio after answer');
+                                        remoteAudioElement.play().catch(e => {
+                                            console.warn('Mobile play attempt failed:', e);
+                                        });
+                                    }
+                                }, 2000);
+                            }
                         } catch (e) {
                             console.error('Error setting remote description:', e);
                             // Don't cleanup on error - might be recoverable
@@ -5064,11 +5139,76 @@
             }
             
             // Ensure remote audio is playing when call interface is shown
-            // This helps with autoplay policies
-            if (remoteAudioElement && remoteAudioElement.paused) {
-                remoteAudioElement.play().catch(e => {
-                    console.warn('Could not resume remote audio:', e);
-                });
+            // This helps with autoplay policies, especially on mobile
+            const ensureAudioPlaying = () => {
+                if (remoteAudioElement) {
+                    if (remoteAudioElement.paused) {
+                        remoteAudioElement.play().catch(e => {
+                            console.warn('Could not resume remote audio:', e);
+                            // Retry after a short delay (user might have interacted)
+                            if (callActive) {
+                                setTimeout(() => {
+                                    if (remoteAudioElement && remoteAudioElement.paused) {
+                                        remoteAudioElement.play().catch(err => {
+                                            console.warn('Retry play failed:', err);
+                                        });
+                                    }
+                                }, 500);
+                            }
+                        });
+                    }
+                    
+                    // Ensure volume and mute settings
+                    remoteAudioElement.volume = 1.0;
+                    remoteAudioElement.muted = false;
+                }
+            };
+            
+            // Try immediately
+            ensureAudioPlaying();
+            
+            // Also try after a short delay (helps with mobile)
+            setTimeout(ensureAudioPlaying, 500);
+            setTimeout(ensureAudioPlaying, 1500);
+            
+            // On mobile, also try when user interacts with the page
+            if (isMobile) {
+                const playOnInteraction = () => {
+                    if (callActive && remoteAudioElement && remoteAudioElement.paused) {
+                        console.log('Mobile: User interaction detected, attempting to play audio');
+                        remoteAudioElement.play().catch(e => console.warn('Interaction play failed:', e));
+                    }
+                };
+                
+                // Try on any user interaction (multiple times for better chance)
+                document.addEventListener('click', playOnInteraction, { once: false });
+                document.addEventListener('touchstart', playOnInteraction, { once: false });
+                document.addEventListener('touchend', playOnInteraction, { once: false });
+                
+                // Also set up periodic check for mobile (every 2 seconds)
+                if (mobileAudioCheckInterval) {
+                    clearInterval(mobileAudioCheckInterval);
+                }
+                
+                mobileAudioCheckInterval = setInterval(() => {
+                    if (!callActive) {
+                        if (mobileAudioCheckInterval) {
+                            clearInterval(mobileAudioCheckInterval);
+                            mobileAudioCheckInterval = null;
+                        }
+                        return;
+                    }
+                    
+                    if (remoteAudioElement && remoteAudioElement.paused) {
+                        console.log('Mobile: Audio paused, attempting to resume');
+                        remoteAudioElement.play().catch(e => {
+                            // Only log if it's not just autoplay blocking
+                            if (!e.message || !e.message.includes('play()')) {
+                                console.warn('Mobile audio resume failed:', e);
+                            }
+                        });
+                    }
+                }, 2000);
             }
             
             // Note: Call end listening is already handled by listenForAnswer() and listenForIncomingCalls()
@@ -5090,6 +5230,12 @@
                 if (callId) {
                     processedCallIds.delete(callId);
                     console.log('Removed callId from processedCallIds:', callId);
+                }
+                
+                // Clear mobile audio check interval
+                if (mobileAudioCheckInterval) {
+                    clearInterval(mobileAudioCheckInterval);
+                    mobileAudioCheckInterval = null;
                 }
                 
                 // Unsubscribe from all listeners
