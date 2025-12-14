@@ -5315,19 +5315,52 @@
 
                         // Handle VIDEO tracks
                         if (event.track.kind === 'video') {
-                            console.log('Received video track - setting up video display');
+                            console.log('Caller: Received video track - setting up video display');
                             const remoteVideo = document.getElementById('remote-video');
                             const videoPlaceholder = document.getElementById('video-placeholder');
+                            const videoCallWindow = document.getElementById('video-call-window');
+                            const activeCallUI = document.getElementById('active-call-interface');
+
+                            // Ensure video call window is visible when we receive video
+                            if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
+                                console.log('Caller: Showing video call window for incoming video track');
+                                videoCallWindow.classList.remove('hidden');
+                                if (activeCallUI) {
+                                    activeCallUI.classList.add('hidden');
+                                }
+                                // Also set up local video if we have it
+                                const localVideo = document.getElementById('local-video');
+                                if (localVideo && localStream) {
+                                    localVideo.srcObject = localStream;
+                                }
+                            }
 
                             if (remoteVideo) {
                                 remoteVideo.srcObject = remoteStream;
-                                remoteVideo.play().catch(e => console.warn('Video play failed:', e));
+                                // Ensure video plays with proper attributes
+                                remoteVideo.muted = false; // Audio comes from audio tracks
+                                remoteVideo.setAttribute('playsinline', '');
+                                remoteVideo.setAttribute('autoplay', '');
+
+                                remoteVideo.play().catch(e => {
+                                    console.warn('Video play failed, retrying:', e);
+                                    // Retry after a short delay
+                                    setTimeout(() => {
+                                        remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
+                                    }, 500);
+                                });
 
                                 // Hide placeholder when video starts
                                 if (videoPlaceholder) {
                                     videoPlaceholder.classList.add('hidden');
                                 }
-                                console.log('Remote video connected');
+                                console.log('Caller: Remote video connected');
+
+                                // Update call mode to video if not already
+                                if (currentCallMode === 'audio') {
+                                    currentCallMode = 'video';
+                                    updateModeUI('video');
+                                }
                             }
                             return; // Video track handled, don't process as audio
                         }
@@ -5865,16 +5898,49 @@
                             console.log('Receiver: Received video track - setting up video display');
                             const remoteVideo = document.getElementById('remote-video');
                             const videoPlaceholder = document.getElementById('video-placeholder');
+                            const videoCallWindow = document.getElementById('video-call-window');
+                            const activeCallUI = document.getElementById('active-call-interface');
+
+                            // Ensure video call window is visible when we receive video
+                            if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
+                                console.log('Receiver: Showing video call window for incoming video track');
+                                videoCallWindow.classList.remove('hidden');
+                                if (activeCallUI) {
+                                    activeCallUI.classList.add('hidden');
+                                }
+                                // Also set up local video if we have it
+                                const localVideo = document.getElementById('local-video');
+                                if (localVideo && localStream) {
+                                    localVideo.srcObject = localStream;
+                                }
+                            }
 
                             if (remoteVideo) {
                                 remoteVideo.srcObject = remoteStream;
-                                remoteVideo.play().catch(e => console.warn('Video play failed:', e));
+                                // Ensure video plays with proper attributes
+                                remoteVideo.muted = false; // Audio comes from audio tracks
+                                remoteVideo.setAttribute('playsinline', '');
+                                remoteVideo.setAttribute('autoplay', '');
+
+                                remoteVideo.play().catch(e => {
+                                    console.warn('Video play failed, retrying:', e);
+                                    // Retry after a short delay
+                                    setTimeout(() => {
+                                        remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
+                                    }, 500);
+                                });
 
                                 // Hide placeholder when video starts
                                 if (videoPlaceholder) {
                                     videoPlaceholder.classList.add('hidden');
                                 }
                                 console.log('Receiver: Remote video connected');
+
+                                // Update call mode to video if not already
+                                if (currentCallMode === 'audio') {
+                                    currentCallMode = 'video';
+                                    updateModeUI('video');
+                                }
                             }
                             return; // Video track handled, don't process as audio
                         }
@@ -7389,4 +7455,4 @@
     </script>
 </body>
 
-</html>
+    </html>
