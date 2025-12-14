@@ -5510,10 +5510,13 @@
                 };
 
                 // Create offer
+                console.log('Creating WebRTC offer...');
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
+                console.log('Offer created and local description set:', offer.type);
 
                 // Save offer to Firestore - create new document
+                console.log('Saving offer to Firestore for roomId:', ghostRoomId, 'caller:', ghostHandle);
                 const callDocRef = await window.firebaseAddDoc(
                     window.firebaseCollection(window.firebaseDB, 'calls'),
                     {
@@ -5528,9 +5531,11 @@
                     }
                 );
                 callId = callDocRef.id; // Use actual document ID
+                console.log('Call document created with ID:', callId);
 
                 // Mark call as active
                 callActive = true;
+                console.log('Call marked as active. Ready to receive answer.');
 
                 // Listen for answer and call state changes
                 listenForAnswer();
