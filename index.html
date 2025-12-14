@@ -4388,51 +4388,40 @@
             }
         }
 
-        // Initialize call (make sure it's globally accessible)
+        // Initialize call
         async function initiateCall() {
-            console.log('initiateCall() called');
-            
             if (!ghostRoomId) {
-                console.error('Cannot initiate call: no roomId');
                 alert("Please join a room first.");
                 return;
             }
 
             if (callActive) {
-                console.warn('Cannot initiate call: call already active');
                 alert("A call is already active.");
                 return;
             }
 
-            console.log('Cleaning up any existing call...');
             // Clean up any existing call first
             await cleanupCall();
 
             try {
-                console.log('Requesting microphone access...');
                 // Check microphone permission first
                 await requestMicrophoneAccess();
                 
-                console.log('Initializing audio context...');
                 // Initialize audio context first
                 await initializeAudioContext();
                 if (!callAudioContext) {
                     throw new Error('Could not initialize audio context');
                 }
 
-                console.log('Getting user media...');
                 // Get user media with enhanced constraints and optimal device
                 const constraints = await getEnhancedMediaConstraints();
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                console.log('Got user media stream');
                 
                 // Setup local audio monitoring for echo detection
                 setupLocalAudioMonitoring(localStream);
                 
                 isCaller = true;
-                console.log('Setting isCaller = true');
                 
-                console.log('Creating peer connection...');
                 // Create peer connection
                 peerConnection = new RTCPeerConnection(iceServers);
                 
@@ -4694,18 +4683,10 @@
                 };
                 
                 // Create offer
-                console.log('Creating offer...');
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
-                console.log('Offer created and set as local description');
                 
                 // Save offer to Firestore - create new document
-                console.log('Saving call document to Firestore...', {
-                    roomId: ghostRoomId,
-                    caller: ghostHandle,
-                    status: 'calling'
-                });
-                
                 const callDocRef = await window.firebaseAddDoc(
                     window.firebaseCollection(window.firebaseDB, 'calls'),
                     {
@@ -4720,27 +4701,17 @@
                     }
                 );
                 callId = callDocRef.id; // Use actual document ID
-                console.log('Call document created with ID:', callId);
-                console.log('Call document data:', {
-                    callId,
-                    roomId: ghostRoomId,
-                    caller: ghostHandle,
-                    status: 'calling'
-                });
                 
                 // Mark call as active
                 callActive = true;
-                console.log('Call marked as active');
                 
                 // Listen for answer and call state changes
-                console.log('Setting up answer listener...');
                 listenForAnswer();
                 
                 // Show active call interface
-                console.log('Showing active call interface...');
                 showActiveCall();
                 
-                console.log('Call initiated successfully, waiting for answer. Call ID:', callId);
+                console.log('Call initiated, waiting for answer');
                 
             } catch (error) {
                 console.error('Call initiation error:', error);
@@ -4767,10 +4738,7 @@
 
         // Listen for incoming calls
         function listenForIncomingCalls() {
-            if (!ghostRoomId || !window.firebaseDB) {
-                console.warn('Cannot listen for calls: missing roomId or Firebase DB');
-                return;
-            }
+            if (!ghostRoomId || !window.firebaseDB) return;
             
             // Unsubscribe from existing listener if any
             if (callUnsubscribe) {
@@ -4787,13 +4755,10 @@
             
             console.log('Setting up incoming call listener for room:', ghostRoomId);
             
-            // Listen to ALL calls (we'll filter by roomId in the callback)
-            // This ensures we don't miss any calls even if Firestore indexing is slow
             const callsRef = window.firebaseCollection(window.firebaseDB, 'calls');
+            const q = window.firebaseQuery(callsRef, window.firebaseOrderBy('timestamp', 'desc'));
             
-            // Use onSnapshot directly on the collection to catch all new calls
-            // We'll filter by roomId in the callback
-            callUnsubscribe = window.firebaseOnSnapshot(callsRef, async (snapshot) => {
+            callUnsubscribe = window.firebaseOnSnapshot(q, async (snapshot) => {
                 snapshot.docChanges().forEach(async (change) => {
                     // Only process new calls that haven't been seen
                     if (change.type === 'added' && !isCaller && !callActive) {
@@ -4802,7 +4767,6 @@
                         
                         // Skip if already processed
                         if (processedCallIds.has(callDocId)) {
-                            console.log('Skipping already processed call:', callDocId);
                             return;
                         }
                         
@@ -4815,25 +4779,12 @@
                                              (callData.timestamp?.seconds ? callData.timestamp.seconds * 1000 : Date.now());
                         const callAge = Date.now() - callTimestamp;
                         
-                        console.log('Checking call:', {
-                            callDocId,
-                            roomId: callData.roomId,
-                            expectedRoomId: ghostRoomId,
-                            caller: callData.caller,
-                            myHandle: ghostHandle,
-                            status: callData.status,
-                            callAge,
-                            isCaller,
-                            callActive
-                        });
-                        
                         if (callData.roomId === ghostRoomId && 
                             callData.caller !== ghostHandle && 
                             callData.status === 'calling' &&
                             !callData.ended &&
                             callAge < 30000) { // Only show calls less than 30 seconds old
                             
-                            console.log('INCOMING CALL DETECTED! Showing modal...');
                             processedCallIds.add(callDocId);
                             callId = callDocId;
                             
@@ -4844,18 +4795,7 @@
                             const incomingModal = document.getElementById('incoming-call-modal');
                             if (incomingModal) {
                                 incomingModal.classList.remove('hidden');
-                                console.log('Incoming call modal shown');
-                            } else {
-                                console.error('Incoming call modal element not found!');
                             }
-                        } else {
-                            console.log('Call filtered out:', {
-                                roomMatch: callData.roomId === ghostRoomId,
-                                notSelf: callData.caller !== ghostHandle,
-                                statusOk: callData.status === 'calling',
-                                notEnded: !callData.ended,
-                                ageOk: callAge < 30000
-                            });
                         }
                     }
                     
@@ -4879,8 +4819,6 @@
                     }
                 });
             });
-            
-            console.log('Incoming call listener set up successfully');
         }
 
         // Accept incoming call
@@ -5868,12 +5806,6 @@
                 throw error;
             }
         }
-
-        // Ensure call functions are globally accessible for onclick handlers
-        window.initiateCall = initiateCall;
-        window.acceptCall = acceptCall;
-        window.denyCall = denyCall;
-        window.hangupCall = hangupCall;
 
     </script>
 </body>
