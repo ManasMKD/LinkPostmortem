@@ -5120,7 +5120,7 @@
         }
 
         // Initialize call
-        async function initiateCall() {
+        async function initiateCall(mode = 'audio') {
             if (!ghostRoomId) {
                 alert("Please join a room first.");
                 return;
@@ -5130,6 +5130,10 @@
                 alert("A call is already active.");
                 return;
             }
+
+            // Set mode from parameter
+            currentCallMode = mode;
+            console.log('Initiating call with mode:', mode);
 
             // Clean up any existing call first
             await cleanupCall();
