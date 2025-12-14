@@ -20,7 +20,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // ============================================
         // FIREBASE CONFIGURATION
@@ -51,7 +51,6 @@
             window.firebaseDoc = doc;
             window.firebaseUpdateDoc = updateDoc;
             window.firebaseGetDocs = getDocs;
-            window.firebaseDeleteDoc = deleteDoc;
             
             console.log('Firebase initialized successfully');
         } catch (error) {
@@ -4024,63 +4023,6 @@
         
         // Mobile audio check interval
         let mobileAudioCheckInterval = null;
-        
-        // Audio health check interval (for all devices)
-        let audioHealthCheckInterval = null;
-        
-        // Start audio health monitoring
-        function startAudioHealthCheck() {
-            if (audioHealthCheckInterval) {
-                clearInterval(audioHealthCheckInterval);
-            }
-            
-            audioHealthCheckInterval = setInterval(() => {
-                if (!callActive) {
-                    if (audioHealthCheckInterval) {
-                        clearInterval(audioHealthCheckInterval);
-                        audioHealthCheckInterval = null;
-                    }
-                    return;
-                }
-                
-                // Check if remote audio is playing
-                if (remoteAudioElement) {
-                    if (remoteAudioElement.paused) {
-                        console.warn('Audio health check: Remote audio is paused, attempting to resume');
-                        remoteAudioElement.play().catch(e => {
-                            if (!e.message || !e.message.includes('play()')) {
-                                console.warn('Audio health check: Resume failed:', e);
-                            }
-                        });
-                    }
-                    
-                    // Verify volume and mute settings
-                    if (remoteAudioElement.volume < 0.5) {
-                        console.warn('Audio health check: Volume too low, resetting to 1.0');
-                        remoteAudioElement.volume = 1.0;
-                    }
-                    
-                    if (remoteAudioElement.muted) {
-                        console.warn('Audio health check: Audio is muted, unmuting');
-                        remoteAudioElement.muted = false;
-                    }
-                    
-                    // Check if stream is still active
-                    if (remoteAudioElement.srcObject) {
-                        const stream = remoteAudioElement.srcObject;
-                        const tracks = stream.getAudioTracks();
-                        const activeTracks = tracks.filter(t => t.enabled && t.readyState === 'live');
-                        
-                        if (activeTracks.length === 0 && tracks.length > 0) {
-                            console.warn('Audio health check: No active tracks, re-enabling');
-                            tracks.forEach(track => {
-                                track.enabled = true;
-                            });
-                        }
-                    }
-                }
-            }, 3000); // Check every 3 seconds
-        }
 
         // Device detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -4245,188 +4187,6 @@
             }
         }
 
-        // Helper function to setup remote audio playback (used by both caller and callee)
-        async function setupRemoteAudioPlayback(remoteStream) {
-            if (!remoteStream) {
-                console.error('No remote stream provided');
-                return false;
-            }
-
-            const audioTracks = remoteStream.getAudioTracks();
-            console.log('Setting up remote audio playback, tracks:', audioTracks.length);
-            
-            if (audioTracks.length === 0) {
-                console.error('No audio tracks in remote stream!');
-                return false;
-            }
-            
-            // Log track details
-            audioTracks.forEach((track, index) => {
-                console.log(`Audio track ${index}:`, {
-                    enabled: track.enabled,
-                    readyState: track.readyState,
-                    muted: track.muted,
-                    label: track.label
-                });
-            });
-
-            try {
-                // Clean up old audio element completely
-                if (remoteAudioElement) {
-                    try {
-                        remoteAudioElement.pause();
-                        remoteAudioElement.srcObject = null;
-                        // Remove all event listeners by cloning (cleaner than tracking them)
-                        const oldElement = remoteAudioElement;
-                        remoteAudioElement = null;
-                        // Let old element be garbage collected
-                    } catch (e) {
-                        console.warn('Error cleaning up old audio element:', e);
-                    }
-                }
-                
-                // Create fresh audio element
-                remoteAudioElement = new Audio();
-                remoteAudioElement.autoplay = true;
-                remoteAudioElement.volume = 1.0;
-                remoteAudioElement.setAttribute('playsinline', 'true');
-                remoteAudioElement.muted = false;
-                
-                // Add monitoring event listeners
-                remoteAudioElement.addEventListener('play', () => {
-                    console.log('✓ Remote audio playing');
-                });
-                remoteAudioElement.addEventListener('pause', () => {
-                    console.warn('⚠ Remote audio paused during call');
-                    if (callActive) {
-                        setTimeout(() => {
-                            if (callActive && remoteAudioElement && remoteAudioElement.paused) {
-                                console.log('Attempting to resume paused audio');
-                                remoteAudioElement.play().catch(e => console.warn('Resume failed:', e));
-                            }
-                        }, 300);
-                    }
-                });
-                remoteAudioElement.addEventListener('error', (e) => {
-                    console.error('Remote audio error:', e);
-                });
-                remoteAudioElement.addEventListener('loadedmetadata', () => {
-                    console.log('Remote audio metadata loaded');
-                });
-                
-                // Set stream
-                remoteAudioElement.srcObject = remoteStream;
-                remoteAudioElement.volume = 1.0;
-                remoteAudioElement.muted = false;
-                
-                // Enable and verify all audio tracks
-                let allTracksEnabled = true;
-                audioTracks.forEach(track => {
-                    track.enabled = true;
-                    if (!track.enabled) {
-                        console.warn('Track not enabled, forcing:', track.label);
-                        track.enabled = true;
-                        allTracksEnabled = false;
-                    }
-                });
-                
-                if (!allTracksEnabled) {
-                    console.warn('Some tracks were not enabled, retrying...');
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    audioTracks.forEach(track => {
-                        track.enabled = true;
-                    });
-                }
-                
-                // Wait for stream to be ready
-                await new Promise(resolve => setTimeout(resolve, 150));
-                
-                // Verify active tracks
-                const activeTracks = audioTracks.filter(t => t.enabled && t.readyState === 'live');
-                if (activeTracks.length === 0) {
-                    console.error('No active audio tracks after setup!');
-                    return false;
-                }
-                console.log('Active audio tracks:', activeTracks.length);
-                
-                // Play with retry mechanism
-                let playAttempts = 0;
-                const maxPlayAttempts = 10;
-                
-                const tryPlay = async () => {
-                    try {
-                        remoteAudioElement.volume = 1.0;
-                        remoteAudioElement.muted = false;
-                        
-                        await remoteAudioElement.play();
-                        
-                        // Verify playback
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        
-                        if (remoteAudioElement.paused) {
-                            throw new Error('Audio still paused after play()');
-                        }
-                        
-                        console.log('✓ Remote audio playing successfully');
-                        console.log('  Volume:', remoteAudioElement.volume);
-                        console.log('  Muted:', remoteAudioElement.muted);
-                        console.log('  Paused:', remoteAudioElement.paused);
-                        
-                        return true;
-                    } catch (playError) {
-                        playAttempts++;
-                        console.warn(`Play attempt ${playAttempts}/${maxPlayAttempts} failed:`, playError.name);
-                        
-                        if (playAttempts < maxPlayAttempts) {
-                            const delay = playError.name === 'NotAllowedError' ? 1000 : 500;
-                            setTimeout(() => {
-                                if (callActive && remoteAudioElement && remoteAudioElement.srcObject) {
-                                    tryPlay();
-                                }
-                            }, delay);
-                        } else {
-                            console.error('Failed to play after', maxPlayAttempts, 'attempts');
-                        }
-                        return false;
-                    }
-                };
-                
-                const playSuccess = await tryPlay();
-                
-                // Also setup Web Audio API for echo cancellation (secondary)
-                try {
-                    if (!callAudioContext || callAudioContext.state === 'closed') {
-                        await initializeAudioContext();
-                    }
-                    
-                    if (callAudioContext && callAudioContext.state === 'suspended') {
-                        await callAudioContext.resume();
-                    }
-                    
-                    if (remoteAudioSource) {
-                        try {
-                            remoteAudioSource.disconnect();
-                        } catch (e) {
-                            // Ignore
-                        }
-                    }
-                    
-                    if (callAudioContext && remoteGainNode) {
-                        remoteAudioSource = callAudioContext.createMediaStreamSource(remoteStream);
-                        remoteAudioSource.connect(remoteGainNode);
-                        console.log('✓ Web Audio API echo cancellation active');
-                    }
-                } catch (webAudioError) {
-                    console.warn('Web Audio API setup failed (audio element will work):', webAudioError);
-                }
-                
-                return playSuccess;
-            } catch (error) {
-                console.error('Error setting up remote audio:', error);
-                return false;
-            }
-        }
-
         // Initialize call
         async function initiateCall() {
             if (!ghostRoomId) {
@@ -4546,10 +4306,178 @@
                     console.log('Track readyState:', event.track.readyState);
                     
                     if (event.streams && event.streams[0]) {
-                        // Use centralized helper function for consistent audio setup
-                        await setupRemoteAudioPlayback(event.streams[0]);
-                    } else {
-                        console.error('No streams in remote track event');
+                        const remoteStream = event.streams[0];
+                        const audioTracks = remoteStream.getAudioTracks();
+                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        
+                        if (audioTracks.length === 0) {
+                            console.error('No audio tracks in remote stream!');
+                            return;
+                        }
+                        
+                        audioTracks.forEach((track, index) => {
+                            console.log(`Audio track ${index}:`, {
+                                enabled: track.enabled,
+                                readyState: track.readyState,
+                                muted: track.muted,
+                                label: track.label
+                            });
+                        });
+                        try {
+                            // Ensure audio context is initialized and nodes exist
+                            if (!callAudioContext || callAudioContext.state === 'closed') {
+                                await initializeAudioContext();
+                            }
+
+                            if (!callAudioContext) {
+                                throw new Error('Audio context not initialized');
+                            }
+
+                            if (callAudioContext.state === 'suspended') {
+                                await callAudioContext.resume();
+                            }
+
+                            // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
+                            // Create or reuse audio element
+                            if (!remoteAudioElement) {
+                                remoteAudioElement = new Audio();
+                                remoteAudioElement.autoplay = true;
+                                remoteAudioElement.volume = 1.0; // Full volume
+                                remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                                remoteAudioElement.muted = false;
+                                
+                                // Add event listeners for debugging
+                                remoteAudioElement.addEventListener('play', () => {
+                                    console.log('Remote audio element started playing');
+                                });
+                                remoteAudioElement.addEventListener('pause', () => {
+                                    console.log('Remote audio element paused');
+                                });
+                                remoteAudioElement.addEventListener('error', (e) => {
+                                    console.error('Remote audio element error:', e);
+                                });
+                                remoteAudioElement.addEventListener('loadedmetadata', () => {
+                                    console.log('Remote audio metadata loaded');
+                                });
+                            }
+                            
+                            // Set remote stream to audio element
+                            remoteAudioElement.srcObject = event.streams[0];
+                            remoteAudioElement.volume = 1.0; // Ensure volume is set
+                            remoteAudioElement.muted = false; // Ensure not muted
+                            
+                            // Enable all audio tracks
+                            audioTracks.forEach(track => {
+                                track.enabled = true;
+                                console.log('Enabled audio track:', track.label);
+                            });
+                            
+                            // Play the audio element with retry for mobile
+                            let playAttempts = 0;
+                            const maxPlayAttempts = 5;
+                            
+                            const tryPlayAudio = async () => {
+                                try {
+                                    await remoteAudioElement.play();
+                                    console.log('Remote audio element playing successfully');
+                                    console.log('Audio element volume:', remoteAudioElement.volume);
+                                    console.log('Audio element muted:', remoteAudioElement.muted);
+                                    console.log('Audio element paused:', remoteAudioElement.paused);
+                                    return true;
+                                } catch (playError) {
+                                    playAttempts++;
+                                    console.warn(`Play attempt ${playAttempts} failed:`, playError);
+                                    
+                                    if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
+                                        // Autoplay blocked - wait a bit and retry (user might interact)
+                                        console.log('Autoplay blocked, will retry...');
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 1000);
+                                    } else if (playAttempts < maxPlayAttempts) {
+                                        // Other error - retry after short delay
+                                        setTimeout(() => {
+                                            if (callActive && remoteAudioElement) {
+                                                tryPlayAudio();
+                                            }
+                                        }, 500);
+                                    } else {
+                                        console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
+                                        // On mobile, try to show a message or use a workaround
+                                        if (isMobile) {
+                                            console.warn('Mobile autoplay blocked - audio may need user interaction');
+                                        }
+                                    }
+                                    return false;
+                                }
+                            };
+                            
+                            await tryPlayAudio();
+                            
+                            // SECONDARY METHOD: Also try Web Audio API for echo cancellation
+                            try {
+                                // Ensure audio nodes are created
+                                if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                    console.log('Initializing Web Audio API nodes for echo cancellation...');
+                                    await initializeAudioContext();
+                                }
+
+                                // Create media stream source from remote stream
+                                if (remoteAudioSource) {
+                                    try {
+                                        remoteAudioSource.disconnect();
+                                    } catch (e) {
+                                        // Ignore disconnect errors
+                                    }
+                                }
+
+                                remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
+                                
+                                // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
+                                if (remoteGainNode) {
+                                    remoteAudioSource.connect(remoteGainNode);
+                                    console.log('Web Audio API echo cancellation active');
+                                    console.log('Web Audio API gain:', remoteGainNode.gain.value);
+                                }
+                            } catch (webAudioError) {
+                                console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
+                                // Audio element will still work
+                            }
+
+                            console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
+                        } catch (e) {
+                            console.error('Error handling remote track:', e);
+                            // Fallback to basic audio element only
+                            try {
+                                if (!remoteAudioElement) {
+                                    remoteAudioElement = new Audio();
+                                    remoteAudioElement.autoplay = true;
+                                    remoteAudioElement.volume = 1.0;
+                                    remoteAudioElement.setAttribute('playsinline', 'true');
+                                    remoteAudioElement.muted = false;
+                                }
+                                remoteAudioElement.srcObject = event.streams[0];
+                                remoteAudioElement.volume = 1.0;
+                                remoteAudioElement.muted = false;
+                                
+                                // Enable all audio tracks
+                                const stream = event.streams[0];
+                                stream.getAudioTracks().forEach(track => {
+                                    track.enabled = true;
+                                });
+                                
+                                await remoteAudioElement.play();
+                                console.log('Using fallback audio element only - playing');
+                            } catch (err) {
+                                console.error('Error with fallback audio element:', err);
+                                // Try to show user-friendly error
+                                if (err.name === 'NotAllowedError') {
+                                    console.warn('Autoplay blocked - user interaction may be required');
+                                }
+                            }
+                        }
                     }
                 };
                 
@@ -4578,9 +4506,6 @@
                 
                 // Listen for answer and call state changes
                 listenForAnswer();
-                
-                // Start audio health monitoring
-                startAudioHealthCheck();
                 
                 // Show active call interface
                 showActiveCall();
@@ -4819,17 +4744,23 @@
                     console.log('Track readyState:', event.track.readyState);
                     
                     if (event.streams && event.streams[0]) {
-                        // Use centralized helper function for consistent audio setup
-                        await setupRemoteAudioPlayback(event.streams[0]);
-                    } else {
-                        console.error('No streams in remote track event');
-                    }
-                };
-                
-                // OLD CODE REMOVED - Using setupRemoteAudioPlayback helper instead
-                /*
-                peerConnection.ontrack = async (event) => {
-                    if (event.streams && event.streams[0]) {
+                        const remoteStream = event.streams[0];
+                        const audioTracks = remoteStream.getAudioTracks();
+                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        
+                        if (audioTracks.length === 0) {
+                            console.error('No audio tracks in remote stream!');
+                            return;
+                        }
+                        
+                        audioTracks.forEach((track, index) => {
+                            console.log(`Audio track ${index}:`, {
+                                enabled: track.enabled,
+                                readyState: track.readyState,
+                                muted: track.muted,
+                                label: track.label
+                            });
+                        });
                         try {
                             // Ensure audio context is initialized and nodes exist
                             if (!callAudioContext || callAudioContext.state === 'closed') {
@@ -5034,9 +4965,6 @@
                 
                 // Listen for ICE candidates from caller
                 listenForOfferCandidates();
-                
-                // Start audio health monitoring
-                startAudioHealthCheck();
                 
                 // Show active call (modal already hidden above)
                 showActiveCall();
@@ -5287,50 +5215,27 @@
             // No need to create duplicate listeners here
         }
 
-        // Hangup call - SECURE HANGUP with recursive deletion
+        // Hangup call
         async function hangupCall() {
-            console.log('HANGUP: Initiating secure hangup...');
-            await cleanupCall();
+            cleanupCall();
         }
 
-        // Cleanup call resources - SECURE HANGUP with recursive deletion
+        // Cleanup call resources
         async function cleanupCall() {
             try {
                 const wasActive = callActive;
-                const currentCallId = callId; // Store callId before cleanup
                 callActive = false;
                 
-                // HARDWARE RELEASE: Stop all tracks IMMEDIATELY to turn off microphone light
-                if (localStream) {
-                    try {
-                        console.log('HANGUP: Stopping all local tracks (hardware release)');
-                        localStream.getTracks().forEach(track => {
-                            track.stop();
-                            track.enabled = false;
-                        });
-                        console.log('HANGUP: All local tracks stopped - microphone should be off');
-                    } catch (e) {
-                        console.warn('Error stopping tracks:', e);
-                    }
-                    localStream = null;
-                }
-                
                 // Remove current callId from processedCallIds to allow new calls
-                if (currentCallId) {
-                    processedCallIds.delete(currentCallId);
-                    console.log('Removed callId from processedCallIds:', currentCallId);
+                if (callId) {
+                    processedCallIds.delete(callId);
+                    console.log('Removed callId from processedCallIds:', callId);
                 }
                 
                 // Clear mobile audio check interval
                 if (mobileAudioCheckInterval) {
                     clearInterval(mobileAudioCheckInterval);
                     mobileAudioCheckInterval = null;
-                }
-                
-                // Clear audio health check interval
-                if (audioHealthCheckInterval) {
-                    clearInterval(audioHealthCheckInterval);
-                    audioHealthCheckInterval = null;
                 }
                 
                 // Unsubscribe from all listeners
@@ -5389,8 +5294,18 @@
                     }
                 }
 
-                // Tracks already stopped above (hardware release section)
-                // This section removed to avoid duplicate stop calls
+                // Stop all tracks
+                if (localStream) {
+                    try {
+                        localStream.getTracks().forEach(track => {
+                            track.stop();
+                            track.enabled = false;
+                        });
+                    } catch (e) {
+                        console.warn('Error stopping tracks:', e);
+                    }
+                    localStream = null;
+                }
                 
                 // Stop remote audio element
                 if (remoteAudioElement) {
@@ -5425,53 +5340,19 @@
                 // Note: We don't close the audio context here to avoid reinitialization overhead
                 // It will be reused for the next call
                 
-                // RECURSIVE DELETION: Delete call document and all subcollections
-                if (currentCallId && window.firebaseDB) {
+                // Update call document in Firestore to notify other side
+                if (callId && window.firebaseDB) {
                     try {
-                        console.log('HANGUP: Starting recursive deletion for callId:', currentCallId);
-                        
-                        const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}`);
-                        
-                        // First, delete subcollections (offerCandidates and answerCandidates)
-                        try {
-                            // Delete offerCandidates subcollection
-                            const offerCandidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${currentCallId}/offerCandidates`);
-                            const offerCandidatesSnapshot = await window.firebaseGetDocs(offerCandidatesRef);
-                            
-                            const deletePromises = [];
-                            offerCandidatesSnapshot.forEach((doc) => {
-                                deletePromises.push(window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}/offerCandidates/${doc.id}`)));
-                            });
-                            
-                            // Delete answerCandidates subcollection
-                            const answerCandidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${currentCallId}/answerCandidates`);
-                            const answerCandidatesSnapshot = await window.firebaseGetDocs(answerCandidatesRef);
-                            
-                            answerCandidatesSnapshot.forEach((doc) => {
-                                deletePromises.push(window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}/answerCandidates/${doc.id}`)));
-                            });
-                            
-                            // Wait for all subcollection deletions
-                            if (deletePromises.length > 0) {
-                                await Promise.all(deletePromises);
-                                console.log(`HANGUP: Deleted ${deletePromises.length} candidate documents from subcollections`);
-                            }
-                        } catch (subCollectionError) {
-                            console.warn('HANGUP: Error deleting subcollections (may not exist):', subCollectionError);
-                        }
-                        
-                        // Delete the main call document
-                        await window.firebaseDeleteDoc(callDocRef);
-                        console.log('HANGUP: Call document deleted from Firestore');
-                        console.log('SECURE HANGUP: Call metadata wiped from server.');
-                        
+                        const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                        await window.firebaseUpdateDoc(callDocRef, { 
+                            ended: true, 
+                            endedAt: window.firebaseServerTimestamp(),
+                            status: 'ended',
+                            endedBy: ghostHandle
+                        });
                     } catch (e) {
-                        console.warn('HANGUP: Could not delete call document (may already be deleted):', e);
-                        // Still log the secure hangup message
-                        console.log('SECURE HANGUP: Cleanup completed (document may have been already deleted).');
+                        console.warn('Could not update call document:', e);
                     }
-                } else {
-                    console.log('SECURE HANGUP: No callId to delete (call may not have been established).');
                 }
                 
                 // Hide UI
@@ -5482,20 +5363,9 @@
                 const callBtn = document.getElementById('ghost-call-btn');
                 if (callBtn) callBtn.classList.remove('hidden');
                 
-                // UI RESET: Reset all call-related variables to prevent memory leaks
-                const endedCallId = currentCallId;
+                const endedCallId = callId;
                 callId = null;
                 isCaller = false;
-                
-                // Reset all call-related variables
-                remoteAudioSource = null;
-                remoteGainNode = null;
-                remoteAnalyser = null;
-                localAnalyser = null;
-                compressorNode = null;
-                limiterNode = null;
-                
-                console.log('HANGUP: All call variables reset (UI reset complete)');
                 
                 // Ensure ended call is removed from processedCallIds
                 if (endedCallId) {
@@ -5689,4 +5559,5 @@
 
     </script>
 </body>
+</html>
 </html>
