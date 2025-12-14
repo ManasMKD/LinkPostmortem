@@ -5859,6 +5859,27 @@
 
                     if (event.streams && event.streams[0]) {
                         const remoteStream = event.streams[0];
+
+                        // Handle VIDEO tracks FIRST
+                        if (event.track.kind === 'video') {
+                            console.log('Receiver: Received video track - setting up video display');
+                            const remoteVideo = document.getElementById('remote-video');
+                            const videoPlaceholder = document.getElementById('video-placeholder');
+
+                            if (remoteVideo) {
+                                remoteVideo.srcObject = remoteStream;
+                                remoteVideo.play().catch(e => console.warn('Video play failed:', e));
+
+                                // Hide placeholder when video starts
+                                if (videoPlaceholder) {
+                                    videoPlaceholder.classList.add('hidden');
+                                }
+                                console.log('Receiver: Remote video connected');
+                            }
+                            return; // Video track handled, don't process as audio
+                        }
+
+                        // Handle AUDIO tracks
                         const audioTracks = remoteStream.getAudioTracks();
                         console.log('Remote stream audio tracks:', audioTracks.length);
 
