@@ -20,7 +20,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // ============================================
         // FIREBASE CONFIGURATION
@@ -51,6 +51,7 @@
             window.firebaseDoc = doc;
             window.firebaseUpdateDoc = updateDoc;
             window.firebaseGetDocs = getDocs;
+            window.firebaseDeleteDoc = deleteDoc;
             
             console.log('Firebase initialized successfully');
         } catch (error) {
@@ -5286,21 +5287,38 @@
             // No need to create duplicate listeners here
         }
 
-        // Hangup call
+        // Hangup call - SECURE HANGUP with recursive deletion
         async function hangupCall() {
-            cleanupCall();
+            console.log('HANGUP: Initiating secure hangup...');
+            await cleanupCall();
         }
 
-        // Cleanup call resources
+        // Cleanup call resources - SECURE HANGUP with recursive deletion
         async function cleanupCall() {
             try {
                 const wasActive = callActive;
+                const currentCallId = callId; // Store callId before cleanup
                 callActive = false;
                 
+                // HARDWARE RELEASE: Stop all tracks IMMEDIATELY to turn off microphone light
+                if (localStream) {
+                    try {
+                        console.log('HANGUP: Stopping all local tracks (hardware release)');
+                        localStream.getTracks().forEach(track => {
+                            track.stop();
+                            track.enabled = false;
+                        });
+                        console.log('HANGUP: All local tracks stopped - microphone should be off');
+                    } catch (e) {
+                        console.warn('Error stopping tracks:', e);
+                    }
+                    localStream = null;
+                }
+                
                 // Remove current callId from processedCallIds to allow new calls
-                if (callId) {
-                    processedCallIds.delete(callId);
-                    console.log('Removed callId from processedCallIds:', callId);
+                if (currentCallId) {
+                    processedCallIds.delete(currentCallId);
+                    console.log('Removed callId from processedCallIds:', currentCallId);
                 }
                 
                 // Clear mobile audio check interval
@@ -5371,18 +5389,8 @@
                     }
                 }
 
-                // Stop all tracks
-                if (localStream) {
-                    try {
-                        localStream.getTracks().forEach(track => {
-                            track.stop();
-                            track.enabled = false;
-                        });
-                    } catch (e) {
-                        console.warn('Error stopping tracks:', e);
-                    }
-                    localStream = null;
-                }
+                // Tracks already stopped above (hardware release section)
+                // This section removed to avoid duplicate stop calls
                 
                 // Stop remote audio element
                 if (remoteAudioElement) {
@@ -5417,19 +5425,53 @@
                 // Note: We don't close the audio context here to avoid reinitialization overhead
                 // It will be reused for the next call
                 
-                // Update call document in Firestore to notify other side
-                if (callId && window.firebaseDB) {
+                // RECURSIVE DELETION: Delete call document and all subcollections
+                if (currentCallId && window.firebaseDB) {
                     try {
-                        const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
-                        await window.firebaseUpdateDoc(callDocRef, { 
-                            ended: true, 
-                            endedAt: window.firebaseServerTimestamp(),
-                            status: 'ended',
-                            endedBy: ghostHandle
-                        });
+                        console.log('HANGUP: Starting recursive deletion for callId:', currentCallId);
+                        
+                        const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}`);
+                        
+                        // First, delete subcollections (offerCandidates and answerCandidates)
+                        try {
+                            // Delete offerCandidates subcollection
+                            const offerCandidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${currentCallId}/offerCandidates`);
+                            const offerCandidatesSnapshot = await window.firebaseGetDocs(offerCandidatesRef);
+                            
+                            const deletePromises = [];
+                            offerCandidatesSnapshot.forEach((doc) => {
+                                deletePromises.push(window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}/offerCandidates/${doc.id}`)));
+                            });
+                            
+                            // Delete answerCandidates subcollection
+                            const answerCandidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${currentCallId}/answerCandidates`);
+                            const answerCandidatesSnapshot = await window.firebaseGetDocs(answerCandidatesRef);
+                            
+                            answerCandidatesSnapshot.forEach((doc) => {
+                                deletePromises.push(window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}/answerCandidates/${doc.id}`)));
+                            });
+                            
+                            // Wait for all subcollection deletions
+                            if (deletePromises.length > 0) {
+                                await Promise.all(deletePromises);
+                                console.log(`HANGUP: Deleted ${deletePromises.length} candidate documents from subcollections`);
+                            }
+                        } catch (subCollectionError) {
+                            console.warn('HANGUP: Error deleting subcollections (may not exist):', subCollectionError);
+                        }
+                        
+                        // Delete the main call document
+                        await window.firebaseDeleteDoc(callDocRef);
+                        console.log('HANGUP: Call document deleted from Firestore');
+                        console.log('SECURE HANGUP: Call metadata wiped from server.');
+                        
                     } catch (e) {
-                        console.warn('Could not update call document:', e);
+                        console.warn('HANGUP: Could not delete call document (may already be deleted):', e);
+                        // Still log the secure hangup message
+                        console.log('SECURE HANGUP: Cleanup completed (document may have been already deleted).');
                     }
+                } else {
+                    console.log('SECURE HANGUP: No callId to delete (call may not have been established).');
                 }
                 
                 // Hide UI
@@ -5440,9 +5482,20 @@
                 const callBtn = document.getElementById('ghost-call-btn');
                 if (callBtn) callBtn.classList.remove('hidden');
                 
-                const endedCallId = callId;
+                // UI RESET: Reset all call-related variables to prevent memory leaks
+                const endedCallId = currentCallId;
                 callId = null;
                 isCaller = false;
+                
+                // Reset all call-related variables
+                remoteAudioSource = null;
+                remoteGainNode = null;
+                remoteAnalyser = null;
+                localAnalyser = null;
+                compressorNode = null;
+                limiterNode = null;
+                
+                console.log('HANGUP: All call variables reset (UI reset complete)');
                 
                 // Ensure ended call is removed from processedCallIds
                 if (endedCallId) {
@@ -5636,5 +5689,4 @@
 
     </script>
 </body>
-</html>
 </html>
