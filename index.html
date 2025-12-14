@@ -4334,79 +4334,116 @@
                                 await callAudioContext.resume();
                             }
 
-                            // Ensure audio nodes are created
-                            if (!remoteGainNode || !compressorNode || !limiterNode) {
-                                console.log('Reinitializing audio nodes...');
-                                await initializeAudioContext();
-                            }
-
-                            // Create media stream source from remote stream
-                            if (remoteAudioSource) {
-                                try {
-                                    remoteAudioSource.disconnect();
-                                } catch (e) {
-                                    console.warn('Error disconnecting old source:', e);
-                                }
-                            }
-
-                            remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
-                            
-                            // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                            if (remoteGainNode) {
-                                remoteAudioSource.connect(remoteGainNode);
-                                console.log('Remote audio connected to Web Audio API processing chain');
-                            } else {
-                                console.error('remoteGainNode not available, using fallback');
-                                throw new Error('Audio nodes not initialized');
-                            }
-                            
-                            // Also create a fallback Audio element for compatibility
-                            // Use fallback as backup in case Web Audio API has issues
+                            // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
+                            // Create or reuse audio element
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.8; // Set volume for fallback
+                                remoteAudioElement.volume = 1.0; // Full volume
                                 remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
                                 remoteAudioElement.muted = false;
+                                
+                                // Add event listeners for debugging
+                                remoteAudioElement.addEventListener('play', () => {
+                                    console.log('Remote audio element started playing');
+                                });
+                                remoteAudioElement.addEventListener('pause', () => {
+                                    console.log('Remote audio element paused');
+                                });
+                                remoteAudioElement.addEventListener('error', (e) => {
+                                    console.error('Remote audio element error:', e);
+                                });
+                                remoteAudioElement.addEventListener('loadedmetadata', () => {
+                                    console.log('Remote audio metadata loaded');
+                                });
                             }
                             
-                            // Set remote stream as fallback (will be used if Web Audio fails)
+                            // Set remote stream to audio element
                             remoteAudioElement.srcObject = event.streams[0];
+                            remoteAudioElement.volume = 1.0; // Ensure volume is set
+                            remoteAudioElement.muted = false; // Ensure not muted
                             
-                            // Try to play fallback (as backup)
+                            // Enable all audio tracks
+                            audioTracks.forEach(track => {
+                                track.enabled = true;
+                                console.log('Enabled audio track:', track.label);
+                            });
+                            
+                            // Play the audio element
                             try {
                                 await remoteAudioElement.play();
-                                console.log('Fallback audio element ready as backup');
-                            } catch (e) {
-                                console.warn('Fallback audio play failed:', e);
+                                console.log('Remote audio element playing successfully');
+                                console.log('Audio element volume:', remoteAudioElement.volume);
+                                console.log('Audio element muted:', remoteAudioElement.muted);
+                                console.log('Audio element paused:', remoteAudioElement.paused);
+                            } catch (playError) {
+                                console.error('Failed to play remote audio element:', playError);
+                                // Try user interaction workaround
+                                if (playError.name === 'NotAllowedError') {
+                                    console.warn('Autoplay blocked, user interaction required');
+                                }
                             }
                             
-                            // Verify Web Audio API connection
-                            if (remoteAudioSource && remoteGainNode) {
-                                console.log('Web Audio API: Remote audio source connected to gain node');
-                                console.log('Web Audio API: Gain value:', remoteGainNode.gain.value);
-                                console.log('Web Audio API: Audio context state:', callAudioContext.state);
-                            } else {
-                                console.warn('Web Audio API nodes not properly initialized, using fallback only');
+                            // SECONDARY METHOD: Also try Web Audio API for echo cancellation
+                            try {
+                                // Ensure audio nodes are created
+                                if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                    console.log('Initializing Web Audio API nodes for echo cancellation...');
+                                    await initializeAudioContext();
+                                }
+
+                                // Create media stream source from remote stream
+                                if (remoteAudioSource) {
+                                    try {
+                                        remoteAudioSource.disconnect();
+                                    } catch (e) {
+                                        // Ignore disconnect errors
+                                    }
+                                }
+
+                                remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
+                                
+                                // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
+                                if (remoteGainNode) {
+                                    remoteAudioSource.connect(remoteGainNode);
+                                    console.log('Web Audio API echo cancellation active');
+                                    console.log('Web Audio API gain:', remoteGainNode.gain.value);
+                                }
+                            } catch (webAudioError) {
+                                console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
+                                // Audio element will still work
                             }
 
-                            console.log('Remote audio fully connected - Web Audio API and fallback both active');
+                            console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
                         } catch (e) {
-                            console.error('Error handling remote track with Web Audio API:', e);
+                            console.error('Error handling remote track:', e);
                             // Fallback to basic audio element only
                             try {
                                 if (!remoteAudioElement) {
                                     remoteAudioElement = new Audio();
                                     remoteAudioElement.autoplay = true;
-                                    remoteAudioElement.volume = 0.7;
+                                    remoteAudioElement.volume = 1.0;
                                     remoteAudioElement.setAttribute('playsinline', 'true');
+                                    remoteAudioElement.muted = false;
                                 }
                                 remoteAudioElement.srcObject = event.streams[0];
+                                remoteAudioElement.volume = 1.0;
+                                remoteAudioElement.muted = false;
+                                
+                                // Enable all audio tracks
+                                const stream = event.streams[0];
+                                stream.getAudioTracks().forEach(track => {
+                                    track.enabled = true;
+                                });
+                                
                                 await remoteAudioElement.play();
-                                console.log('Using fallback audio element only');
+                                console.log('Using fallback audio element only - playing');
                             } catch (err) {
                                 console.error('Error with fallback audio element:', err);
-                                alert('Could not play remote audio. Please check your audio settings.');
+                                // Try to show user-friendly error
+                                if (err.name === 'NotAllowedError') {
+                                    console.warn('Autoplay blocked - user interaction may be required');
+                                }
                             }
                         }
                     }
@@ -4706,79 +4743,116 @@
                                 await callAudioContext.resume();
                             }
 
-                            // Ensure audio nodes are created
-                            if (!remoteGainNode || !compressorNode || !limiterNode) {
-                                console.log('Reinitializing audio nodes...');
-                                await initializeAudioContext();
-                            }
-
-                            // Create media stream source from remote stream
-                            if (remoteAudioSource) {
-                                try {
-                                    remoteAudioSource.disconnect();
-                                } catch (e) {
-                                    console.warn('Error disconnecting old source:', e);
-                                }
-                            }
-
-                            remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
-                            
-                            // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                            if (remoteGainNode) {
-                                remoteAudioSource.connect(remoteGainNode);
-                                console.log('Remote audio connected to Web Audio API processing chain');
-                            } else {
-                                console.error('remoteGainNode not available, using fallback');
-                                throw new Error('Audio nodes not initialized');
-                            }
-                            
-                            // Also create a fallback Audio element for compatibility
-                            // Use fallback as backup in case Web Audio API has issues
+                            // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
+                            // Create or reuse audio element
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 0.8; // Set volume for fallback
+                                remoteAudioElement.volume = 1.0; // Full volume
                                 remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
                                 remoteAudioElement.muted = false;
+                                
+                                // Add event listeners for debugging
+                                remoteAudioElement.addEventListener('play', () => {
+                                    console.log('Remote audio element started playing');
+                                });
+                                remoteAudioElement.addEventListener('pause', () => {
+                                    console.log('Remote audio element paused');
+                                });
+                                remoteAudioElement.addEventListener('error', (e) => {
+                                    console.error('Remote audio element error:', e);
+                                });
+                                remoteAudioElement.addEventListener('loadedmetadata', () => {
+                                    console.log('Remote audio metadata loaded');
+                                });
                             }
                             
-                            // Set remote stream as fallback (will be used if Web Audio fails)
+                            // Set remote stream to audio element
                             remoteAudioElement.srcObject = event.streams[0];
+                            remoteAudioElement.volume = 1.0; // Ensure volume is set
+                            remoteAudioElement.muted = false; // Ensure not muted
                             
-                            // Try to play fallback (as backup)
+                            // Enable all audio tracks
+                            audioTracks.forEach(track => {
+                                track.enabled = true;
+                                console.log('Enabled audio track:', track.label);
+                            });
+                            
+                            // Play the audio element
                             try {
                                 await remoteAudioElement.play();
-                                console.log('Fallback audio element ready as backup');
-                            } catch (e) {
-                                console.warn('Fallback audio play failed:', e);
+                                console.log('Remote audio element playing successfully');
+                                console.log('Audio element volume:', remoteAudioElement.volume);
+                                console.log('Audio element muted:', remoteAudioElement.muted);
+                                console.log('Audio element paused:', remoteAudioElement.paused);
+                            } catch (playError) {
+                                console.error('Failed to play remote audio element:', playError);
+                                // Try user interaction workaround
+                                if (playError.name === 'NotAllowedError') {
+                                    console.warn('Autoplay blocked, user interaction required');
+                                }
                             }
                             
-                            // Verify Web Audio API connection
-                            if (remoteAudioSource && remoteGainNode) {
-                                console.log('Web Audio API: Remote audio source connected to gain node');
-                                console.log('Web Audio API: Gain value:', remoteGainNode.gain.value);
-                                console.log('Web Audio API: Audio context state:', callAudioContext.state);
-                            } else {
-                                console.warn('Web Audio API nodes not properly initialized, using fallback only');
+                            // SECONDARY METHOD: Also try Web Audio API for echo cancellation
+                            try {
+                                // Ensure audio nodes are created
+                                if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                    console.log('Initializing Web Audio API nodes for echo cancellation...');
+                                    await initializeAudioContext();
+                                }
+
+                                // Create media stream source from remote stream
+                                if (remoteAudioSource) {
+                                    try {
+                                        remoteAudioSource.disconnect();
+                                    } catch (e) {
+                                        // Ignore disconnect errors
+                                    }
+                                }
+
+                                remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
+                                
+                                // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
+                                if (remoteGainNode) {
+                                    remoteAudioSource.connect(remoteGainNode);
+                                    console.log('Web Audio API echo cancellation active');
+                                    console.log('Web Audio API gain:', remoteGainNode.gain.value);
+                                }
+                            } catch (webAudioError) {
+                                console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
+                                // Audio element will still work
                             }
 
-                            console.log('Remote audio fully connected - Web Audio API and fallback both active');
+                            console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
                         } catch (e) {
-                            console.error('Error handling remote track with Web Audio API:', e);
+                            console.error('Error handling remote track:', e);
                             // Fallback to basic audio element only
                             try {
                                 if (!remoteAudioElement) {
                                     remoteAudioElement = new Audio();
                                     remoteAudioElement.autoplay = true;
-                                    remoteAudioElement.volume = 0.7;
+                                    remoteAudioElement.volume = 1.0;
                                     remoteAudioElement.setAttribute('playsinline', 'true');
+                                    remoteAudioElement.muted = false;
                                 }
                                 remoteAudioElement.srcObject = event.streams[0];
+                                remoteAudioElement.volume = 1.0;
+                                remoteAudioElement.muted = false;
+                                
+                                // Enable all audio tracks
+                                const stream = event.streams[0];
+                                stream.getAudioTracks().forEach(track => {
+                                    track.enabled = true;
+                                });
+                                
                                 await remoteAudioElement.play();
-                                console.log('Using fallback audio element only');
+                                console.log('Using fallback audio element only - playing');
                             } catch (err) {
                                 console.error('Error with fallback audio element:', err);
-                                alert('Could not play remote audio. Please check your audio settings.');
+                                // Try to show user-friendly error
+                                if (err.name === 'NotAllowedError') {
+                                    console.warn('Autoplay blocked - user interaction may be required');
+                                }
                             }
                         }
                     }
@@ -4987,6 +5061,14 @@
             }
             if (callBtn) {
                 callBtn.classList.add('hidden');
+            }
+            
+            // Ensure remote audio is playing when call interface is shown
+            // This helps with autoplay policies
+            if (remoteAudioElement && remoteAudioElement.paused) {
+                remoteAudioElement.play().catch(e => {
+                    console.warn('Could not resume remote audio:', e);
+                });
             }
             
             // Note: Call end listening is already handled by listenForAnswer() and listenForIncomingCalls()
