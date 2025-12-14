@@ -547,6 +547,31 @@
             #ghost-gif-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            /* Fix emoji grid on mobile - 6 columns with smaller buttons */
+            #ghost-emoji-grid {
+                grid-template-columns: repeat(6, 1fr) !important;
+                gap: 0.25rem !important;
+            }
+
+            #ghost-emoji-grid button {
+                width: 2.25rem !important;
+                height: 2.25rem !important;
+                font-size: 1.125rem !important;
+            }
+
+            /* Fix emoji category tabs on mobile - smaller and scrollable */
+            #ghost-emoji-picker>div:first-child {
+                gap: 0.25rem !important;
+                padding: 0.5rem !important;
+            }
+
+            #ghost-emoji-picker>div:first-child button {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 1rem !important;
+                min-width: unset !important;
+                min-height: unset !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -570,202 +595,6 @@
             .header-controls {
                 flex-wrap: wrap;
                 gap: 0.5rem;
-            }
-        }
-
-        /* ============================================
-           ENHANCED ANIMATIONS
-           ============================================ */
-
-        /* Ghost Button Glow Pulse */
-        @keyframes glow-pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3), 0 0 20px rgba(16, 185, 129, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 15px 50px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.4);
-            }
-        }
-
-        #ghost-float-btn {
-            animation: float 3s ease-in-out infinite, glow-pulse 2s ease-in-out infinite;
-        }
-
-        #ghost-float-btn:hover {
-            animation-play-state: paused;
-            transform: scale(1.1);
-            transition: transform 0.3s ease;
-        }
-
-        /* Message Slide Animations */
-        .message-own {
-            animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .message-other {
-            animation: slideInLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes slideInRight {
-            0% {
-                opacity: 0;
-                transform: translateX(30px) scale(0.9);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
-        }
-
-        @keyframes slideInLeft {
-            0% {
-                opacity: 0;
-                transform: translateX(-30px) scale(0.9);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
-        }
-
-        /* Button Hover Effects */
-        button {
-            transition: all 0.2s ease;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0px) scale(0.98);
-        }
-
-        .bg-rose-600:hover {
-            box-shadow: 0 10px 30px rgba(225, 29, 72, 0.3);
-        }
-
-        .bg-emerald-600:hover {
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-        }
-
-        .bg-cyan-600:hover,
-        .bg-cyan-900:hover {
-            box-shadow: 0 10px 30px rgba(8, 145, 178, 0.3);
-        }
-
-        /* Tab Animation */
-        .tab-content.active {
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Input Focus Glow */
-        input:focus,
-        textarea:focus,
-        select:focus {
-            transition: all 0.3s ease;
-            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
-        }
-
-        /* Modal Animations */
-        #ghost-modal>div,
-        #chat-selection-modal>div,
-        #security-breach-modal>div,
-        #memory-warning-modal>div {
-            animation: scaleInModal 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes scaleInModal {
-            0% {
-                opacity: 0;
-                transform: scale(0.9) translateY(20px);
-            }
-
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        /* Notification Pulse */
-        #ghost-notification-dot {
-            animation: notification-pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes notification-pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-            }
-
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-            }
-        }
-
-        /* Icon Hover */
-        button:hover [data-lucide],
-        a:hover [data-lucide] {
-            transform: scale(1.1);
-            transition: transform 0.2s ease;
-        }
-
-        /* Text Glow on Hover */
-        .text-rose-600:hover,
-        .text-emerald-500:hover,
-        .text-cyan-500:hover,
-        .text-amber-500:hover {
-            filter: drop-shadow(0 0 8px currentColor);
-            transition: filter 0.3s ease;
-        }
-
-        /* Smooth Scrolling */
-        * {
-            scroll-behavior: smooth;
-        }
-
-        /* Security Toast Animation */
-        @keyframes toast-slide-in {
-            from {
-                transform: translateX(100px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes toast-slide-out {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateX(100px);
-                opacity: 0;
             }
         }
     </style>
@@ -1515,10 +1344,53 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="initiateCall()" id="ghost-call-btn"
-                                class="hidden text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
-                                <i data-lucide="phone" class="w-4 h-4"></i> Call
-                            </button>
+                            <div class="relative" id="call-button-container">
+                                <button onclick="toggleCallOptions()" id="ghost-call-btn"
+                                    class="hidden text-xs bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
+                                    <i data-lucide="phone" class="w-4 h-4"></i> Call
+                                </button>
+                                <!-- Call Mode Selection Popup -->
+                                <div id="call-options-popup"
+                                    class="hidden absolute top-full left-0 md:left-auto md:right-0 mt-2 bg-zinc-900 border border-cyan-600 rounded-xl shadow-2xl overflow-hidden z-50 w-[200px] md:min-w-[180px]">
+                                    <div class="p-3 border-b border-zinc-700 text-center bg-zinc-800/50">
+                                        <span class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Start
+                                            Call</span>
+                                    </div>
+                                    <button onclick="startCallWithMode('audio')"
+                                        class="w-full px-4 py-4 flex items-center gap-4 hover:bg-cyan-900/30 transition-colors text-left active:bg-cyan-900/50">
+                                        <div
+                                            class="w-10 h-10 bg-emerald-600/20 rounded-full flex items-center justify-center">
+                                            <i data-lucide="mic" class="w-5 h-5 text-emerald-400"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-medium text-sm">Voice Call</div>
+                                            <div class="text-zinc-500 text-[11px]">Audio only</div>
+                                        </div>
+                                    </button>
+                                    <button onclick="startCallWithMode('video')"
+                                        class="w-full px-4 py-4 flex items-center gap-4 hover:bg-cyan-900/30 transition-colors text-left border-t border-zinc-800 active:bg-cyan-900/50">
+                                        <div
+                                            class="w-10 h-10 bg-cyan-600/20 rounded-full flex items-center justify-center">
+                                            <i data-lucide="video" class="w-5 h-5 text-cyan-400"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-medium text-sm">Video Call</div>
+                                            <div class="text-zinc-500 text-[11px]">Camera + Audio</div>
+                                        </div>
+                                    </button>
+                                    <button onclick="startCallWithMode('screen')"
+                                        class="hidden md:flex w-full px-4 py-4 items-center gap-4 hover:bg-cyan-900/30 transition-colors text-left border-t border-zinc-800 active:bg-cyan-900/50">
+                                        <div
+                                            class="w-10 h-10 bg-purple-600/20 rounded-full flex items-center justify-center">
+                                            <i data-lucide="monitor" class="w-5 h-5 text-purple-400"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-white font-medium text-sm">Screen Share</div>
+                                            <div class="text-zinc-500 text-[11px]">Share screen</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                             <button onclick="copyRoomLink()" id="ghost-share-btn"
                                 class="hidden text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all">
                                 <i data-lucide="share-2" class="w-4 h-4"></i> Share Link
@@ -1588,8 +1460,36 @@
 
                                 <!-- Emoji Picker Popup -->
                                 <div id="ghost-emoji-picker"
-                                    class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl p-4 w-80 max-h-64 overflow-y-auto z-50">
-                                    <div class="grid grid-cols-8 gap-2" id="ghost-emoji-grid"></div>
+                                    class="hidden absolute bottom-full left-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-[340px] max-h-[400px] flex flex-col z-50">
+                                    <!-- Category Tabs -->
+                                    <div class="flex gap-1 p-2 border-b border-zinc-800 overflow-x-auto flex-shrink-0">
+                                        <button onclick="loadEmojiCategory('smileys')" id="emoji-tab-smileys"
+                                            class="px-2 py-1 text-lg rounded bg-emerald-600" title="Smileys">😀</button>
+                                        <button onclick="loadEmojiCategory('gestures')" id="emoji-tab-gestures"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Gestures">👋</button>
+                                        <button onclick="loadEmojiCategory('hearts')" id="emoji-tab-hearts"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Hearts">❤️</button>
+                                        <button onclick="loadEmojiCategory('celebration')" id="emoji-tab-celebration"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Celebration">🎉</button>
+                                        <button onclick="loadEmojiCategory('symbols')" id="emoji-tab-symbols"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Symbols">🔥</button>
+                                        <button onclick="loadEmojiCategory('animals')" id="emoji-tab-animals"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Animals">🐶</button>
+                                        <button onclick="loadEmojiCategory('food')" id="emoji-tab-food"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800" title="Food">🍕</button>
+                                        <button onclick="loadEmojiCategory('activities')" id="emoji-tab-activities"
+                                            class="px-2 py-1 text-lg rounded hover:bg-zinc-800"
+                                            title="Activities">⚽</button>
+                                    </div>
+                                    <!-- Emoji Grid -->
+                                    <div class="overflow-y-auto p-2 flex-1">
+                                        <div class="grid grid-cols-8 gap-1" id="ghost-emoji-grid"></div>
+                                    </div>
                                 </div>
 
                                 <!-- GIF Picker Popup -->
@@ -1698,28 +1598,164 @@
         </div>
     </div>
 
-    <!-- ACTIVE CALL INTERFACE (The Uplink) -->
-    <div id="active-call-interface"
-        class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[10000] bg-zinc-900 border-2 border-cyan-600 rounded-xl px-6 py-4 shadow-2xl">
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span class="text-sm font-bold text-white">ACTIVE CALL</span>
-                <div id="call-visualizer" class="flex items-center gap-1 h-6">
-                    <div class="w-1 bg-cyan-500 rounded-full"
-                        style="height: 4px; animation: pulse 1s ease-in-out infinite;"></div>
-                    <div class="w-1 bg-cyan-500 rounded-full"
-                        style="height: 8px; animation: pulse 1s ease-in-out infinite 0.2s;"></div>
-                    <div class="w-1 bg-cyan-500 rounded-full"
-                        style="height: 12px; animation: pulse 1s ease-in-out infinite 0.4s;"></div>
-                    <div class="w-1 bg-cyan-500 rounded-full"
-                        style="height: 8px; animation: pulse 1s ease-in-out infinite 0.6s;"></div>
+    <!-- FULL-SCREEN VIDEO CALL WINDOW (The Uplink v2) -->
+    <div id="video-call-window" class="hidden fixed inset-0 z-[10000] bg-black flex flex-col">
+        <!-- Mode Badge -->
+        <div class="absolute top-4 left-4 z-10 flex items-center gap-3">
+            <div
+                class="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-sm border border-cyan-600 rounded-lg px-3 py-2">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span id="call-mode-badge" class="text-xs font-bold text-cyan-400 uppercase tracking-wider">VOICE
+                    CALL</span>
+                <div id="call-timer" class="text-xs text-zinc-400 font-mono ml-2">00:00</div>
+            </div>
+        </div>
+
+        <!-- Close/Minimize Button -->
+        <button onclick="minimizeCallWindow()"
+            class="absolute top-4 right-4 z-10 bg-zinc-800/80 hover:bg-zinc-700 p-2 rounded-lg transition-colors">
+            <i data-lucide="minimize-2" class="w-4 h-4 text-white"></i>
+        </button>
+
+        <!-- Remote Video (Main Stage) -->
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden">
+            <video id="remote-video" autoplay playsinline class="w-full h-full object-contain"></video>
+
+            <!-- Waiting/Audio-Only Placeholder -->
+            <div id="video-placeholder"
+                class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-black">
+                <div
+                    class="w-24 h-24 bg-cyan-600/20 rounded-full flex items-center justify-center mb-4 border-2 border-cyan-600/30">
+                    <i data-lucide="radio" class="w-12 h-12 text-cyan-500"></i>
+                </div>
+                <div id="placeholder-text" class="text-cyan-400 font-bold text-lg animate-pulse">AWAITING
+                    TRANSMISSION...</div>
+                <div class="flex items-center gap-1 mt-4">
+                    <div class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                    <div class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                    <div class="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
                 </div>
             </div>
-            <button onclick="hangupCall()" id="hangup-btn"
-                class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-                <i data-lucide="phone-off" class="w-4 h-4"></i> HANG UP
-            </button>
+        </div>
+
+        <!-- Local Video (PIP - Picture in Picture) -->
+        <video id="local-video" autoplay playsinline muted
+            class="absolute bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 rounded-xl border-2 border-cyan-500 object-cover shadow-2xl z-10 bg-zinc-900"></video>
+
+        <!-- Camera Off Indicator (shows when camera is disabled) -->
+        <div id="local-camera-off"
+            class="hidden absolute bottom-24 right-4 w-32 h-24 md:w-48 md:h-36 rounded-xl border-2 border-zinc-600 bg-zinc-900 flex items-center justify-center z-10">
+            <div class="text-center">
+                <i data-lucide="video-off" class="w-8 h-8 text-zinc-500 mx-auto"></i>
+                <span class="text-[10px] text-zinc-500 block mt-1">Camera Off</span>
+            </div>
+        </div>
+
+        <!-- Control Bar -->
+        <div class="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 z-20 w-full px-2 md:px-0 md:w-auto">
+            <div
+                class="flex items-center justify-center gap-3 md:gap-4 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-2xl px-3 md:px-6 py-2 md:py-3">
+                <!-- Mute Button -->
+                <button onclick="toggleMute()" id="vc-mute-btn"
+                    class="flex flex-col items-center gap-1 p-2 md:p-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl transition-all min-w-[50px] md:min-w-[60px]">
+                    <i data-lucide="mic" class="w-5 h-5 md:w-6 md:h-6 text-white" id="vc-mute-icon"></i>
+                    <span class="text-[8px] md:text-[10px] text-zinc-300">Mute</span>
+                </button>
+
+                <!-- Camera Toggle Button -->
+                <button onclick="toggleCamera()" id="vc-camera-btn"
+                    class="flex flex-col items-center gap-1 p-2 md:p-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl transition-all min-w-[50px] md:min-w-[60px]">
+                    <i data-lucide="video" class="w-5 h-5 md:w-6 md:h-6 text-white" id="vc-camera-icon"></i>
+                    <span class="text-[8px] md:text-[10px] text-zinc-300">Camera</span>
+                </button>
+
+                <!-- Screen Share Button (hidden on mobile - not supported well) -->
+                <button onclick="toggleScreenShare()" id="vc-screen-btn"
+                    class="hidden md:flex flex-col items-center gap-1 p-2 md:p-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl transition-all min-w-[50px] md:min-w-[60px]">
+                    <i data-lucide="monitor" class="w-5 h-5 md:w-6 md:h-6 text-white" id="vc-screen-icon"></i>
+                    <span class="text-[8px] md:text-[10px] text-zinc-300">Screen</span>
+                </button>
+
+                <!-- Mode Switch Button -->
+                <button onclick="openModeSwitcher()" id="vc-mode-btn"
+                    class="flex flex-col items-center gap-1 p-2 md:p-3 bg-cyan-700 hover:bg-cyan-600 rounded-xl transition-all min-w-[50px] md:min-w-[60px]">
+                    <i data-lucide="repeat" class="w-5 h-5 md:w-6 md:h-6 text-white"></i>
+                    <span class="text-[8px] md:text-[10px] text-zinc-300">Switch</span>
+                </button>
+
+                <!-- End Call Button -->
+                <button onclick="hangupCall()" id="vc-end-btn"
+                    class="flex flex-col items-center gap-1 p-2 md:p-3 bg-red-600 hover:bg-red-700 rounded-xl transition-all min-w-[50px] md:min-w-[60px] shadow-lg shadow-red-900/50">
+                    <i data-lucide="phone-off" class="w-5 h-5 md:w-6 md:h-6 text-white"></i>
+                    <span class="text-[8px] md:text-[10px] text-white">End</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Switcher Popup -->
+        <div id="mode-switcher-popup"
+            class="hidden absolute bottom-28 left-1/2 -translate-x-1/2 z-30 bg-zinc-900 border border-cyan-600 rounded-xl shadow-2xl overflow-hidden">
+            <div class="p-2 border-b border-zinc-700 text-center">
+                <span class="text-xs text-cyan-400 font-bold uppercase">Switch Mode</span>
+            </div>
+            <div class="flex gap-1 p-2">
+                <button onclick="switchCallMode('audio')"
+                    class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="mic" class="w-6 h-6 text-emerald-400"></i>
+                    <span class="text-[10px] text-zinc-400">Voice</span>
+                </button>
+                <button onclick="switchCallMode('video')"
+                    class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="video" class="w-6 h-6 text-cyan-400"></i>
+                    <span class="text-[10px] text-zinc-400">Video</span>
+                </button>
+                <button onclick="switchCallMode('screen')"
+                    class="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="monitor" class="w-6 h-6 text-purple-400"></i>
+                    <span class="text-[10px] text-zinc-400">Screen</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINIMIZED CALL BAR (for audio-only or minimized calls) -->
+    <div id="active-call-interface"
+        class="hidden fixed top-2 left-2 right-2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto z-[10000] bg-zinc-900/95 backdrop-blur-sm border-2 border-cyan-600 rounded-xl px-3 py-2 md:px-6 md:py-4 shadow-2xl">
+        <div class="flex items-center justify-between md:justify-start gap-2 md:gap-4">
+            <!-- Left: Status -->
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 md:w-3 md:h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span id="mini-call-mode" class="text-[10px] md:text-sm font-bold text-cyan-400 uppercase">VOICE</span>
+            </div>
+
+            <!-- Right: Control Buttons -->
+            <div class="flex items-center gap-1 md:gap-2">
+                <!-- Expand Button -->
+                <button onclick="expandCallWindow()" title="Expand"
+                    class="w-9 h-9 md:w-10 md:h-10 bg-cyan-700 hover:bg-cyan-600 text-white rounded-full flex items-center justify-center transition-colors">
+                    <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                </button>
+                <!-- Video Toggle -->
+                <button onclick="switchCallMode('video')" id="mini-video-btn" title="Video"
+                    class="w-9 h-9 md:w-10 md:h-10 bg-zinc-700 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center transition-colors">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                </button>
+                <!-- Screen Share -->
+                <button onclick="toggleScreenShare()" id="mini-screen-btn" title="Screen Share"
+                    class="hidden md:flex w-9 h-9 md:w-10 md:h-10 bg-zinc-700 hover:bg-zinc-600 text-white rounded-full items-center justify-center transition-colors">
+                    <i data-lucide="monitor" class="w-4 h-4"></i>
+                </button>
+                <!-- Mute Button -->
+                <button onclick="toggleMute()" id="mute-btn" title="Mute"
+                    class="w-9 h-9 md:w-10 md:h-10 bg-zinc-700 hover:bg-zinc-600 text-white rounded-full flex items-center justify-center transition-colors">
+                    <i data-lucide="mic" class="w-4 h-4" id="mute-icon"></i>
+                </button>
+                <!-- Hang Up Button -->
+                <button onclick="hangupCall()" id="hangup-btn" title="End Call"
+                    class="w-10 h-10 md:w-11 md:h-11 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors shadow-lg">
+                    <i data-lucide="phone-off" class="w-4 h-4 md:w-5 md:h-5"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -4227,15 +4263,42 @@
             }
         }
 
-        // Emoji picker functions
-        const commonEmojis = ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '😶‍🌫️', '😵', '🤯', '🤠', '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
+        // Emoji picker functions - Comprehensive categories
+        const emojiCategories = {
+            smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '🫡', '😏', '😒', '🙄', '😬', '😮‍💨', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '😵‍💫', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐', '😕', '🫤', '😟', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '🥹', '😦', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'],
+            gestures: ['👋', '🤚', '🖐️', '✋', '🖖', '🫱', '🫲', '🫳', '🫴', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '🫵', '👍', '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '🫶', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄', '🫦', '👶', '🧒', '👦', '👧', '🧑', '👱', '👨', '🧔', '👩', '🧓', '👴', '👵', '🙍', '🙎', '🙅', '🙆', '💁', '🙋', '🧏', '🙇', '🤦', '🤷', '💆', '💇', '🧖', '🛀', '🛌'],
+            hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '♥️', '💋', '💌', '💐', '🌹', '🥀', '🌷', '🌺', '🌸', '💮', '🏵️', '🪷', '🌻', '🌼', '💑', '👩‍❤️‍👨', '👨‍❤️‍👨', '👩‍❤️‍👩', '💏', '👩‍❤️‍💋‍👨', '👨‍❤️‍💋‍👨', '👩‍❤️‍💋‍👩', '🫂', '👪', '👨‍👩‍👦', '👨‍👩‍👧', '😍', '🥰', '😘', '😻', '💍', '💎'],
+            celebration: ['🎉', '🎊', '🥳', '🎈', '🎁', '🎂', '🍰', '🧁', '🎀', '🪅', '🎆', '🎇', '✨', '🌟', '⭐', '💫', '🔥', '🌈', '☀️', '🌤️', '🎵', '🎶', '🎤', '🎧', '🎹', '🎸', '🎺', '🎷', '🥁', '🪘', '🎯', '🎲', '🎮', '🕹️', '🧩', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏵️', '🎗️', '🎪', '🎭', '🎨', '🖼️', '🎬', '📸', '📷', '🍾', '🥂', '🍻', '🍺', '🍷', '🍸', '🍹', '🧊', '🫧', '🪩', '💃', '🕺', '👯', '🎤', '🎧'],
+            symbols: ['🔥', '💯', '✅', '❌', '❗', '❓', '❕', '❔', '⭕', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🔶', '🔷', '🔸', '🔹', '💠', '🔘', '🔲', '🔳', '⬛', '⬜', '◼️', '◻️', '◾', '◽', '▪️', '▫️', '🏴', '🏳️', '🏁', '🚩', '🎌', '⚠️', '🚸', '⛔', '🚫', '🔞', '📵', '🔇', '🔕', '♻️', '✳️', '❇️', '🔆', '🔅', '⚜️', '🔱', '📛', '🔰', '⚡', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '🛑', '⛑️', '🔺', '🔻', '💬', '👁️‍🗨️', '🗨️', '💭', '🗯️', '♠️', '♣️', '♥️', '♦️', '🃏', '🎴', '🀄', '🕐', '🕑', '🕒', '🕓'],
+            animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐻‍❄️', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🪱', '🐛', '🦋', '🐌', '🐞', '🐜', '🪰', '🪲', '🪳', '🦟', '🦗', '🕷️', '🕸️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🪸', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🦣', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🦬', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🪶', '🐓', '🦃', '🦤', '🦚', '🦜', '🦢', '🦩', '🕊️', '🐇', '🦝', '🦨', '🦡', '🦫', '🦦', '🦥', '🐁', '🐀', '🐿️', '🦔'],
+            food: ['🍕', '🍔', '🍟', '🌭', '🥪', '🌮', '🌯', '🫔', '🥙', '🧆', '🥚', '🍳', '🥘', '🍲', '🫕', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍇', '🍈', '🍉', '🍊', '🍋', '🍌', '🍍', '🥭', '🍎', '🍏', '🍐', '🍑', '🍒', '🍓', '🫐', '🥝', '🍅', '🫒', '🥥', '🥑', '🍆', '🥔', '🥕', '🌽', '🌶️', '🫑', '🥒', '🥬', '🥦', '🧄', '🧅', '🍄', '🥜', '🫘', '🌰', '🍞', '🥐', '🥖', '🫓', '🥨', '🥯', '🥞', '🧇', '🧀', '🍖', '🍗', '🥩', '🥓', '🍺', '🍻', '🥂', '🍷', '🍸', '🍹', '🍾', '🧋', '☕', '🍵', '🧃', '🥤', '🧊', '🥛', '🫖'],
+            activities: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🪂', '🏋️', '🤼', '🤸', '⛹️', '🤺', '🤾', '🏌️', '🏇', '🧘', '🏄', '🏊', '🤽', '🚣', '🧗', '🚵', '🚴', '🎽', '🎿', '🛹', '🛼', '🛶', '🏹', '🎣', '🤿', '🥊', '🥋', '🎯', '🪀', '🎮', '🕹️', '🎰', '🧩', '♟️', '🎲', '🎭', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🪘', '🎷', '🎺', '🪗', '🎸', '🪕', '🎻', '🎪', '🤹', '🎠', '🎡', '🎢', '🏕️', '🏖️', '🏜️', '🏔️', '⛰️', '🗻', '🏠', '🏡', '🏢', '🏣', '🏤', '🏥', '🏦', '🏨', '🏩', '🏪', '🏫', '🏬', '🏭', '🏯', '🏰', '💒', '🗼', '🗽', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋']
+        };
+        let currentEmojiCategory = 'smileys';
 
         function initializeEmojiPicker() {
+            loadEmojiCategory('smileys');
+        }
+
+        function loadEmojiCategory(category) {
             const emojiGrid = document.getElementById('ghost-emoji-grid');
             if (!emojiGrid) return;
 
+            currentEmojiCategory = category;
+
+            // Update tab styles
+            document.querySelectorAll('[id^="emoji-tab-"]').forEach(btn => {
+                btn.className = 'px-2 py-1 text-lg rounded hover:bg-zinc-800';
+            });
+            const activeTab = document.getElementById(`emoji-tab-${category}`);
+            if (activeTab) {
+                activeTab.className = 'px-2 py-1 text-lg rounded bg-emerald-600';
+            }
+
+            // Load emojis for category
+            const emojis = emojiCategories[category] || emojiCategories.smileys;
             emojiGrid.innerHTML = '';
-            commonEmojis.forEach(emoji => {
+            emojis.forEach(emoji => {
                 const emojiBtn = document.createElement('button');
                 emojiBtn.className = 'w-8 h-8 text-xl hover:bg-zinc-800 rounded transition-colors flex items-center justify-center';
                 emojiBtn.textContent = emoji;
@@ -4248,7 +4311,13 @@
             const picker = document.getElementById('ghost-emoji-picker');
             const gifPicker = document.getElementById('ghost-gif-picker');
             if (gifPicker) gifPicker.classList.add('hidden');
-            if (picker) picker.classList.toggle('hidden');
+            if (picker) {
+                picker.classList.toggle('hidden');
+                // Initialize with first category if opening
+                if (!picker.classList.contains('hidden') && document.getElementById('ghost-emoji-grid').children.length === 0) {
+                    loadEmojiCategory('smileys');
+                }
+            }
         }
 
         function insertEmoji(emoji) {
@@ -4716,15 +4785,168 @@
         // Mobile audio check interval
         let mobileAudioCheckInterval = null;
 
+        // Mobile background audio handling
+        let wakeLock = null;
+        let wasCallActiveBeforeBackground = false;
+
+        // Request Wake Lock to prevent screen sleep during calls (mobile)
+        async function requestWakeLock() {
+            if (!isMobile || !('wakeLock' in navigator)) return;
+
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock released');
+                });
+                console.log('Wake Lock acquired - screen will stay on during call');
+            } catch (err) {
+                console.warn('Wake Lock request failed:', err);
+            }
+        }
+
+        // Release Wake Lock
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+        }
+
+        // Handle visibility change (mobile browser goes to background)
+        document.addEventListener('visibilitychange', async () => {
+            if (!callActive) return;
+
+            if (document.hidden) {
+                // App went to background
+                console.log('App went to background during call');
+                wasCallActiveBeforeBackground = true;
+
+                // Notify other user that mic is paused (on mobile)
+                if (isMobile && ghostRoomId) {
+                    try {
+                        const timestamp = Date.now();
+                        // Store mic pause status in call document
+                        if (callId && window.firebaseDB) {
+                            const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                            await window.firebaseUpdateDoc(callDocRef, {
+                                [`micPaused_${ghostHandle}`]: true,
+                                [`micPausedAt_${ghostHandle}`]: timestamp
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Could not update mic pause status:', e);
+                    }
+                }
+            } else {
+                // App came to foreground
+                console.log('App came to foreground during call');
+
+                // Re-initialize audio if we were in a call
+                if (wasCallActiveBeforeBackground && callActive) {
+                    console.log('Attempting to restore audio after background...');
+
+                    // Try to resume audio context
+                    if (callAudioContext && callAudioContext.state === 'suspended') {
+                        try {
+                            await callAudioContext.resume();
+                            console.log('Audio context resumed');
+                        } catch (e) {
+                            console.error('Failed to resume audio context:', e);
+                        }
+                    }
+
+                    // Re-acquire microphone if tracks were stopped
+                    if (localStream) {
+                        const audioTracks = localStream.getAudioTracks();
+                        const needsReInit = audioTracks.length === 0 ||
+                            audioTracks.every(track => track.readyState === 'ended' || !track.enabled);
+
+                        if (needsReInit && peerConnection) {
+                            console.log('Audio tracks were stopped, re-initializing mic...');
+                            try {
+                                // Get new audio stream
+                                const constraints = await getEnhancedMediaConstraints();
+                                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                                // Replace tracks in peer connection
+                                const senders = peerConnection.getSenders();
+                                const audioSender = senders.find(s => s.track?.kind === 'audio');
+
+                                if (audioSender && newStream.getAudioTracks()[0]) {
+                                    await audioSender.replaceTrack(newStream.getAudioTracks()[0]);
+                                    console.log('Audio track replaced successfully');
+
+                                    // Update local stream reference
+                                    localStream.getAudioTracks().forEach(t => t.stop());
+                                    localStream = newStream;
+
+                                    // Setup monitoring
+                                    setupLocalAudioMonitoring(localStream);
+                                }
+                            } catch (e) {
+                                console.error('Failed to re-initialize mic:', e);
+                                // Don't cleanup call - let user know audio may not work
+                                alert('Your microphone was paused while in background. The other person may not hear you. Please check your audio.');
+                            }
+                        }
+                    }
+
+                    // Update mic pause status
+                    if (isMobile && callId && window.firebaseDB) {
+                        try {
+                            const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                            await window.firebaseUpdateDoc(callDocRef, {
+                                [`micPaused_${ghostHandle}`]: false
+                            });
+                        } catch (e) {
+                            console.warn('Could not update mic resume status:', e);
+                        }
+                    }
+                }
+
+                wasCallActiveBeforeBackground = false;
+
+                // Re-acquire wake lock
+                if (callActive) {
+                    requestWakeLock();
+                }
+            }
+        });
+
         // Device detection
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isAndroid = /Android/.test(navigator.userAgent);
 
-        // ICE Servers Configuration (Google's free STUN servers)
+        // ICE Servers Configuration (STUN + Free TURN servers for better NAT traversal)
         const iceServers = {
             iceServers: [
-                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+                // Google STUN servers (free)
+                { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
+                // Metered.ca free TURN servers for better mobile/PC NAT traversal
+                {
+                    urls: 'stun:stun.relay.metered.ca:80'
+                },
+                {
+                    urls: 'turn:global.relay.metered.ca:80',
+                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
+                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                },
+                {
+                    urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
+                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                },
+                {
+                    urls: 'turn:global.relay.metered.ca:443',
+                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
+                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                },
+                {
+                    urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
+                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                }
             ],
             iceCandidatePoolSize: 10
         };
@@ -4732,7 +4954,6 @@
         // Enhanced Media Constraints with maximum echo cancellation
         const getMediaConstraints = () => {
             const baseConstraints = {
-                video: false,
                 audio: {
                     echoCancellation: true,
                     noiseSuppression: true,
@@ -4757,6 +4978,24 @@
             if (isMobile) {
                 baseConstraints.audio.sampleRate = 16000; // Lower sample rate for mobile
                 baseConstraints.audio.latency = 0.02;
+            }
+
+            // Video settings based on call mode
+            if (currentCallMode === 'video') {
+                baseConstraints.video = {
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
+                    frameRate: { ideal: 30, max: 60 },
+                    facingMode: 'user'
+                };
+                // Lower resolution for mobile to save bandwidth
+                if (isMobile) {
+                    baseConstraints.video.width = { ideal: 640, max: 1280 };
+                    baseConstraints.video.height = { ideal: 480, max: 720 };
+                    baseConstraints.video.frameRate = { ideal: 24, max: 30 };
+                }
+            } else {
+                baseConstraints.video = false;
             }
 
             return baseConstraints;
@@ -4999,6 +5238,27 @@
 
                     if (event.streams && event.streams[0]) {
                         const remoteStream = event.streams[0];
+
+                        // Handle VIDEO tracks
+                        if (event.track.kind === 'video') {
+                            console.log('Received video track - setting up video display');
+                            const remoteVideo = document.getElementById('remote-video');
+                            const videoPlaceholder = document.getElementById('video-placeholder');
+
+                            if (remoteVideo) {
+                                remoteVideo.srcObject = remoteStream;
+                                remoteVideo.play().catch(e => console.warn('Video play failed:', e));
+
+                                // Hide placeholder when video starts
+                                if (videoPlaceholder) {
+                                    videoPlaceholder.classList.add('hidden');
+                                }
+                                console.log('Remote video connected');
+                            }
+                            return; // Video track handled, don't process as audio
+                        }
+
+                        // Handle AUDIO tracks
                         const audioTracks = remoteStream.getAudioTracks();
                         console.log('Remote stream audio tracks:', audioTracks.length);
 
@@ -5295,16 +5555,51 @@
                         const callData = change.doc.data();
                         const callDocId = change.doc.id;
 
-                        // Only process if this is the current call
+                        // Only process if this is the current call we're tracking
                         if (callDocId === callId) {
-                            if (callData.status === 'ended' || callData.ended) {
-                                // If we're in a call that just ended, cleanup
+                            // Check if call was ended, rejected, or cancelled
+                            if (callData.status === 'ended' || callData.status === 'rejected' ||
+                                callData.status === 'cancelled' || callData.ended) {
+                                console.log('Call status changed to:', callData.status);
+
+                                // Hide incoming call modal if it's visible (caller hung up before we answered)
+                                const incomingModal = document.getElementById('incoming-call-modal');
+                                if (incomingModal && !incomingModal.classList.contains('hidden')) {
+                                    incomingModal.classList.add('hidden');
+                                    console.log('Incoming call modal hidden - caller ended call');
+                                }
+
+                                // If we were in an active call, cleanup
                                 if (callActive) {
                                     cleanupCall();
+                                } else {
+                                    // Reset callId since call is no longer valid
+                                    callId = null;
                                 }
                             } else if (callData.status === 'active' && !callActive && !isCaller) {
                                 // Call was accepted by us, don't do anything - acceptCall is handling it
                                 console.log('Call status changed to active (we accepted it)');
+                            }
+                        }
+                    }
+
+                    // Handle deleted call documents (caller deleted the call)
+                    if (change.type === 'removed') {
+                        const callDocId = change.doc.id;
+                        if (callDocId === callId) {
+                            console.log('Call document was deleted');
+
+                            // Hide incoming call modal
+                            const incomingModal = document.getElementById('incoming-call-modal');
+                            if (incomingModal && !incomingModal.classList.contains('hidden')) {
+                                incomingModal.classList.add('hidden');
+                            }
+
+                            // Cleanup if in active call
+                            if (callActive) {
+                                cleanupCall();
+                            } else {
+                                callId = null;
                             }
                         }
                     }
@@ -5821,13 +6116,50 @@
             // callActive = true; // Removed - set by caller
 
             const activeCallUI = document.getElementById('active-call-interface');
+            const videoCallWindow = document.getElementById('video-call-window');
             const callBtn = document.getElementById('ghost-call-btn');
 
-            if (activeCallUI) {
-                activeCallUI.classList.remove('hidden');
-            }
+            // Hide call button
             if (callBtn) {
                 callBtn.classList.add('hidden');
+            }
+
+            // Show appropriate interface based on call mode
+            if (currentCallMode === 'video' || currentCallMode === 'screen') {
+                // Show full-screen video call window
+                if (videoCallWindow) {
+                    videoCallWindow.classList.remove('hidden');
+                }
+                if (activeCallUI) {
+                    activeCallUI.classList.add('hidden');
+                }
+
+                // Set up local video preview
+                const localVideo = document.getElementById('local-video');
+                if (localVideo && localStream) {
+                    localVideo.srcObject = localStream;
+                    cameraStream = localStream; // Store for swap-back
+                }
+
+                // Update UI based on mode
+                updateModeUI(currentCallMode);
+                updateCameraUI();
+            } else {
+                // Show mini bar for audio calls
+                if (activeCallUI) {
+                    activeCallUI.classList.remove('hidden');
+                }
+                if (videoCallWindow) {
+                    videoCallWindow.classList.add('hidden');
+                }
+            }
+
+            // Start call timer
+            startCallTimer();
+
+            // Refresh Lucide icons
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
             }
 
             // Ensure remote audio is playing when call interface is shown
@@ -5912,6 +6244,464 @@
             console.log('HANGUP: Initiating secure hangup...');
             await cleanupCall();
         }
+
+        // Mute state tracking
+        let isMuted = false;
+
+        // Toggle microphone mute/unmute
+        function toggleMute() {
+            if (!localStream || !callActive) {
+                console.warn('Cannot toggle mute: no active call or stream');
+                return;
+            }
+
+            const audioTracks = localStream.getAudioTracks();
+            if (audioTracks.length === 0) {
+                console.warn('No audio tracks to mute');
+                return;
+            }
+
+            isMuted = !isMuted;
+
+            // Mute/unmute all audio tracks
+            audioTracks.forEach(track => {
+                track.enabled = !isMuted;
+                console.log(`Audio track ${track.label} ${isMuted ? 'muted' : 'unmuted'}`);
+            });
+
+            // Update UI
+            const muteBtn = document.getElementById('mute-btn');
+            const muteIcon = document.getElementById('mute-icon');
+            const muteText = document.getElementById('mute-text');
+
+            if (muteBtn && muteIcon && muteText) {
+                if (isMuted) {
+                    muteBtn.classList.remove('bg-zinc-700');
+                    muteBtn.classList.add('bg-red-600');
+                    muteIcon.setAttribute('data-lucide', 'mic-off');
+                    muteText.textContent = 'UNMUTE';
+                } else {
+                    muteBtn.classList.remove('bg-red-600');
+                    muteBtn.classList.add('bg-zinc-700');
+                    muteIcon.setAttribute('data-lucide', 'mic');
+                    muteText.textContent = 'MUTE';
+                }
+                // Refresh Lucide icons
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+
+            // Also update video call window mute button
+            const vcMuteBtn = document.getElementById('vc-mute-btn');
+            const vcMuteIcon = document.getElementById('vc-mute-icon');
+            if (vcMuteBtn && vcMuteIcon) {
+                if (isMuted) {
+                    vcMuteBtn.classList.remove('bg-zinc-700');
+                    vcMuteBtn.classList.add('bg-red-600');
+                    vcMuteIcon.setAttribute('data-lucide', 'mic-off');
+                } else {
+                    vcMuteBtn.classList.remove('bg-red-600');
+                    vcMuteBtn.classList.add('bg-zinc-700');
+                    vcMuteIcon.setAttribute('data-lucide', 'mic');
+                }
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+
+            // Notify other user about mute status (optional but helpful)
+            if (callId && window.firebaseDB) {
+                try {
+                    const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                    window.firebaseUpdateDoc(callDocRef, {
+                        [`muted_${ghostHandle}`]: isMuted
+                    }).catch(e => console.warn('Could not update mute status:', e));
+                } catch (e) {
+                    console.warn('Could not update mute status:', e);
+                }
+            }
+
+            console.log(`Microphone ${isMuted ? 'muted' : 'unmuted'}`);
+        }
+
+        // ============================================
+        // VIDEO CALL STATE & FUNCTIONS
+        // ============================================
+        let currentCallMode = 'audio'; // 'audio', 'video', 'screen'
+        let isCameraOff = false;
+        let isScreenSharing = false;
+        let cameraStream = null; // Store camera stream for swap-back
+        let callTimerInterval = null;
+        let callStartTime = null;
+
+        // Toggle call options popup
+        function toggleCallOptions() {
+            const popup = document.getElementById('call-options-popup');
+            if (popup) {
+                popup.classList.toggle('hidden');
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Hide call options popup
+        function hideCallOptions() {
+            const popup = document.getElementById('call-options-popup');
+            if (popup) popup.classList.add('hidden');
+        }
+
+        // Start call with specific mode
+        async function startCallWithMode(mode) {
+            hideCallOptions();
+            currentCallMode = mode;
+
+            // Start the call with the selected mode
+            await initiateCall(mode);
+        }
+
+        // Modified initiateCall to accept mode parameter
+        // The original initiateCall will be updated to use the mode
+
+        // Toggle camera on/off
+        function toggleCamera() {
+            if (!localStream || !callActive) {
+                console.warn('Cannot toggle camera: no active call or stream');
+                return;
+            }
+
+            const videoTracks = localStream.getVideoTracks();
+            if (videoTracks.length === 0) {
+                console.warn('No video tracks to toggle');
+                // If in audio mode, might need to add video
+                if (currentCallMode === 'audio') {
+                    switchCallMode('video');
+                }
+                return;
+            }
+
+            isCameraOff = !isCameraOff;
+
+            videoTracks.forEach(track => {
+                track.enabled = !isCameraOff;
+                console.log(`Video track ${track.label} ${isCameraOff ? 'disabled' : 'enabled'}`);
+            });
+
+            // Update UI
+            updateCameraUI();
+
+            console.log(`Camera ${isCameraOff ? 'off' : 'on'}`);
+        }
+
+        // Update camera button UI
+        function updateCameraUI() {
+            const vcCameraBtn = document.getElementById('vc-camera-btn');
+            const vcCameraIcon = document.getElementById('vc-camera-icon');
+            const localVideo = document.getElementById('local-video');
+            const localCameraOff = document.getElementById('local-camera-off');
+
+            if (vcCameraBtn && vcCameraIcon) {
+                if (isCameraOff) {
+                    vcCameraBtn.classList.remove('bg-zinc-700');
+                    vcCameraBtn.classList.add('bg-red-600');
+                    vcCameraIcon.setAttribute('data-lucide', 'video-off');
+                } else {
+                    vcCameraBtn.classList.remove('bg-red-600');
+                    vcCameraBtn.classList.add('bg-zinc-700');
+                    vcCameraIcon.setAttribute('data-lucide', 'video');
+                }
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+
+            // Show/hide local video vs camera off indicator
+            if (localVideo && localCameraOff) {
+                if (isCameraOff || currentCallMode === 'audio') {
+                    localVideo.classList.add('hidden');
+                    localCameraOff.classList.remove('hidden');
+                } else {
+                    localVideo.classList.remove('hidden');
+                    localCameraOff.classList.add('hidden');
+                }
+            }
+        }
+
+        // Toggle screen sharing using replaceTrack for seamless switch
+        async function toggleScreenShare() {
+            if (!callActive || !peerConnection) {
+                console.warn('Cannot toggle screen share: no active call');
+                return;
+            }
+
+            const videoSender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+
+            if (!isScreenSharing) {
+                // START Screen Share
+                try {
+                    console.log('Starting screen share...');
+                    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: { cursor: 'always' },
+                        audio: true // System audio if supported
+                    });
+
+                    // Store current camera stream for swap-back
+                    if (localStream && localStream.getVideoTracks().length > 0) {
+                        cameraStream = localStream;
+                    }
+
+                    const screenTrack = screenStream.getVideoTracks()[0];
+
+                    // HOT SWAP: Replace video track without reconnection
+                    if (videoSender) {
+                        await videoSender.replaceTrack(screenTrack);
+                        console.log('Screen track replaced successfully (Hot Swap)');
+                    } else {
+                        // No video sender - need to add track
+                        peerConnection.addTrack(screenTrack, screenStream);
+                        console.log('Screen track added to peer connection');
+                    }
+
+                    // Update local preview
+                    const localVideo = document.getElementById('local-video');
+                    if (localVideo) {
+                        localVideo.srcObject = screenStream;
+                    }
+
+                    // Listen for browser "Stop Sharing" button
+                    screenTrack.onended = () => {
+                        console.log('Screen share ended by browser');
+                        stopScreenShare();
+                    };
+
+                    isScreenSharing = true;
+                    currentCallMode = 'screen';
+                    updateScreenShareUI(true);
+                    updateModeUI('screen');
+
+                    console.log('Screen share started successfully');
+                } catch (err) {
+                    console.error('Screen share failed:', err);
+                    if (err.name !== 'AbortError') { // User didn't just cancel
+                        alert('Could not start screen sharing: ' + err.message);
+                    }
+                }
+            } else {
+                // STOP Screen Share
+                stopScreenShare();
+            }
+        }
+
+        // Stop screen sharing and revert to camera
+        async function stopScreenShare() {
+            if (!isScreenSharing) return;
+
+            console.log('Stopping screen share...');
+            const videoSender = peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
+
+            if (videoSender && cameraStream && cameraStream.getVideoTracks().length > 0) {
+                // HOT SWAP BACK: Revert to camera
+                try {
+                    await videoSender.replaceTrack(cameraStream.getVideoTracks()[0]);
+                    console.log('Reverted to camera (Hot Swap)');
+                } catch (e) {
+                    console.warn('Could not revert to camera:', e);
+                }
+
+                // Update local preview
+                const localVideo = document.getElementById('local-video');
+                if (localVideo) {
+                    localVideo.srcObject = cameraStream;
+                }
+            }
+
+            isScreenSharing = false;
+            currentCallMode = 'video';
+            updateScreenShareUI(false);
+            updateModeUI('video');
+
+            console.log('Screen share stopped');
+        }
+
+        // Update screen share button UI
+        function updateScreenShareUI(sharing) {
+            const vcScreenBtn = document.getElementById('vc-screen-btn');
+            const vcScreenIcon = document.getElementById('vc-screen-icon');
+
+            if (vcScreenBtn && vcScreenIcon) {
+                if (sharing) {
+                    vcScreenBtn.classList.remove('bg-zinc-700');
+                    vcScreenBtn.classList.add('bg-purple-600');
+                } else {
+                    vcScreenBtn.classList.remove('bg-purple-600');
+                    vcScreenBtn.classList.add('bg-zinc-700');
+                }
+            }
+        }
+
+        // Switch call mode (audio/video/screen)
+        async function switchCallMode(newMode) {
+            if (!callActive || !peerConnection) {
+                console.warn('Cannot switch mode: no active call');
+                return;
+            }
+
+            console.log(`Switching call mode from ${currentCallMode} to ${newMode}`);
+            hideModeSwitcher();
+
+            const videoSender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+
+            if (newMode === 'audio') {
+                // Switch to audio-only: disable video track
+                if (isScreenSharing) {
+                    await stopScreenShare();
+                }
+                if (videoSender && videoSender.track) {
+                    videoSender.track.enabled = false;
+                }
+                isCameraOff = true;
+                currentCallMode = 'audio';
+                updateCameraUI();
+            }
+            else if (newMode === 'video') {
+                // Switch to video
+                if (isScreenSharing) {
+                    await stopScreenShare();
+                }
+
+                // If we have camera stream, enable it
+                if (videoSender && videoSender.track) {
+                    videoSender.track.enabled = true;
+                    isCameraOff = false;
+                } else if (!videoSender && localStream) {
+                    // Need to get video stream
+                    try {
+                        const videoStream = await navigator.mediaDevices.getUserMedia({
+                            video: { width: 1280, height: 720, facingMode: 'user' }
+                        });
+                        const videoTrack = videoStream.getVideoTracks()[0];
+                        peerConnection.addTrack(videoTrack, videoStream);
+                        cameraStream = videoStream;
+                        isCameraOff = false;
+                    } catch (e) {
+                        console.error('Could not get video:', e);
+                    }
+                }
+                currentCallMode = 'video';
+                updateCameraUI();
+            }
+            else if (newMode === 'screen') {
+                // Switch to screen share
+                await toggleScreenShare();
+                return; // toggleScreenShare handles the mode update
+            }
+
+            updateModeUI(currentCallMode);
+        }
+
+        // Open mode switcher popup
+        function openModeSwitcher() {
+            const popup = document.getElementById('mode-switcher-popup');
+            if (popup) {
+                popup.classList.toggle('hidden');
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Hide mode switcher popup
+        function hideModeSwitcher() {
+            const popup = document.getElementById('mode-switcher-popup');
+            if (popup) popup.classList.add('hidden');
+        }
+
+        // Update mode indicator UI
+        function updateModeUI(mode) {
+            const modeBadge = document.getElementById('call-mode-badge');
+            const miniModeBadge = document.getElementById('mini-call-mode');
+
+            const modeLabels = {
+                'audio': 'VOICE CALL',
+                'video': 'VIDEO CALL',
+                'screen': 'SCREEN SHARE'
+            };
+
+            const label = modeLabels[mode] || 'CALL';
+
+            if (modeBadge) modeBadge.textContent = label;
+            if (miniModeBadge) miniModeBadge.textContent = label;
+        }
+
+        // Minimize video call window to bar
+        function minimizeCallWindow() {
+            const videoWindow = document.getElementById('video-call-window');
+            const miniBar = document.getElementById('active-call-interface');
+
+            if (videoWindow) videoWindow.classList.add('hidden');
+            if (miniBar) miniBar.classList.remove('hidden');
+        }
+
+        // Expand to full-screen video call window
+        function expandCallWindow() {
+            const videoWindow = document.getElementById('video-call-window');
+            const miniBar = document.getElementById('active-call-interface');
+
+            if (miniBar) miniBar.classList.add('hidden');
+            if (videoWindow) {
+                videoWindow.classList.remove('hidden');
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Start call timer
+        function startCallTimer() {
+            callStartTime = Date.now();
+            if (callTimerInterval) clearInterval(callTimerInterval);
+
+            callTimerInterval = setInterval(() => {
+                if (!callActive) {
+                    clearInterval(callTimerInterval);
+                    return;
+                }
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                const timerEl = document.getElementById('call-timer');
+                if (timerEl) timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        // Stop call timer
+        function stopCallTimer() {
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            const timerEl = document.getElementById('call-timer');
+            if (timerEl) timerEl.textContent = '00:00';
+        }
+
+        // Close popups when clicking outside
+        document.addEventListener('click', (e) => {
+            const callOptionsPopup = document.getElementById('call-options-popup');
+            const callBtn = document.getElementById('ghost-call-btn');
+            const modeSwitcherPopup = document.getElementById('mode-switcher-popup');
+            const modeSwitchBtn = document.getElementById('vc-mode-btn');
+
+            // Close call options if clicking outside
+            if (callOptionsPopup && !callOptionsPopup.contains(e.target) && !callBtn?.contains(e.target)) {
+                callOptionsPopup.classList.add('hidden');
+            }
+
+            // Close mode switcher if clicking outside
+            if (modeSwitcherPopup && !modeSwitcherPopup.contains(e.target) && !modeSwitchBtn?.contains(e.target)) {
+                modeSwitcherPopup.classList.add('hidden');
+            }
+        });
 
         // Cleanup call resources - SECURE HANGUP with recursive deletion
         async function cleanupCall() {
@@ -6043,6 +6833,23 @@
 
                         const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${currentCallId}`);
 
+                        // CRITICAL FIX: Update call status to 'ended' FIRST so other user gets notification
+                        // This ensures both sides know the call has ended before we delete the document
+                        try {
+                            await window.firebaseUpdateDoc(callDocRef, {
+                                status: 'ended',
+                                ended: true,
+                                endedAt: window.firebaseServerTimestamp(),
+                                endedBy: ghostHandle
+                            });
+                            console.log('HANGUP: Call status updated to ended - other user will be notified');
+
+                            // Wait briefly for the other user to receive the status change
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (updateError) {
+                            console.warn('HANGUP: Could not update call status (may already be deleted):', updateError);
+                        }
+
                         // First, delete subcollections (offerCandidates and answerCandidates)
                         try {
                             // Delete offerCandidates subcollection
@@ -6085,18 +6892,42 @@
                     console.log('SECURE HANGUP: No callId to delete (call may not have been established).');
                 }
 
-                // Hide UI
+                // Release wake lock
+                releaseWakeLock();
+
+                // Stop call timer
+                stopCallTimer();
+
+                // Hide UI - both video window and mini bar
                 const activeCallUI = document.getElementById('active-call-interface');
                 if (activeCallUI) activeCallUI.classList.add('hidden');
+                const videoCallWindow = document.getElementById('video-call-window');
+                if (videoCallWindow) videoCallWindow.classList.add('hidden');
                 const incomingModal = document.getElementById('incoming-call-modal');
                 if (incomingModal) incomingModal.classList.add('hidden');
                 const callBtn = document.getElementById('ghost-call-btn');
                 if (callBtn) callBtn.classList.remove('hidden');
 
+                // Clear video elements
+                const localVideo = document.getElementById('local-video');
+                if (localVideo) localVideo.srcObject = null;
+                const remoteVideo = document.getElementById('remote-video');
+                if (remoteVideo) remoteVideo.srcObject = null;
+
+                // Show video placeholder
+                const videoPlaceholder = document.getElementById('video-placeholder');
+                if (videoPlaceholder) videoPlaceholder.classList.remove('hidden');
+
                 // UI RESET: Reset all call-related variables to prevent memory leaks
                 const endedCallId = currentCallId;
                 callId = null;
                 isCaller = false;
+
+                // Reset video call state
+                currentCallMode = 'audio';
+                isCameraOff = false;
+                isScreenSharing = false;
+                cameraStream = null;
 
                 // Reset all call-related variables
                 remoteAudioSource = null;
@@ -6118,6 +6949,7 @@
                 console.error('Error in cleanupCall:', error);
                 // Force cleanup even if there's an error
                 callActive = false;
+                isMuted = false; // Reset mute state
                 if (callId) {
                     processedCallIds.delete(callId);
                 }
