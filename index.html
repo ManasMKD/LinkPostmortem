@@ -6157,6 +6157,11 @@
                     throw new Error('Offer not found');
                 }
 
+                // Mark call as active and start listening for ICE candidates BEFORE setting remote description
+                // This prevents race condition where candidates arrive before we're listening
+                callActive = true;
+                listenForOfferCandidates();
+
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
 
                 // Create answer
@@ -6171,12 +6176,6 @@
                     },
                     status: 'active'
                 });
-
-                // Mark call as active BEFORE listening for candidates to prevent race conditions
-                callActive = true;
-
-                // Listen for ICE candidates from caller
-                listenForOfferCandidates();
 
                 // Show active call (modal already hidden above)
                 showActiveCall();
