@@ -4922,9 +4922,9 @@
         // ICE Servers Configuration (STUN + Free TURN servers for better NAT traversal)
         const iceServers = {
             iceServers: [
-                // Google STUN servers (free) - backup for discovery
+                // Google STUN servers (free) - for direct connection discovery
                 { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
-                // OpenRelay FREE TURN server
+                // OpenRelay FREE TURN server - for relay when direct fails
                 {
                     urls: 'turn:openrelay.metered.ca:80',
                     username: 'openrelayproject',
@@ -4941,9 +4941,7 @@
                     credential: 'openrelayproject'
                 }
             ],
-            iceCandidatePoolSize: 10,
-            // Force TURN relay to bypass NAT traversal issues on desktop
-            iceTransportPolicy: 'relay'
+            iceCandidatePoolSize: 10
         };
 
         // Enhanced Media Constraints with maximum echo cancellation
@@ -4978,11 +4976,12 @@
             // Video settings based on call mode
             if (currentCallMode === 'video') {
                 if (isMobile) {
-                    // Use simple constraints for mobile - complex ones can cause issues
+                    // FIX: Use ideal constraints instead of strict values
+                    // This allows portrait video (480x640) when phone is held vertically
                     baseConstraints.video = {
                         facingMode: 'user',
-                        width: 640,
-                        height: 480
+                        width: { ideal: 640, max: 1280 },
+                        height: { ideal: 480, max: 1280 }
                     };
                 } else {
                     baseConstraints.video = {
@@ -5302,246 +5301,246 @@
 
                 // Handle remote stream with Web Audio API for echo cancellation
                 peerConnection.ontrack = async (event) => {
-                    console.log('Received remote track', event);
-                    console.log('Track kind:', event.track.kind);
-                    console.log('Track enabled:', event.track.enabled);
-                    console.log('Track readyState:', event.track.readyState);
+                    console.log('Received remote track', event.track.kind);
 
-                    if (event.streams && event.streams[0]) {
-                        const remoteStream = event.streams[0];
+                    // FIX: Robust stream retrieval - event.streams[0] can be null
+                    let remoteStream = event.streams && event.streams[0];
+                    if (!remoteStream) {
+                        console.log('No stream in event, creating new MediaStream from track');
+                        remoteStream = new MediaStream();
+                        remoteStream.addTrack(event.track);
+                    }
 
-                        // Handle VIDEO tracks
-                        if (event.track.kind === 'video') {
-                            console.log('Caller: Received video track - setting up video display');
+                    // Handle VIDEO tracks
+                    if (event.track.kind === 'video') {
+                        console.log('Caller: Received video track - setting up video display');
 
-                            // DEBUG: Show visible debug info since dev tools blocked
-                            const debugText = document.getElementById('placeholder-text');
-                            if (debugText) {
-                                debugText.textContent = 'VIDEO TRACK RECEIVED!';
+                        const remoteVideo = document.getElementById('remote-video');
+                        const videoPlaceholder = document.getElementById('video-placeholder');
+                        const videoCallWindow = document.getElementById('video-call-window');
+                        const activeCallUI = document.getElementById('active-call-interface');
+
+                        // Ensure video call window is visible when we receive video
+                        if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
+                            console.log('Caller: Showing video call window for incoming video track');
+                            videoCallWindow.classList.remove('hidden');
+                            if (activeCallUI) {
+                                activeCallUI.classList.add('hidden');
                             }
-                            const remoteVideo = document.getElementById('remote-video');
-                            const videoPlaceholder = document.getElementById('video-placeholder');
-                            const videoCallWindow = document.getElementById('video-call-window');
-                            const activeCallUI = document.getElementById('active-call-interface');
-
-                            // Ensure video call window is visible when we receive video
-                            if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
-                                console.log('Caller: Showing video call window for incoming video track');
-                                videoCallWindow.classList.remove('hidden');
-                                if (activeCallUI) {
-                                    activeCallUI.classList.add('hidden');
-                                }
-                                // Also set up local video if we have it
-                                const localVideo = document.getElementById('local-video');
-                                if (localVideo && localStream) {
-                                    localVideo.srcObject = localStream;
-                                }
+                            // Also set up local video if we have it
+                            const localVideo = document.getElementById('local-video');
+                            if (localVideo && localStream) {
+                                localVideo.srcObject = localStream;
                             }
-
-                            if (remoteVideo) {
-                                remoteVideo.srcObject = remoteStream;
-                                // Ensure video plays with proper attributes
-                                remoteVideo.muted = false; // Audio comes from audio tracks
-                                remoteVideo.setAttribute('playsinline', '');
-                                remoteVideo.setAttribute('autoplay', '');
-
-                                remoteVideo.play().catch(e => {
-                                    console.warn('Video play failed, retrying:', e);
-                                    // Retry after a short delay
-                                    setTimeout(() => {
-                                        remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
-                                    }, 500);
-                                });
-
-                                // Hide placeholder when video starts
-                                if (videoPlaceholder) {
-                                    videoPlaceholder.classList.add('hidden');
-                                }
-                                console.log('Caller: Remote video connected');
-
-                                // Update call mode to video if not already
-                                if (currentCallMode === 'audio') {
-                                    currentCallMode = 'video';
-                                    updateModeUI('video');
-                                }
-                            }
-                            return; // Video track handled, don't process as audio
                         }
 
-                        // Handle AUDIO tracks
-                        const audioTracks = remoteStream.getAudioTracks();
-                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        if (remoteVideo) {
+                            // FIX: Force reset srcObject to ensure the new stream triggers a render
+                            remoteVideo.srcObject = null;
+                            remoteVideo.srcObject = remoteStream;
 
-                        if (audioTracks.length === 0) {
-                            console.error('No audio tracks in remote stream!');
-                            return;
-                        }
+                            // Ensure video plays with proper attributes
+                            remoteVideo.muted = false; // Audio comes from audio tracks
+                            remoteVideo.setAttribute('playsinline', '');
+                            remoteVideo.setAttribute('autoplay', '');
 
-                        audioTracks.forEach((track, index) => {
-                            console.log(`Audio track ${index}:`, {
-                                enabled: track.enabled,
-                                readyState: track.readyState,
-                                muted: track.muted,
-                                label: track.label
+                            remoteVideo.play().catch(e => {
+                                console.warn('Video play failed, retrying:', e);
+                                // Retry after a short delay
+                                setTimeout(() => {
+                                    remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
+                                }, 500);
                             });
+
+                            // Hide placeholder when video starts
+                            if (videoPlaceholder) {
+                                videoPlaceholder.classList.add('hidden');
+                            }
+                            console.log('Caller: Remote video connected');
+
+                            // Update call mode to video if not already
+                            if (currentCallMode === 'audio') {
+                                currentCallMode = 'video';
+                                updateModeUI('video');
+                            }
+                        }
+                        return; // Video track handled, don't process as audio
+                    }
+
+                    // Handle AUDIO tracks
+                    const audioTracks = remoteStream.getAudioTracks();
+                    console.log('Remote stream audio tracks:', audioTracks.length);
+
+                    if (audioTracks.length === 0) {
+                        console.error('No audio tracks in remote stream!');
+                        return;
+                    }
+
+                    audioTracks.forEach((track, index) => {
+                        console.log(`Audio track ${index}:`, {
+                            enabled: track.enabled,
+                            readyState: track.readyState,
+                            muted: track.muted,
+                            label: track.label
                         });
+                    });
+                    try {
+                        // Ensure audio context is initialized and nodes exist
+                        if (!callAudioContext || callAudioContext.state === 'closed') {
+                            await initializeAudioContext();
+                        }
+
+                        if (!callAudioContext) {
+                            throw new Error('Audio context not initialized');
+                        }
+
+                        if (callAudioContext.state === 'suspended') {
+                            await callAudioContext.resume();
+                        }
+
+                        // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
+                        // Create or reuse audio element
+                        if (!remoteAudioElement) {
+                            remoteAudioElement = new Audio();
+                            remoteAudioElement.autoplay = true;
+                            remoteAudioElement.volume = 1.0; // Full volume
+                            remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                            remoteAudioElement.muted = false;
+
+                            // Add event listeners for debugging
+                            remoteAudioElement.addEventListener('play', () => {
+                                console.log('Remote audio element started playing');
+                            });
+                            remoteAudioElement.addEventListener('pause', () => {
+                                console.log('Remote audio element paused');
+                            });
+                            remoteAudioElement.addEventListener('error', (e) => {
+                                console.error('Remote audio element error:', e);
+                            });
+                            remoteAudioElement.addEventListener('loadedmetadata', () => {
+                                console.log('Remote audio metadata loaded');
+                            });
+                        }
+
+                        // Set remote stream to audio element
+                        remoteAudioElement.srcObject = remoteStream;
+                        remoteAudioElement.volume = 1.0; // Ensure volume is set
+                        remoteAudioElement.muted = false; // Ensure not muted
+
+                        // Enable all audio tracks
+                        audioTracks.forEach(track => {
+                            track.enabled = true;
+                            console.log('Enabled audio track:', track.label);
+                        });
+
+                        // Play the audio element with retry for mobile
+                        let playAttempts = 0;
+                        const maxPlayAttempts = 5;
+
+                        const tryPlayAudio = async () => {
+                            try {
+                                await remoteAudioElement.play();
+                                console.log('Remote audio element playing successfully');
+                                console.log('Audio element volume:', remoteAudioElement.volume);
+                                console.log('Audio element muted:', remoteAudioElement.muted);
+                                console.log('Audio element paused:', remoteAudioElement.paused);
+                                return true;
+                            } catch (playError) {
+                                playAttempts++;
+                                console.warn(`Play attempt ${playAttempts} failed:`, playError);
+
+                                if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
+                                    // Autoplay blocked - wait a bit and retry (user might interact)
+                                    console.log('Autoplay blocked, will retry...');
+                                    setTimeout(() => {
+                                        if (callActive && remoteAudioElement) {
+                                            tryPlayAudio();
+                                        }
+                                    }, 1000);
+                                } else if (playAttempts < maxPlayAttempts) {
+                                    // Other error - retry after short delay
+                                    setTimeout(() => {
+                                        if (callActive && remoteAudioElement) {
+                                            tryPlayAudio();
+                                        }
+                                    }, 500);
+                                } else {
+                                    console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
+                                    // On mobile, try to show a message or use a workaround
+                                    if (isMobile) {
+                                        console.warn('Mobile autoplay blocked - audio may need user interaction');
+                                    }
+                                }
+                                return false;
+                            }
+                        };
+
+                        await tryPlayAudio();
+
+                        // SECONDARY METHOD: Also try Web Audio API for echo cancellation
                         try {
-                            // Ensure audio context is initialized and nodes exist
-                            if (!callAudioContext || callAudioContext.state === 'closed') {
+                            // Ensure audio nodes are created
+                            if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                console.log('Initializing Web Audio API nodes for echo cancellation...');
                                 await initializeAudioContext();
                             }
 
-                            if (!callAudioContext) {
-                                throw new Error('Audio context not initialized');
+                            // Create media stream source from remote stream
+                            if (remoteAudioSource) {
+                                try {
+                                    remoteAudioSource.disconnect();
+                                } catch (e) {
+                                    // Ignore disconnect errors
+                                }
                             }
 
-                            if (callAudioContext.state === 'suspended') {
-                                await callAudioContext.resume();
-                            }
+                            remoteAudioSource = callAudioContext.createMediaStreamSource(remoteStream);
 
-                            // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
-                            // Create or reuse audio element
+                            // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
+                            if (remoteGainNode) {
+                                remoteAudioSource.connect(remoteGainNode);
+                                console.log('Web Audio API echo cancellation active');
+                                console.log('Web Audio API gain:', remoteGainNode.gain.value);
+                            }
+                        } catch (webAudioError) {
+                            console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
+                            // Audio element will still work
+                        }
+
+                        console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
+                    } catch (e) {
+                        console.error('Error handling remote track:', e);
+                        // Fallback to basic audio element only
+                        try {
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 1.0; // Full volume
-                                remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                                remoteAudioElement.volume = 1.0;
+                                remoteAudioElement.setAttribute('playsinline', 'true');
                                 remoteAudioElement.muted = false;
-
-                                // Add event listeners for debugging
-                                remoteAudioElement.addEventListener('play', () => {
-                                    console.log('Remote audio element started playing');
-                                });
-                                remoteAudioElement.addEventListener('pause', () => {
-                                    console.log('Remote audio element paused');
-                                });
-                                remoteAudioElement.addEventListener('error', (e) => {
-                                    console.error('Remote audio element error:', e);
-                                });
-                                remoteAudioElement.addEventListener('loadedmetadata', () => {
-                                    console.log('Remote audio metadata loaded');
-                                });
                             }
-
-                            // Set remote stream to audio element
-                            remoteAudioElement.srcObject = event.streams[0];
-                            remoteAudioElement.volume = 1.0; // Ensure volume is set
-                            remoteAudioElement.muted = false; // Ensure not muted
+                            remoteAudioElement.srcObject = remoteStream;
+                            remoteAudioElement.volume = 1.0;
+                            remoteAudioElement.muted = false;
 
                             // Enable all audio tracks
-                            audioTracks.forEach(track => {
+                            const stream = remoteStream;
+                            stream.getAudioTracks().forEach(track => {
                                 track.enabled = true;
-                                console.log('Enabled audio track:', track.label);
                             });
 
-                            // Play the audio element with retry for mobile
-                            let playAttempts = 0;
-                            const maxPlayAttempts = 5;
-
-                            const tryPlayAudio = async () => {
-                                try {
-                                    await remoteAudioElement.play();
-                                    console.log('Remote audio element playing successfully');
-                                    console.log('Audio element volume:', remoteAudioElement.volume);
-                                    console.log('Audio element muted:', remoteAudioElement.muted);
-                                    console.log('Audio element paused:', remoteAudioElement.paused);
-                                    return true;
-                                } catch (playError) {
-                                    playAttempts++;
-                                    console.warn(`Play attempt ${playAttempts} failed:`, playError);
-
-                                    if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
-                                        // Autoplay blocked - wait a bit and retry (user might interact)
-                                        console.log('Autoplay blocked, will retry...');
-                                        setTimeout(() => {
-                                            if (callActive && remoteAudioElement) {
-                                                tryPlayAudio();
-                                            }
-                                        }, 1000);
-                                    } else if (playAttempts < maxPlayAttempts) {
-                                        // Other error - retry after short delay
-                                        setTimeout(() => {
-                                            if (callActive && remoteAudioElement) {
-                                                tryPlayAudio();
-                                            }
-                                        }, 500);
-                                    } else {
-                                        console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
-                                        // On mobile, try to show a message or use a workaround
-                                        if (isMobile) {
-                                            console.warn('Mobile autoplay blocked - audio may need user interaction');
-                                        }
-                                    }
-                                    return false;
-                                }
-                            };
-
-                            await tryPlayAudio();
-
-                            // SECONDARY METHOD: Also try Web Audio API for echo cancellation
-                            try {
-                                // Ensure audio nodes are created
-                                if (!remoteGainNode || !compressorNode || !limiterNode) {
-                                    console.log('Initializing Web Audio API nodes for echo cancellation...');
-                                    await initializeAudioContext();
-                                }
-
-                                // Create media stream source from remote stream
-                                if (remoteAudioSource) {
-                                    try {
-                                        remoteAudioSource.disconnect();
-                                    } catch (e) {
-                                        // Ignore disconnect errors
-                                    }
-                                }
-
-                                remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
-
-                                // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                                if (remoteGainNode) {
-                                    remoteAudioSource.connect(remoteGainNode);
-                                    console.log('Web Audio API echo cancellation active');
-                                    console.log('Web Audio API gain:', remoteGainNode.gain.value);
-                                }
-                            } catch (webAudioError) {
-                                console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
-                                // Audio element will still work
-                            }
-
-                            console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
-                        } catch (e) {
-                            console.error('Error handling remote track:', e);
-                            // Fallback to basic audio element only
-                            try {
-                                if (!remoteAudioElement) {
-                                    remoteAudioElement = new Audio();
-                                    remoteAudioElement.autoplay = true;
-                                    remoteAudioElement.volume = 1.0;
-                                    remoteAudioElement.setAttribute('playsinline', 'true');
-                                    remoteAudioElement.muted = false;
-                                }
-                                remoteAudioElement.srcObject = event.streams[0];
-                                remoteAudioElement.volume = 1.0;
-                                remoteAudioElement.muted = false;
-
-                                // Enable all audio tracks
-                                const stream = event.streams[0];
-                                stream.getAudioTracks().forEach(track => {
-                                    track.enabled = true;
-                                });
-
-                                await remoteAudioElement.play();
-                                console.log('Using fallback audio element only - playing');
-                            } catch (err) {
-                                console.error('Error with fallback audio element:', err);
-                                // Try to show user-friendly error
-                                if (err.name === 'NotAllowedError') {
-                                    console.warn('Autoplay blocked - user interaction may be required');
-                                }
+                            await remoteAudioElement.play();
+                            console.log('Using fallback audio element only - playing');
+                        } catch (err) {
+                            console.error('Error with fallback audio element:', err);
+                            // Try to show user-friendly error
+                            if (err.name === 'NotAllowedError') {
+                                console.warn('Autoplay blocked - user interaction may be required');
                             }
                         }
                     }
                 };
+
 
                 // Create offer
                 console.log('Creating WebRTC offer...');
@@ -5808,6 +5807,12 @@
                     peerConnection.addTransceiver('video', { direction: 'sendrecv' });
                 }
 
+                // FIX: For VIDEO mode, also explicitly add a transceiver to ensure SDP Answer signals video capability
+                if (currentCallMode === 'video') {
+                    console.log('Video mode (Receiver): Adding explicit video transceiver...');
+                    peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+                }
+
                 // Handle ICE candidates
                 peerConnection.onicecandidate = async (event) => {
                     if (event.candidate && callId) {
@@ -5888,249 +5893,246 @@
 
                 // Handle remote stream with Web Audio API for echo cancellation
                 peerConnection.ontrack = async (event) => {
-                    // DEBUG: Alert when any track is received
-                    alert(`PC ontrack fired!\nTrack kind: ${event.track.kind}\nTrack enabled: ${event.track.enabled}\nHas streams: ${event.streams && event.streams.length > 0}`);
+                    console.log('Received remote track', event.track.kind);
 
-                    console.log('Received remote track', event);
-                    console.log('Track kind:', event.track.kind);
-                    console.log('Track enabled:', event.track.enabled);
-                    console.log('Track readyState:', event.track.readyState);
+                    // FIX: Robust stream retrieval - event.streams[0] can be null on PC receiving from mobile
+                    let remoteStream = event.streams && event.streams[0];
+                    if (!remoteStream) {
+                        console.log('No stream in event, creating new MediaStream from track');
+                        remoteStream = new MediaStream();
+                        remoteStream.addTrack(event.track);
+                    }
 
-                    if (event.streams && event.streams[0]) {
-                        const remoteStream = event.streams[0];
+                    // Handle VIDEO tracks FIRST
+                    if (event.track.kind === 'video') {
+                        console.log('Receiver: Received video track - setting up video display');
 
-                        // Handle VIDEO tracks FIRST
-                        if (event.track.kind === 'video') {
-                            console.log('Receiver: Received video track - setting up video display');
+                        const remoteVideo = document.getElementById('remote-video');
+                        const videoPlaceholder = document.getElementById('video-placeholder');
+                        const videoCallWindow = document.getElementById('video-call-window');
+                        const activeCallUI = document.getElementById('active-call-interface');
 
-                            // DEBUG: Show visible debug info since dev tools blocked
-                            const debugText = document.getElementById('placeholder-text');
-                            if (debugText) {
-                                debugText.textContent = 'VIDEO TRACK RECEIVED!';
+                        // Ensure video call window is visible when we receive video
+                        if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
+                            console.log('Receiver: Showing video call window for incoming video track');
+                            videoCallWindow.classList.remove('hidden');
+                            if (activeCallUI) {
+                                activeCallUI.classList.add('hidden');
                             }
-                            const remoteVideo = document.getElementById('remote-video');
-                            const videoPlaceholder = document.getElementById('video-placeholder');
-                            const videoCallWindow = document.getElementById('video-call-window');
-                            const activeCallUI = document.getElementById('active-call-interface');
-
-                            // Ensure video call window is visible when we receive video
-                            if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
-                                console.log('Receiver: Showing video call window for incoming video track');
-                                videoCallWindow.classList.remove('hidden');
-                                if (activeCallUI) {
-                                    activeCallUI.classList.add('hidden');
-                                }
-                                // Also set up local video if we have it
-                                const localVideo = document.getElementById('local-video');
-                                if (localVideo && localStream) {
-                                    localVideo.srcObject = localStream;
-                                }
+                            // Also set up local video if we have it
+                            const localVideo = document.getElementById('local-video');
+                            if (localVideo && localStream) {
+                                localVideo.srcObject = localStream;
                             }
-
-                            if (remoteVideo) {
-                                remoteVideo.srcObject = remoteStream;
-                                // Ensure video plays with proper attributes
-                                remoteVideo.muted = false; // Audio comes from audio tracks
-                                remoteVideo.setAttribute('playsinline', '');
-                                remoteVideo.setAttribute('autoplay', '');
-
-                                remoteVideo.play().catch(e => {
-                                    console.warn('Video play failed, retrying:', e);
-                                    // Retry after a short delay
-                                    setTimeout(() => {
-                                        remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
-                                    }, 500);
-                                });
-
-                                // Hide placeholder when video starts
-                                if (videoPlaceholder) {
-                                    videoPlaceholder.classList.add('hidden');
-                                }
-                                console.log('Receiver: Remote video connected');
-
-                                // Update call mode to video if not already
-                                if (currentCallMode === 'audio') {
-                                    currentCallMode = 'video';
-                                    updateModeUI('video');
-                                }
-                            }
-                            return; // Video track handled, don't process as audio
                         }
 
-                        // Handle AUDIO tracks
-                        const audioTracks = remoteStream.getAudioTracks();
-                        console.log('Remote stream audio tracks:', audioTracks.length);
+                        if (remoteVideo) {
+                            // FIX: Force reset srcObject to ensure the new stream triggers a render
+                            remoteVideo.srcObject = null;
+                            remoteVideo.srcObject = remoteStream;
 
-                        if (audioTracks.length === 0) {
-                            console.error('No audio tracks in remote stream!');
-                            return;
-                        }
+                            // Ensure video plays with proper attributes
+                            remoteVideo.muted = false; // Audio comes from audio tracks
+                            remoteVideo.setAttribute('playsinline', '');
+                            remoteVideo.setAttribute('autoplay', '');
 
-                        audioTracks.forEach((track, index) => {
-                            console.log(`Audio track ${index}:`, {
-                                enabled: track.enabled,
-                                readyState: track.readyState,
-                                muted: track.muted,
-                                label: track.label
+                            remoteVideo.play().catch(e => {
+                                console.warn('Video play failed, retrying:', e);
+                                // Retry after a short delay
+                                setTimeout(() => {
+                                    remoteVideo.play().catch(e2 => console.warn('Video retry failed:', e2));
+                                }, 500);
                             });
+
+                            // Hide placeholder when video starts
+                            if (videoPlaceholder) {
+                                videoPlaceholder.classList.add('hidden');
+                            }
+                            console.log('Receiver: Remote video connected');
+
+                            // Update call mode to video if not already
+                            if (currentCallMode === 'audio') {
+                                currentCallMode = 'video';
+                                updateModeUI('video');
+                            }
+                        }
+                        return; // Video track handled, don't process as audio
+                    }
+
+                    // Handle AUDIO tracks
+                    const audioTracks = remoteStream.getAudioTracks();
+                    console.log('Remote stream audio tracks:', audioTracks.length);
+
+                    if (audioTracks.length === 0) {
+                        console.error('No audio tracks in remote stream!');
+                        return;
+                    }
+
+                    audioTracks.forEach((track, index) => {
+                        console.log(`Audio track ${index}:`, {
+                            enabled: track.enabled,
+                            readyState: track.readyState,
+                            muted: track.muted,
+                            label: track.label
                         });
+                    });
+                    try {
+                        // Ensure audio context is initialized and nodes exist
+                        if (!callAudioContext || callAudioContext.state === 'closed') {
+                            await initializeAudioContext();
+                        }
+
+                        if (!callAudioContext) {
+                            throw new Error('Audio context not initialized');
+                        }
+
+                        if (callAudioContext.state === 'suspended') {
+                            await callAudioContext.resume();
+                        }
+
+                        // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
+                        // Create or reuse audio element
+                        if (!remoteAudioElement) {
+                            remoteAudioElement = new Audio();
+                            remoteAudioElement.autoplay = true;
+                            remoteAudioElement.volume = 1.0; // Full volume
+                            remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                            remoteAudioElement.muted = false;
+
+                            // Add event listeners for debugging
+                            remoteAudioElement.addEventListener('play', () => {
+                                console.log('Remote audio element started playing');
+                            });
+                            remoteAudioElement.addEventListener('pause', () => {
+                                console.log('Remote audio element paused');
+                            });
+                            remoteAudioElement.addEventListener('error', (e) => {
+                                console.error('Remote audio element error:', e);
+                            });
+                            remoteAudioElement.addEventListener('loadedmetadata', () => {
+                                console.log('Remote audio metadata loaded');
+                            });
+                        }
+
+                        // Set remote stream to audio element
+                        remoteAudioElement.srcObject = remoteStream;
+                        remoteAudioElement.volume = 1.0; // Ensure volume is set
+                        remoteAudioElement.muted = false; // Ensure not muted
+
+                        // Enable all audio tracks
+                        audioTracks.forEach(track => {
+                            track.enabled = true;
+                            console.log('Enabled audio track:', track.label);
+                        });
+
+                        // Play the audio element with retry for mobile
+                        let playAttempts = 0;
+                        const maxPlayAttempts = 5;
+
+                        const tryPlayAudio = async () => {
+                            try {
+                                await remoteAudioElement.play();
+                                console.log('Remote audio element playing successfully');
+                                console.log('Audio element volume:', remoteAudioElement.volume);
+                                console.log('Audio element muted:', remoteAudioElement.muted);
+                                console.log('Audio element paused:', remoteAudioElement.paused);
+                                return true;
+                            } catch (playError) {
+                                playAttempts++;
+                                console.warn(`Play attempt ${playAttempts} failed:`, playError);
+
+                                if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
+                                    // Autoplay blocked - wait a bit and retry (user might interact)
+                                    console.log('Autoplay blocked, will retry...');
+                                    setTimeout(() => {
+                                        if (callActive && remoteAudioElement) {
+                                            tryPlayAudio();
+                                        }
+                                    }, 1000);
+                                } else if (playAttempts < maxPlayAttempts) {
+                                    // Other error - retry after short delay
+                                    setTimeout(() => {
+                                        if (callActive && remoteAudioElement) {
+                                            tryPlayAudio();
+                                        }
+                                    }, 500);
+                                } else {
+                                    console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
+                                    // On mobile, try to show a message or use a workaround
+                                    if (isMobile) {
+                                        console.warn('Mobile autoplay blocked - audio may need user interaction');
+                                    }
+                                }
+                                return false;
+                            }
+                        };
+
+                        await tryPlayAudio();
+
+                        // SECONDARY METHOD: Also try Web Audio API for echo cancellation
                         try {
-                            // Ensure audio context is initialized and nodes exist
-                            if (!callAudioContext || callAudioContext.state === 'closed') {
+                            // Ensure audio nodes are created
+                            if (!remoteGainNode || !compressorNode || !limiterNode) {
+                                console.log('Initializing Web Audio API nodes for echo cancellation...');
                                 await initializeAudioContext();
                             }
 
-                            if (!callAudioContext) {
-                                throw new Error('Audio context not initialized');
+                            // Create media stream source from remote stream
+                            if (remoteAudioSource) {
+                                try {
+                                    remoteAudioSource.disconnect();
+                                } catch (e) {
+                                    // Ignore disconnect errors
+                                }
                             }
 
-                            if (callAudioContext.state === 'suspended') {
-                                await callAudioContext.resume();
-                            }
+                            remoteAudioSource = callAudioContext.createMediaStreamSource(remoteStream);
 
-                            // PRIMARY METHOD: Use HTML5 Audio element (most reliable)
-                            // Create or reuse audio element
+                            // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
+                            if (remoteGainNode) {
+                                remoteAudioSource.connect(remoteGainNode);
+                                console.log('Web Audio API echo cancellation active');
+                                console.log('Web Audio API gain:', remoteGainNode.gain.value);
+                            }
+                        } catch (webAudioError) {
+                            console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
+                            // Audio element will still work
+                        }
+
+                        console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
+                    } catch (e) {
+                        console.error('Error handling remote track:', e);
+                        // Fallback to basic audio element only
+                        try {
                             if (!remoteAudioElement) {
                                 remoteAudioElement = new Audio();
                                 remoteAudioElement.autoplay = true;
-                                remoteAudioElement.volume = 1.0; // Full volume
-                                remoteAudioElement.setAttribute('playsinline', 'true'); // iOS compatibility
+                                remoteAudioElement.volume = 1.0;
+                                remoteAudioElement.setAttribute('playsinline', 'true');
                                 remoteAudioElement.muted = false;
-
-                                // Add event listeners for debugging
-                                remoteAudioElement.addEventListener('play', () => {
-                                    console.log('Remote audio element started playing');
-                                });
-                                remoteAudioElement.addEventListener('pause', () => {
-                                    console.log('Remote audio element paused');
-                                });
-                                remoteAudioElement.addEventListener('error', (e) => {
-                                    console.error('Remote audio element error:', e);
-                                });
-                                remoteAudioElement.addEventListener('loadedmetadata', () => {
-                                    console.log('Remote audio metadata loaded');
-                                });
                             }
-
-                            // Set remote stream to audio element
-                            remoteAudioElement.srcObject = event.streams[0];
-                            remoteAudioElement.volume = 1.0; // Ensure volume is set
-                            remoteAudioElement.muted = false; // Ensure not muted
+                            remoteAudioElement.srcObject = remoteStream;
+                            remoteAudioElement.volume = 1.0;
+                            remoteAudioElement.muted = false;
 
                             // Enable all audio tracks
-                            audioTracks.forEach(track => {
+                            const stream = remoteStream;
+                            stream.getAudioTracks().forEach(track => {
                                 track.enabled = true;
-                                console.log('Enabled audio track:', track.label);
                             });
 
-                            // Play the audio element with retry for mobile
-                            let playAttempts = 0;
-                            const maxPlayAttempts = 5;
-
-                            const tryPlayAudio = async () => {
-                                try {
-                                    await remoteAudioElement.play();
-                                    console.log('Remote audio element playing successfully');
-                                    console.log('Audio element volume:', remoteAudioElement.volume);
-                                    console.log('Audio element muted:', remoteAudioElement.muted);
-                                    console.log('Audio element paused:', remoteAudioElement.paused);
-                                    return true;
-                                } catch (playError) {
-                                    playAttempts++;
-                                    console.warn(`Play attempt ${playAttempts} failed:`, playError);
-
-                                    if (playError.name === 'NotAllowedError' && playAttempts < maxPlayAttempts) {
-                                        // Autoplay blocked - wait a bit and retry (user might interact)
-                                        console.log('Autoplay blocked, will retry...');
-                                        setTimeout(() => {
-                                            if (callActive && remoteAudioElement) {
-                                                tryPlayAudio();
-                                            }
-                                        }, 1000);
-                                    } else if (playAttempts < maxPlayAttempts) {
-                                        // Other error - retry after short delay
-                                        setTimeout(() => {
-                                            if (callActive && remoteAudioElement) {
-                                                tryPlayAudio();
-                                            }
-                                        }, 500);
-                                    } else {
-                                        console.error('Failed to play remote audio after', maxPlayAttempts, 'attempts');
-                                        // On mobile, try to show a message or use a workaround
-                                        if (isMobile) {
-                                            console.warn('Mobile autoplay blocked - audio may need user interaction');
-                                        }
-                                    }
-                                    return false;
-                                }
-                            };
-
-                            await tryPlayAudio();
-
-                            // SECONDARY METHOD: Also try Web Audio API for echo cancellation
-                            try {
-                                // Ensure audio nodes are created
-                                if (!remoteGainNode || !compressorNode || !limiterNode) {
-                                    console.log('Initializing Web Audio API nodes for echo cancellation...');
-                                    await initializeAudioContext();
-                                }
-
-                                // Create media stream source from remote stream
-                                if (remoteAudioSource) {
-                                    try {
-                                        remoteAudioSource.disconnect();
-                                    } catch (e) {
-                                        // Ignore disconnect errors
-                                    }
-                                }
-
-                                remoteAudioSource = callAudioContext.createMediaStreamSource(event.streams[0]);
-
-                                // Connect through processing chain: source -> gain -> compressor -> limiter -> destination
-                                if (remoteGainNode) {
-                                    remoteAudioSource.connect(remoteGainNode);
-                                    console.log('Web Audio API echo cancellation active');
-                                    console.log('Web Audio API gain:', remoteGainNode.gain.value);
-                                }
-                            } catch (webAudioError) {
-                                console.warn('Web Audio API setup failed, using audio element only:', webAudioError);
-                                // Audio element will still work
-                            }
-
-                            console.log('Remote audio connected - Primary: Audio Element, Secondary: Web Audio API');
-                        } catch (e) {
-                            console.error('Error handling remote track:', e);
-                            // Fallback to basic audio element only
-                            try {
-                                if (!remoteAudioElement) {
-                                    remoteAudioElement = new Audio();
-                                    remoteAudioElement.autoplay = true;
-                                    remoteAudioElement.volume = 1.0;
-                                    remoteAudioElement.setAttribute('playsinline', 'true');
-                                    remoteAudioElement.muted = false;
-                                }
-                                remoteAudioElement.srcObject = event.streams[0];
-                                remoteAudioElement.volume = 1.0;
-                                remoteAudioElement.muted = false;
-
-                                // Enable all audio tracks
-                                const stream = event.streams[0];
-                                stream.getAudioTracks().forEach(track => {
-                                    track.enabled = true;
-                                });
-
-                                await remoteAudioElement.play();
-                                console.log('Using fallback audio element only - playing');
-                            } catch (err) {
-                                console.error('Error with fallback audio element:', err);
-                                // Try to show user-friendly error
-                                if (err.name === 'NotAllowedError') {
-                                    console.warn('Autoplay blocked - user interaction may be required');
-                                }
+                            await remoteAudioElement.play();
+                            console.log('Using fallback audio element only - playing');
+                        } catch (err) {
+                            console.error('Error with fallback audio element:', err);
+                            // Try to show user-friendly error
+                            if (err.name === 'NotAllowedError') {
+                                console.warn('Autoplay blocked - user interaction may be required');
                             }
                         }
                     }
                 };
+
 
                 // Get offer from Firestore
                 const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
