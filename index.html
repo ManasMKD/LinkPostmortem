@@ -5768,6 +5768,8 @@
                     }
                 }
 
+                // DEBUG: Verify currentCallMode is correct
+                alert(`PC accepting call\nMode from Firebase: ${currentCallMode}\nisMobile: ${isMobile}`);
                 // Check microphone permission first
                 await requestMicrophoneAccess();
 
