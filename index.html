@@ -6201,13 +6201,9 @@
                 // Show active call (modal already hidden above)
                 showActiveCall();
 
-                // DEBUG: Check answer SDP and ICE state after a delay
-                setTimeout(() => {
-                    const hasVideoInAnswer = answer.sdp && answer.sdp.includes('m=video');
-                    const iceState = peerConnection ? peerConnection.iceConnectionState : 'no peer';
-                    const connState = peerConnection ? peerConnection.connectionState : 'no peer';
-                    alert(`Answer check:\nVideo in answer SDP: ${hasVideoInAnswer}\nICE state: ${iceState}\nConnection state: ${connState}`);
-                }, 3000);
+                // DEBUG: Immediate check for answer SDP
+                const hasVideoInAnswer = answer.sdp && answer.sdp.includes('m=video');
+                alert(`Answer created!\nVideo in answer SDP: ${hasVideoInAnswer}`);
 
                 console.log('Call accepted and connection established');
 
