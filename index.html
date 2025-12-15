@@ -4983,17 +4983,20 @@
 
             // Video settings based on call mode
             if (currentCallMode === 'video') {
-                baseConstraints.video = {
-                    width: { ideal: 1280, max: 1920 },
-                    height: { ideal: 720, max: 1080 },
-                    frameRate: { ideal: 30, max: 60 },
-                    facingMode: 'user'
-                };
-                // Lower resolution for mobile to save bandwidth
                 if (isMobile) {
-                    baseConstraints.video.width = { ideal: 640, max: 1280 };
-                    baseConstraints.video.height = { ideal: 480, max: 720 };
-                    baseConstraints.video.frameRate = { ideal: 24, max: 30 };
+                    // Use simple constraints for mobile - complex ones can cause issues
+                    baseConstraints.video = {
+                        facingMode: 'user',
+                        width: 640,
+                        height: 480
+                    };
+                } else {
+                    baseConstraints.video = {
+                        width: { ideal: 1280, max: 1920 },
+                        height: { ideal: 720, max: 1080 },
+                        frameRate: { ideal: 30, max: 60 },
+                        facingMode: 'user'
+                    };
                 }
             } else {
                 baseConstraints.video = false;
