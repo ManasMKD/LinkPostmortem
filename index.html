@@ -5319,6 +5319,12 @@
                         // Handle VIDEO tracks
                         if (event.track.kind === 'video') {
                             console.log('Caller: Received video track - setting up video display');
+
+                            // DEBUG: Show visible debug info since dev tools blocked
+                            const debugText = document.getElementById('placeholder-text');
+                            if (debugText) {
+                                debugText.textContent = 'VIDEO TRACK RECEIVED!';
+                            }
                             const remoteVideo = document.getElementById('remote-video');
                             const videoPlaceholder = document.getElementById('video-placeholder');
                             const videoCallWindow = document.getElementById('video-call-window');
@@ -5899,6 +5905,12 @@
                         // Handle VIDEO tracks FIRST
                         if (event.track.kind === 'video') {
                             console.log('Receiver: Received video track - setting up video display');
+
+                            // DEBUG: Show visible debug info since dev tools blocked
+                            const debugText = document.getElementById('placeholder-text');
+                            if (debugText) {
+                                debugText.textContent = 'VIDEO TRACK RECEIVED!';
+                            }
                             const remoteVideo = document.getElementById('remote-video');
                             const videoPlaceholder = document.getElementById('video-placeholder');
                             const videoCallWindow = document.getElementById('video-call-window');
