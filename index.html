@@ -6242,6 +6242,29 @@
                         // Don't cleanup - call is being established
                     }
 
+                    // Handle renegotiation (new offer during active call for mode switch)
+                    if (data.renegotiation && data.offer && peerConnection && callActive) {
+                        console.log('Renegotiation offer received, processing...');
+                        try {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                            const answer = await peerConnection.createAnswer();
+                            await peerConnection.setLocalDescription(answer);
+
+                            // Send answer back
+                            await window.firebaseUpdateDoc(callDocRef, {
+                                answer: {
+                                    type: answer.type,
+                                    sdp: answer.sdp
+                                },
+                                renegotiation: false // Mark as processed
+                            });
+                            console.log('Renegotiation answer sent');
+                        } catch (renego_err) {
+                            console.error('Renegotiation error:', renego_err);
+                        }
+                        return;
+                    }
+
                     if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
                         try {
                             console.log('Setting remote description from answer');
@@ -6759,7 +6782,7 @@
                 // START Screen Share
                 // Check if screen sharing is supported (not available on most mobile browsers)
                 if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-                    alert('Screen sharing is not supported on this device. This feature is only available on desktop browsers.');
+                    alert('Screen sharing is not available on mobile browsers. Please install the app on your device to access this feature.');
                     return;
                 }
 
@@ -6782,15 +6805,46 @@
                         await videoSender.replaceTrack(screenTrack);
                         console.log('Screen track replaced successfully (Hot Swap)');
                     } else {
-                        // No video sender - need to add track
+                        // No video sender - need to add track AND renegotiate
                         peerConnection.addTrack(screenTrack, screenStream);
                         console.log('Screen track added to peer connection');
+
+                        // Renegotiation needed when adding new track
+                        try {
+                            const offer = await peerConnection.createOffer();
+                            await peerConnection.setLocalDescription(offer);
+
+                            // Update offer in Firebase
+                            if (callId && window.firebaseDB) {
+                                const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                                await window.firebaseUpdateDoc(callDocRef, {
+                                    offer: {
+                                        type: offer.type,
+                                        sdp: offer.sdp
+                                    },
+                                    renegotiation: true
+                                });
+                                console.log('Renegotiation offer sent for screen share');
+                            }
+                        } catch (renego_err) {
+                            console.error('Renegotiation failed:', renego_err);
+                        }
                     }
 
                     // Update local preview
                     const localVideo = document.getElementById('local-video');
                     if (localVideo) {
                         localVideo.srcObject = screenStream;
+                    }
+
+                    // Show video call window if not visible
+                    const videoCallWindow = document.getElementById('video-call-window');
+                    const activeCallUI = document.getElementById('active-call-interface');
+                    if (videoCallWindow && videoCallWindow.classList.contains('hidden')) {
+                        videoCallWindow.classList.remove('hidden');
+                        if (activeCallUI) {
+                            activeCallUI.classList.add('hidden');
+                        }
                     }
 
                     // Listen for browser "Stop Sharing" button
@@ -6926,10 +6980,13 @@
 
                         // Check if we already have a video sender we can replace
                         const existingSender = peerConnection.getSenders().find(s => s.track?.kind === 'video' || !s.track);
+                        let needsRenegotiation = false;
+
                         if (existingSender && existingSender.track === null) {
                             await existingSender.replaceTrack(videoTrack);
                         } else if (!existingSender) {
                             peerConnection.addTrack(videoTrack, videoStream);
+                            needsRenegotiation = true; // New track added, need to notify remote
                         } else {
                             await existingSender.replaceTrack(videoTrack);
                         }
@@ -6949,6 +7006,26 @@
                             localStream.addTrack(videoTrack);
                         } else {
                             localStream = videoStream;
+                        }
+
+                        // Renegotiation if we added a new track
+                        if (needsRenegotiation && callId && window.firebaseDB) {
+                            try {
+                                const offer = await peerConnection.createOffer();
+                                await peerConnection.setLocalDescription(offer);
+
+                                const callDocRef = window.firebaseDoc(window.firebaseDB, `calls/${callId}`);
+                                await window.firebaseUpdateDoc(callDocRef, {
+                                    offer: {
+                                        type: offer.type,
+                                        sdp: offer.sdp
+                                    },
+                                    renegotiation: true
+                                });
+                                console.log('Renegotiation offer sent for video mode switch');
+                            } catch (renego_err) {
+                                console.error('Renegotiation failed:', renego_err);
+                            }
                         }
 
                         console.log('Video track added successfully');
