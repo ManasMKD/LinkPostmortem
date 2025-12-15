@@ -6303,6 +6303,11 @@
                     if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
                         try {
                             console.log('Setting remote description from answer');
+
+                            // DEBUG: Show alert when mobile receives answer
+                            const hasVideoInReceivedAnswer = data.answer.sdp && data.answer.sdp.includes('m=video');
+                            alert(`Mobile received answer!\nVideo in answer: ${hasVideoInReceivedAnswer}`);
+
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
 
                             // Stop outgoing ring sound (caller side - callee has answered)
