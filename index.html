@@ -6309,21 +6309,29 @@
         }
 
         // Listen for answer candidates (caller side)
+        const processedAnswerCandidates = new Set(); // Track processed candidates
         async function listenForAnswerCandidates() {
             if (!callId || !window.firebaseDB) return;
 
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/answerCandidates`);
             answerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
-                snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added' && peerConnection && peerConnection.remoteDescription) {
+                // Process ALL candidates in snapshot, not just changes
+                // This handles race condition where candidates exist before listener starts
+                snapshot.docs.forEach(async (doc) => {
+                    const candidateId = doc.id;
+                    if (processedAnswerCandidates.has(candidateId)) return; // Skip already processed
+                    processedAnswerCandidates.add(candidateId);
+
+                    if (peerConnection && peerConnection.remoteDescription) {
                         try {
-                            const candidate = change.doc.data();
+                            const candidate = doc.data();
                             const iceCandidate = new RTCIceCandidate({
                                 candidate: candidate.candidate,
                                 sdpMLineIndex: candidate.sdpMLineIndex,
                                 sdpMid: candidate.sdpMid
                             });
                             await peerConnection.addIceCandidate(iceCandidate);
+                            console.log('Added answer candidate:', candidateId);
                         } catch (e) {
                             // Ignore errors for duplicate candidates
                             if (!e.message.includes('duplicate')) {
@@ -6337,21 +6345,29 @@
 
 
         // Listen for offer candidates (receiver side)
+        const processedOfferCandidates = new Set(); // Track processed candidates
         async function listenForOfferCandidates() {
             if (!callId || !window.firebaseDB) return;
 
             const candidatesRef = window.firebaseCollection(window.firebaseDB, `calls/${callId}/offerCandidates`);
             offerCandidatesUnsubscribe = window.firebaseOnSnapshot(candidatesRef, (snapshot) => {
-                snapshot.docChanges().forEach(async (change) => {
-                    if (change.type === 'added' && peerConnection && peerConnection.remoteDescription) {
+                // Process ALL candidates in snapshot, not just changes
+                // This handles race condition where candidates exist before listener starts
+                snapshot.docs.forEach(async (doc) => {
+                    const candidateId = doc.id;
+                    if (processedOfferCandidates.has(candidateId)) return; // Skip already processed
+                    processedOfferCandidates.add(candidateId);
+
+                    if (peerConnection && peerConnection.remoteDescription) {
                         try {
-                            const candidate = change.doc.data();
+                            const candidate = doc.data();
                             const iceCandidate = new RTCIceCandidate({
                                 candidate: candidate.candidate,
                                 sdpMLineIndex: candidate.sdpMLineIndex,
                                 sdpMid: candidate.sdpMid
                             });
                             await peerConnection.addIceCandidate(iceCandidate);
+                            console.log('Added offer candidate:', candidateId);
                         } catch (e) {
                             // Ignore errors for duplicate candidates
                             if (!e.message.includes('duplicate')) {
