@@ -5223,6 +5223,12 @@
                     peerConnection.addTrack(track, localStream);
                 });
 
+                // DEBUG: Show senders count after adding tracks
+                const senders = peerConnection.getSenders();
+                const videoSenders = senders.filter(s => s.track && s.track.kind === 'video');
+                const audioSenders = senders.filter(s => s.track && s.track.kind === 'audio');
+                alert(`Tracks added to PC!\nVideo senders: ${videoSenders.length}\nAudio senders: ${audioSenders.length}`);
+
                 // WIDE TUNNEL IMPLEMENTATION:
                 // If we are in AUDIO mode, we still need to establish a video "lane" (transceiver)
                 // so we can seamlessly switch to video/screen sharing later without renegotiation.
