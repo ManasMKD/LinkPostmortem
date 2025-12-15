@@ -6172,6 +6172,11 @@
                     throw new Error('Offer not found');
                 }
 
+                // DEBUG: Check if offer SDP contains video
+                const hasVideoInOffer = offerData.offer.sdp && offerData.offer.sdp.includes('m=video');
+                const hasAudioInOffer = offerData.offer.sdp && offerData.offer.sdp.includes('m=audio');
+                alert(`PC received offer!\nHas video in SDP: ${hasVideoInOffer}\nHas audio in SDP: ${hasAudioInOffer}\nCall mode from Firebase: ${offerData.callMode || 'not set'}`);
+
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
 
                 // Create answer
