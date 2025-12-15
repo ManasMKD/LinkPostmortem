@@ -6315,6 +6315,13 @@
 
                             listenForAnswerCandidates();
 
+                            // DEBUG: Check ICE state after a delay
+                            setTimeout(() => {
+                                if (peerConnection) {
+                                    alert(`Mobile ICE check:\nICE state: ${peerConnection.iceConnectionState}\nConnection: ${peerConnection.connectionState}`);
+                                }
+                            }, 5000);
+
                             // After setting remote description, ensure audio will play when track arrives
                             // This is especially important for mobile devices
                             if (isMobile) {
