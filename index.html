@@ -4924,30 +4924,26 @@
             iceServers: [
                 // Google STUN servers (free)
                 { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
-                // Metered.ca free TURN servers for better mobile/PC NAT traversal
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                // OpenRelay FREE TURN server (no credentials needed for basic use)
                 {
-                    urls: 'stun:stun.relay.metered.ca:80'
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
                 },
                 {
-                    urls: 'turn:global.relay.metered.ca:80',
-                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
-                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
                 },
                 {
-                    urls: 'turn:global.relay.metered.ca:80?transport=tcp',
-                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
-                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
                 },
-                {
-                    urls: 'turn:global.relay.metered.ca:443',
-                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
-                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
-                },
-                {
-                    urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-                    username: 'e9bce8e8a9b8e8e8e8e8e8e8',
-                    credential: 'e9bce8e8a9b8e8e8e8e8e8e8'
-                }
+                // Twilio free STUN
+                { urls: 'stun:global.stun.twilio.com:3478' }
             ],
             iceCandidatePoolSize: 10
         };
@@ -5197,11 +5193,6 @@
                     // Standard Audio/Video Call
                     const constraints = await getEnhancedMediaConstraints();
                     localStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-                    // DEBUG: Show visible alert with track info
-                    const videoTracks = localStream.getVideoTracks();
-                    const audioTracks = localStream.getAudioTracks();
-                    alert(`Tracks captured!\nVideo tracks: ${videoTracks.length}\nAudio tracks: ${audioTracks.length}\nCall mode: ${currentCallMode}`);
                 }
 
                 // Setup local audio monitoring for echo detection
@@ -5222,12 +5213,6 @@
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
                 });
-
-                // DEBUG: Show senders count after adding tracks
-                const senders = peerConnection.getSenders();
-                const videoSenders = senders.filter(s => s.track && s.track.kind === 'video');
-                const audioSenders = senders.filter(s => s.track && s.track.kind === 'audio');
-                alert(`Tracks added to PC!\nVideo senders: ${videoSenders.length}\nAudio senders: ${audioSenders.length}`);
 
                 // WIDE TUNNEL IMPLEMENTATION:
                 // If we are in AUDIO mode, we still need to establish a video "lane" (transceiver)
@@ -6172,11 +6157,6 @@
                     throw new Error('Offer not found');
                 }
 
-                // DEBUG: Check if offer SDP contains video
-                const hasVideoInOffer = offerData.offer.sdp && offerData.offer.sdp.includes('m=video');
-                const hasAudioInOffer = offerData.offer.sdp && offerData.offer.sdp.includes('m=audio');
-                alert(`PC received offer!\nHas video in SDP: ${hasVideoInOffer}\nHas audio in SDP: ${hasAudioInOffer}\nCall mode from Firebase: ${offerData.callMode || 'not set'}`);
-
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(offerData.offer));
 
                 // Create answer
@@ -6200,10 +6180,6 @@
 
                 // Show active call (modal already hidden above)
                 showActiveCall();
-
-                // DEBUG: Immediate check for answer SDP
-                const hasVideoInAnswer = answer.sdp && answer.sdp.includes('m=video');
-                alert(`Answer created!\nVideo in answer SDP: ${hasVideoInAnswer}`);
 
                 console.log('Call accepted and connection established');
 
@@ -6303,24 +6279,12 @@
                     if (data?.answer && peerConnection && peerConnection.remoteDescription === null) {
                         try {
                             console.log('Setting remote description from answer');
-
-                            // DEBUG: Show alert when mobile receives answer
-                            const hasVideoInReceivedAnswer = data.answer.sdp && data.answer.sdp.includes('m=video');
-                            alert(`Mobile received answer!\nVideo in answer: ${hasVideoInReceivedAnswer}`);
-
                             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
 
                             // Stop outgoing ring sound (caller side - callee has answered)
                             stopRingSound();
 
                             listenForAnswerCandidates();
-
-                            // DEBUG: Check ICE state after a delay
-                            setTimeout(() => {
-                                if (peerConnection) {
-                                    alert(`Mobile ICE check:\nICE state: ${peerConnection.iceConnectionState}\nConnection: ${peerConnection.connectionState}`);
-                                }
-                            }, 5000);
 
                             // After setting remote description, ensure audio will play when track arrives
                             // This is especially important for mobile devices
@@ -6345,7 +6309,6 @@
         }
 
         // Listen for answer candidates (caller side)
-        let answerCandidateCount = 0; // DEBUG counter
         async function listenForAnswerCandidates() {
             if (!callId || !window.firebaseDB) return;
 
@@ -6361,8 +6324,6 @@
                                 sdpMid: candidate.sdpMid
                             });
                             await peerConnection.addIceCandidate(iceCandidate);
-                            answerCandidateCount++;
-                            console.log('Added answer candidate #' + answerCandidateCount);
                         } catch (e) {
                             // Ignore errors for duplicate candidates
                             if (!e.message.includes('duplicate')) {
@@ -6372,11 +6333,6 @@
                     }
                 });
             });
-
-            // DEBUG: Show candidate count after 3 seconds
-            setTimeout(() => {
-                alert(`Answer candidates received: ${answerCandidateCount}`);
-            }, 3000);
         }
 
 
