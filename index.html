@@ -6757,6 +6757,12 @@
 
             if (!isScreenSharing) {
                 // START Screen Share
+                // Check if screen sharing is supported (not available on most mobile browsers)
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    alert('Screen sharing is not supported on this device. This feature is only available on desktop browsers.');
+                    return;
+                }
+
                 try {
                     console.log('Starting screen share...');
                     const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -6888,22 +6894,67 @@
                     await stopScreenShare();
                 }
 
+                // Show video call window
+                const videoCallWindow = document.getElementById('video-call-window');
+                const activeCallUI = document.getElementById('active-call-interface');
+                if (videoCallWindow) {
+                    videoCallWindow.classList.remove('hidden');
+                }
+                if (activeCallUI) {
+                    activeCallUI.classList.add('hidden');
+                }
+
                 // If we have camera stream, enable it
                 if (videoSender && videoSender.track) {
                     videoSender.track.enabled = true;
                     isCameraOff = false;
-                } else if (!videoSender && localStream) {
-                    // Need to get video stream
+
+                    // Update local video preview
+                    const localVideo = document.getElementById('local-video');
+                    if (localVideo && cameraStream) {
+                        localVideo.srcObject = cameraStream;
+                    }
+                } else {
+                    // Need to get video stream - use mobile-friendly constraints
                     try {
-                        const videoStream = await navigator.mediaDevices.getUserMedia({
-                            video: { width: 1280, height: 720, facingMode: 'user' }
-                        });
+                        const constraints = isMobile
+                            ? { video: { width: 640, height: 480, facingMode: 'user' } }
+                            : { video: { width: 1280, height: 720, facingMode: 'user' } };
+
+                        const videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                         const videoTrack = videoStream.getVideoTracks()[0];
-                        peerConnection.addTrack(videoTrack, videoStream);
+
+                        // Check if we already have a video sender we can replace
+                        const existingSender = peerConnection.getSenders().find(s => s.track?.kind === 'video' || !s.track);
+                        if (existingSender && existingSender.track === null) {
+                            await existingSender.replaceTrack(videoTrack);
+                        } else if (!existingSender) {
+                            peerConnection.addTrack(videoTrack, videoStream);
+                        } else {
+                            await existingSender.replaceTrack(videoTrack);
+                        }
+
                         cameraStream = videoStream;
                         isCameraOff = false;
+
+                        // Update local video preview
+                        const localVideo = document.getElementById('local-video');
+                        if (localVideo) {
+                            localVideo.srcObject = videoStream;
+                        }
+
+                        // Update localStream to include video
+                        if (localStream) {
+                            // Add video track to existing localStream
+                            localStream.addTrack(videoTrack);
+                        } else {
+                            localStream = videoStream;
+                        }
+
+                        console.log('Video track added successfully');
                     } catch (e) {
                         console.error('Could not get video:', e);
+                        alert('Could not access camera: ' + e.message);
                     }
                 }
                 currentCallMode = 'video';
@@ -7455,4 +7506,4 @@
     </script>
 </body>
 
-    </html>
+</html>
