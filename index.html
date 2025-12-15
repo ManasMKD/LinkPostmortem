@@ -5197,6 +5197,11 @@
                     // Standard Audio/Video Call
                     const constraints = await getEnhancedMediaConstraints();
                     localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                    // DEBUG: Show visible alert with track info
+                    const videoTracks = localStream.getVideoTracks();
+                    const audioTracks = localStream.getAudioTracks();
+                    alert(`Tracks captured!\nVideo tracks: ${videoTracks.length}\nAudio tracks: ${audioTracks.length}\nCall mode: ${currentCallMode}`);
                 }
 
                 // Setup local audio monitoring for echo detection
