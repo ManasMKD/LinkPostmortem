@@ -6345,6 +6345,7 @@
         }
 
         // Listen for answer candidates (caller side)
+        let answerCandidateCount = 0; // DEBUG counter
         async function listenForAnswerCandidates() {
             if (!callId || !window.firebaseDB) return;
 
@@ -6360,6 +6361,8 @@
                                 sdpMid: candidate.sdpMid
                             });
                             await peerConnection.addIceCandidate(iceCandidate);
+                            answerCandidateCount++;
+                            console.log('Added answer candidate #' + answerCandidateCount);
                         } catch (e) {
                             // Ignore errors for duplicate candidates
                             if (!e.message.includes('duplicate')) {
@@ -6369,7 +6372,13 @@
                     }
                 });
             });
+
+            // DEBUG: Show candidate count after 3 seconds
+            setTimeout(() => {
+                alert(`Answer candidates received: ${answerCandidateCount}`);
+            }, 3000);
         }
+
 
         // Listen for offer candidates (receiver side)
         async function listenForOfferCandidates() {
