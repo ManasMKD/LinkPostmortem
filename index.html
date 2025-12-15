@@ -5888,6 +5888,9 @@
 
                 // Handle remote stream with Web Audio API for echo cancellation
                 peerConnection.ontrack = async (event) => {
+                    // DEBUG: Alert when any track is received
+                    alert(`PC ontrack fired!\nTrack kind: ${event.track.kind}\nTrack enabled: ${event.track.enabled}\nHas streams: ${event.streams && event.streams.length > 0}`);
+
                     console.log('Received remote track', event);
                     console.log('Track kind:', event.track.kind);
                     console.log('Track enabled:', event.track.enabled);
