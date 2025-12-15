@@ -4922,11 +4922,9 @@
         // ICE Servers Configuration (STUN + Free TURN servers for better NAT traversal)
         const iceServers = {
             iceServers: [
-                // Google STUN servers (free)
+                // Google STUN servers (free) - backup for discovery
                 { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' },
-                // OpenRelay FREE TURN server (no credentials needed for basic use)
+                // OpenRelay FREE TURN server
                 {
                     urls: 'turn:openrelay.metered.ca:80',
                     username: 'openrelayproject',
@@ -4941,11 +4939,11 @@
                     urls: 'turn:openrelay.metered.ca:443?transport=tcp',
                     username: 'openrelayproject',
                     credential: 'openrelayproject'
-                },
-                // Twilio free STUN
-                { urls: 'stun:global.stun.twilio.com:3478' }
+                }
             ],
-            iceCandidatePoolSize: 10
+            iceCandidatePoolSize: 10,
+            // Force TURN relay to bypass NAT traversal issues on desktop
+            iceTransportPolicy: 'relay'
         };
 
         // Enhanced Media Constraints with maximum echo cancellation
@@ -5768,8 +5766,6 @@
                     }
                 }
 
-                // DEBUG: Verify currentCallMode is correct
-                alert(`PC accepting call\nMode from Firebase: ${currentCallMode}\nisMobile: ${isMobile}`);
                 // Check microphone permission first
                 await requestMicrophoneAccess();
 
