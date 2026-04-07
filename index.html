@@ -93,6 +93,154 @@
             color: #d4d4d8;
         }
 
+        /* ============================================
+           CYBERPUNK PREMIUM - DESIGN SYSTEM
+           ============================================ */
+
+        /* Grid Pattern Background Overlay */
+        .cyber-grid-bg::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(225, 29, 72, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(225, 29, 72, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Dot Pattern Overlay */
+        .cyber-grid-bg::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle, rgba(225, 29, 72, 0.06) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animated Gradient Border */
+        .gradient-border {
+            position: relative;
+            border: none !important;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #e11d48, #f97316, #06b6d4, #e11d48);
+            background-size: 300% 300%;
+            border-radius: inherit;
+            z-index: -1;
+            animation: gradientShift 4s ease infinite;
+            opacity: 0.6;
+        }
+
+        .gradient-border::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #09090b;
+            border-radius: inherit;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glowing Card Effect */
+        .cyber-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(63, 63, 70, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .cyber-card:hover {
+            border-color: rgba(225, 29, 72, 0.3);
+            box-shadow: 0 0 30px rgba(225, 29, 72, 0.08), 0 8px 32px rgba(0, 0, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Feature Card Styles */
+        .feature-card {
+            background: rgba(24, 24, 27, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(63, 63, 70, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(225, 29, 72, 0.4);
+            box-shadow: 0 0 40px rgba(225, 29, 72, 0.1), 0 12px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(-4px);
+            background: rgba(24, 24, 27, 0.7);
+        }
+
+        .feature-card:hover .feature-icon {
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.3);
+            border-color: rgba(225, 29, 72, 0.5);
+        }
+
+        .feature-icon {
+            transition: all 0.4s ease;
+            border: 1px solid rgba(63, 63, 70, 0.5);
+        }
+
+        /* Enhanced Nav Glow */
+        .nav-active-glow {
+            box-shadow: 0 0 12px rgba(225, 29, 72, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(63, 63, 70, 0.8), rgba(39, 39, 42, 0.8)) !important;
+            border: 1px solid rgba(225, 29, 72, 0.2) !important;
+        }
+
+        /* Glowing Line Separator */
+        .glow-separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(225, 29, 72, 0.3), rgba(6, 182, 212, 0.2), transparent);
+        }
+
+        /* Enhanced Input Glow */
+        .cyber-input:focus {
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.15), 0 0 60px rgba(225, 29, 72, 0.05);
+        }
+
+        /* Status Pulse Indicator */
+        .status-pulse {
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Subtle text glow on hover for nav items */
+        .nav-item-hover:hover {
+            text-shadow: 0 0 10px rgba(225, 29, 72, 0.3);
+        }
+
         .tab-content {
             display: none;
         }
@@ -261,7 +409,8 @@
             animation: fadeIn 0.3s ease-out;
         }
 
-        /* HACKER TRAP - GLITCH MODE */
+        /* HACKER TRAP - GLITCH MODE (DISABLED) */
+        /*
         .system-breach {
             animation: glitch 0.3s infinite, colorShift 0.5s infinite, shake 0.1s infinite;
             filter: invert(1) hue-rotate(180deg);
@@ -283,6 +432,7 @@
             z-index: 9999;
             animation: noise 0.2s infinite;
         }
+        */
 
         @keyframes glitch {
 
@@ -367,9 +517,9 @@
         }
 
         .breach-warning {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border: 3px solid #fca5a5;
-            box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+            border: 2px solid #3f3f46;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3);
         }
 
         /* CHAOS MODE - PHYSICS */
@@ -601,7 +751,7 @@
     </style>
 </head>
 
-<body class="selection:bg-rose-900 selection:text-white min-h-screen flex flex-col no-select">
+<body class="selection:bg-rose-900 selection:text-white min-h-screen flex flex-col no-select cyber-grid-bg">
 
     <!-- NAVIGATION -->
     <nav class="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-zinc-900">
@@ -619,17 +769,17 @@
             <!-- Desktop Nav -->
             <div class="hidden md:flex items-center gap-1 bg-zinc-900/50 p-1 rounded-full border border-zinc-800">
                 <button type="button" onclick="switchTab('downloader')" id="btn-nav-downloader"
-                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-zinc-800 text-white shadow-lg">Downloader</button>
+                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all nav-active-glow text-white shadow-lg">Downloader</button>
                 <button type="button" onclick="switchTab('crypter')" id="btn-nav-crypter"
-                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Encrypter</button>
+                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300 nav-item-hover">Encrypter</button>
                 <button type="button" onclick="switchTab('keys')" id="btn-nav-keys"
-                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Key
+                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300 nav-item-hover">Key
                     Forge</button>
                 <button type="button" onclick="switchTab('stego')" id="btn-nav-stego"
-                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300">Stego
+                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300 nav-item-hover">Stego
                     Lab</button>
                 <button type="button" onclick="switchTab('sonic')" id="btn-nav-sonic"
-                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1">
+                    class="px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1 nav-item-hover">
                     <i data-lucide="waves" class="w-3 h-3"></i> Sonic Lab
                 </button>
             </div>
@@ -658,13 +808,16 @@
     <!-- MAIN CONTENT -->
     <main class="relative pt-12 pb-24 overflow-hidden flex-grow relative">
 
-        <!-- Background Gradients -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none opacity-20">
+        <!-- Background Gradients (Enhanced) -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none opacity-25">
             <div
-                class="absolute top-20 left-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-rose-900/40 rounded-full mix-blend-screen filter blur-[80px] md:blur-[100px] animate-pulse">
+                class="absolute top-20 left-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-rose-900/50 rounded-full mix-blend-screen filter blur-[80px] md:blur-[120px] animate-pulse">
             </div>
             <div
-                class="absolute bottom-20 right-1/4 w-[300px] md:w-[400px] h-[300px] md:h-[400px] bg-indigo-900/40 rounded-full mix-blend-screen filter blur-[80px] md:blur-[100px]">
+                class="absolute bottom-20 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-indigo-900/40 rounded-full mix-blend-screen filter blur-[80px] md:blur-[120px]">
+            </div>
+            <div
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] md:w-[300px] h-[200px] md:h-[300px] bg-cyan-900/20 rounded-full mix-blend-screen filter blur-[60px] md:blur-[80px]">
             </div>
         </div>
 
@@ -673,6 +826,11 @@
             <!-- TAB: DOWNLOADER -->
             <div id="tab-downloader" class="tab-content active animate-in">
                 <div class="text-center mb-10">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 status-pulse"></div>
+                        <span class="text-xs font-mono text-zinc-600 uppercase tracking-widest">Secure Tunnel Active</span>
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 status-pulse"></div>
+                    </div>
                     <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-4 text-white">
                         Extract <span
                             class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-600">Remote</span>
@@ -684,7 +842,7 @@
                 </div>
 
                 <div
-                    class="max-w-3xl mx-auto bg-zinc-900/50 backdrop-blur-md rounded-2xl shadow-2xl border border-zinc-800 p-3 mb-8">
+                    class="max-w-3xl mx-auto gradient-border rounded-2xl shadow-2xl p-3 mb-8">
                     <form onsubmit="handleDownload(event)" class="relative flex flex-col md:flex-row gap-2">
                         <div class="relative flex-grow">
                             <div
@@ -692,7 +850,7 @@
                                 <i data-lucide="link" class="w-5 h-5"></i>
                             </div>
                             <input type="text" id="dl-input" placeholder="Paste source link (Cloud or Direct)..."
-                                class="w-full pl-12 pr-10 py-4 rounded-xl bg-black border border-zinc-800 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none transition-all text-white placeholder:text-zinc-600">
+                                class="w-full pl-12 pr-10 py-4 rounded-xl bg-black border border-zinc-800 focus:border-rose-600 focus:ring-1 focus:ring-rose-600 outline-none transition-all text-white placeholder:text-zinc-600 cyber-input">
                             <button type="button" onclick="clearInput('dl-input')"
                                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-600 hover:text-zinc-300 transition-colors">
                                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -704,6 +862,49 @@
                             <span>Extract</span>
                         </button>
                     </form>
+                </div>
+
+                <!-- FEATURE CARDS SECTION -->
+                <div class="max-w-4xl mx-auto mb-12">
+                    <div class="glow-separator mb-8"></div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div class="feature-card rounded-xl p-4 text-center" onclick="switchTab('downloader')">
+                            <div class="feature-icon w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="download" class="w-5 h-5 text-rose-500"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mb-1">Downloader</h4>
+                            <p class="text-[10px] text-zinc-600">Extract files</p>
+                        </div>
+                        <div class="feature-card rounded-xl p-4 text-center" onclick="switchTab('crypter')">
+                            <div class="feature-icon w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="lock" class="w-5 h-5 text-rose-500"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mb-1">Encrypter</h4>
+                            <p class="text-[10px] text-zinc-600">Encrypt links</p>
+                        </div>
+                        <div class="feature-card rounded-xl p-4 text-center" onclick="switchTab('keys')">
+                            <div class="feature-icon w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="key" class="w-5 h-5 text-rose-500"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mb-1">Key Forge</h4>
+                            <p class="text-[10px] text-zinc-600">Generate keys</p>
+                        </div>
+                        <div class="feature-card rounded-xl p-4 text-center" onclick="switchTab('stego')">
+                            <div class="feature-icon w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="image" class="w-5 h-5 text-rose-500"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mb-1">Stego Lab</h4>
+                            <p class="text-[10px] text-zinc-600">Hide in images</p>
+                        </div>
+                        <div class="feature-card rounded-xl p-4 text-center col-span-2 md:col-span-1" onclick="switchTab('sonic')">
+                            <div class="feature-icon w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="waves" class="w-5 h-5 text-cyan-500"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white mb-1">Sonic Lab</h4>
+                            <p class="text-[10px] text-zinc-600">Audio tools</p>
+                        </div>
+                    </div>
+                    <div class="glow-separator mt-8"></div>
                 </div>
 
                 <div id="dl-error"
@@ -754,22 +955,31 @@
             <!-- TAB: CRYPTER -->
             <div id="tab-crypter" class="tab-content animate-in">
                 <div class="text-center mb-10">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 status-pulse"></div>
+                        <span class="text-xs font-mono text-zinc-600 uppercase tracking-widest">AES-256-GCM Encryption</span>
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 status-pulse"></div>
+                    </div>
                     <h1 class="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
-                        Link <span class="text-rose-600">Obfuscator</span>
+                        Link <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-rose-700">Encrypter</span>
                     </h1>
-                    <p class="text-zinc-500 max-w-lg mx-auto">Encrypt multiple links into a single payload with
+                    <p class="text-zinc-500 max-w-lg mx-auto">Encrypt multiple links into a single military-grade payload with
                         time-locks.</p>
                 </div>
 
                 <div
-                    class="max-w-4xl mx-auto grid md:grid-cols-2 gap-6 bg-zinc-900/30 p-2 rounded-2xl border border-zinc-800 backdrop-blur-sm">
-                    <div class="bg-black/50 p-6 rounded-xl border border-zinc-800 flex flex-col h-full">
+                    class="max-w-4xl mx-auto grid md:grid-cols-2 gap-4 gradient-border rounded-2xl p-4">
+                    <!-- INPUT PANEL -->
+                    <div class="cyber-card p-6 rounded-xl flex flex-col h-full">
                         <div class="flex justify-between items-center mb-4">
-                            <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Input
-                                Payload</label>
-                            <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+                            <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="shield" class="w-4 h-4 text-rose-500"></i>
+                                Input Payload
+                            </label>
+                            <div class="flex bg-black/50 rounded-lg p-1 border border-zinc-700/50">
                                 <button type="button" onclick="setCryptoMode('encrypt')" id="mode-encrypt"
-                                    class="p-1.5 rounded-md transition-all bg-zinc-700 text-white"><i data-lucide="lock"
+                                    class="p-1.5 rounded-md transition-all bg-rose-600/20 text-rose-400 border border-rose-600/30"><i data-lucide="lock"
                                         class="w-4 h-4"></i></button>
                                 <button type="button" onclick="setCryptoMode('decrypt')" id="mode-decrypt"
                                     class="p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400"><i
@@ -778,28 +988,32 @@
                         </div>
                         <div class="relative w-full flex-grow flex flex-col">
                             <textarea id="crypto-input" placeholder="Paste link(s) here..."
-                                class="w-full flex-grow bg-zinc-900 border border-zinc-800 rounded-lg p-4 pr-10 text-zinc-300 focus:border-rose-600 outline-none resize-none font-mono text-sm min-h-[150px]"></textarea>
+                                class="w-full flex-grow bg-black/60 border border-zinc-700/50 rounded-lg p-4 pr-10 text-zinc-300 focus:border-rose-600 focus:ring-1 focus:ring-rose-600/30 outline-none resize-none font-mono text-sm min-h-[150px] cyber-input transition-all"></textarea>
                             <div class="absolute top-2 right-2 flex flex-col gap-1">
                                 <button type="button" onclick="clearInput('crypto-input')"
-                                    class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded"><i
+                                    class="p-1.5 text-zinc-500 hover:text-rose-400 bg-zinc-800/50 hover:bg-zinc-800 rounded transition-all"><i
                                         data-lucide="x" class="w-3 h-3"></i></button>
                                 <button type="button" onclick="pasteToInput('crypto-input')"
-                                    class="p-1.5 text-zinc-500 hover:text-white bg-zinc-800/50 rounded"><i
+                                    class="p-1.5 text-zinc-500 hover:text-rose-400 bg-zinc-800/50 hover:bg-zinc-800 rounded transition-all"><i
                                         data-lucide="clipboard" class="w-3 h-3"></i></button>
                             </div>
                         </div>
                         <div id="crypto-settings" class="mt-4 grid grid-cols-2 gap-3">
                             <div>
                                 <label
-                                    class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Passcode</label>
-                                <input type="text" id="crypto-pass" placeholder="Optional PIN"
-                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 outline-none">
+                                    class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block flex items-center gap-1">
+                                    <i data-lucide="key" class="w-3 h-3 text-rose-500/60"></i> Passcode
+                                </label>
+                                <input type="password" id="crypto-pass" placeholder="Optional PIN"
+                                    class="w-full bg-black/60 border border-zinc-700/50 rounded-lg px-3 py-2 text-sm text-white focus:border-rose-600 focus:ring-1 focus:ring-rose-600/30 outline-none cyber-input transition-all">
                             </div>
                             <div id="crypto-expiry-container">
                                 <label
-                                    class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Lifespan</label>
+                                    class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block flex items-center gap-1">
+                                    <i data-lucide="timer" class="w-3 h-3 text-rose-500/60"></i> Lifespan
+                                </label>
                                 <select id="crypto-expiry"
-                                    class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-rose-600 outline-none">
+                                    class="w-full bg-black/60 border border-zinc-700/50 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:border-rose-600 outline-none cursor-pointer transition-all">
                                     <option value="0">Eternal</option>
                                     <option value="5">5 Minutes</option>
                                     <option value="60">1 Hour</option>
@@ -808,29 +1022,34 @@
                             </div>
                         </div>
                         <button type="button" onclick="handleCryptoProcess()" id="crypto-action-btn"
-                            class="mt-4 w-full bg-white text-black hover:bg-zinc-200 font-bold py-3 rounded-lg flex items-center justify-center gap-2">
+                            class="mt-4 w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(225,29,72,0.2)] hover:shadow-[0_0_30px_rgba(225,29,72,0.4)]">
                             <i data-lucide="lock" id="action-icon" class="w-4 h-4"></i> <span id="action-text">Encrypt
                                 Payload</span>
                         </button>
                     </div>
 
+                    <!-- RESULT PANEL -->
                     <div
-                        class="bg-zinc-900/80 p-6 rounded-xl border border-zinc-800 flex flex-col h-full relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-rose-600/10 blur-xl rounded-full"></div>
+                        class="cyber-card p-6 rounded-xl flex flex-col h-full relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-rose-600/5 blur-2xl rounded-full"></div>
+                        <div class="absolute bottom-0 left-0 w-16 h-16 bg-cyan-600/5 blur-xl rounded-full"></div>
                         <div class="flex justify-between items-center mb-4 relative z-10">
-                            <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Result</label>
+                            <label class="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="terminal" class="w-4 h-4 text-emerald-500"></i>
+                                Result
+                            </label>
                             <div class="flex gap-2">
                                 <button type="button" id="btn-copy" onclick="copyToClipboard()"
-                                    class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium"><i
+                                    class="hidden text-xs flex items-center gap-1 text-rose-500 hover:text-rose-400 font-medium bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20 transition-all hover:bg-rose-500/20"><i
                                         data-lucide="copy" class="w-3 h-3"></i> <span>Copy</span></button>
                             </div>
                         </div>
                         <div
-                            class="flex-grow bg-black border border-zinc-800 rounded-lg p-4 relative min-h-[150px] flex flex-col overflow-hidden">
+                            class="flex-grow bg-black/60 border border-zinc-700/50 rounded-lg p-4 relative min-h-[150px] flex flex-col overflow-hidden">
                             <div id="result-empty"
                                 class="h-full flex flex-col items-center justify-center text-zinc-700">
-                                <i data-lucide="refresh-cw" class="mb-2 opacity-20 w-8 h-8"></i> <span
-                                    class="text-xs">Waiting...</span>
+                                <i data-lucide="shield-check" class="mb-2 opacity-20 w-8 h-8"></i> <span
+                                    class="text-xs">Awaiting payload...</span>
                             </div>
                             <div id="result-text" class="hidden break-all font-mono text-sm text-emerald-400"></div>
                             <div id="result-launch"
@@ -843,6 +1062,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- TAB: KEY FORGE -->
             <div id="tab-keys" class="tab-content animate-in">
@@ -1556,20 +1776,20 @@
 
     <!-- SECURITY BREACH MODAL -->
     <div id="security-breach-modal"
-        class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-sm">
-        <div class="breach-warning rounded-2xl p-8 max-w-md text-center shadow-2xl">
+        class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="breach-warning rounded-2xl p-8 max-w-md text-center shadow-2xl border border-zinc-800">
             <div class="mb-6">
                 <div
-                    class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                    <i data-lucide="shield-alert" class="w-10 h-10 text-white"></i>
+                    class="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="info" class="w-10 h-10 text-white"></i>
                 </div>
-                <h2 class="text-3xl font-black text-white mb-2 tracking-wider">UNAUTHORIZED ACCESS</h2>
-                <h3 class="text-xl font-bold text-red-200 mb-4">SYSTEM COMPROMISED</h3>
-                <p class="text-red-100 text-sm">Intrusion detected. Security protocols activated.</p>
+                <h2 class="text-3xl font-black text-white mb-2 tracking-wider uppercase">Curiosity Detected</h2>
+                <h3 class="text-xl font-bold text-zinc-400 mb-4">A Polite Request</h3>
+                <p class="text-zinc-300 text-sm">We noticed you're exploring the system's internals. We've worked hard on this project and would appreciate it if you could enjoy the experience as intended. Thank you for your interest!</p>
             </div>
             <button onclick="closeBreachModal()"
-                class="bg-white text-red-600 font-bold px-8 py-3 rounded-lg hover:bg-red-50 transition-colors">
-                ACKNOWLEDGE
+                class="bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-zinc-200 transition-colors">
+                I UNDERSTAND
             </button>
         </div>
     </div>
@@ -1762,23 +1982,23 @@
 
     <!-- MEMORY WARNING MODAL -->
     <div id="memory-warning-modal"
-        class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+        class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         style="pointer-events: auto;">
-        <div class="bg-zinc-900 border-2 border-amber-600 rounded-2xl p-8 max-w-md text-center shadow-2xl"
+        <div class="bg-zinc-900 border-2 border-zinc-700 rounded-2xl p-8 max-w-md text-center shadow-2xl"
             style="pointer-events: auto;">
             <div class="mb-6">
-                <div class="w-16 h-16 bg-amber-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="eye" class="w-8 h-8 text-amber-500"></i>
+                <div class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="smile" class="w-8 h-8 text-white"></i>
                 </div>
-                <h2 class="text-2xl font-black text-white mb-2">I REMEMBER YOU</h2>
-                <p class="text-zinc-300 mb-2">You tried to break me last time.</p>
-                <p class="text-amber-400 font-bold" id="memory-warning-text">Don't try it again.</p>
+                <h2 class="text-2xl font-black text-white mb-2">WELCOME BACK</h2>
+                <p class="text-zinc-300 mb-2">We've missed your curiosity.</p>
+                <p class="text-zinc-400 font-bold" id="memory-warning-text">Enjoy exploring!</p>
             </div>
             <button type="button" id="memory-warning-btn"
                 onclick="if(typeof closeMemoryWarning === 'function') { closeMemoryWarning(); } else { const mw = document.getElementById('memory-warning-modal'); if(mw) { mw.style.display = 'none'; mw.classList.add('hidden'); } } return false;"
-                class="bg-amber-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors cursor-pointer"
+                class="bg-zinc-800 text-white font-bold px-8 py-3 rounded-lg hover:bg-zinc-700 transition-colors cursor-pointer"
                 style="pointer-events: auto; z-index: 10001;">
-                PROCEED WITH CAUTION
+                CONTINUE
             </button>
         </div>
     </div>
@@ -1886,7 +2106,7 @@
             // Caution board removed - no longer showing
         });
 
-        // 2. ENHANCED TRAP WITH REASON TRACKING & FIRESTORE LOGGING
+        // 2. ENHANCED TRAP WITH REASON TRACKING (SOFTENED)
         async function triggerSecurityBreach(reason) {
             // Prevent multiple rapid triggers (debounce)
             const now = Date.now();
@@ -1895,75 +2115,39 @@
 
             localStorage.setItem('last_breach_trigger', now.toString());
 
-            if (breachDetected) {
-                document.body.classList.add('system-breach');
-                setTimeout(() => {
-                    document.body.classList.remove('system-breach');
-                }, 3000);
-                return;
-            }
-
+            if (breachDetected) return;
             breachDetected = true;
 
-            // Store breach in memory with reason
-            localStorage.setItem(SECURITY_KEY, "breached");
-            localStorage.setItem('security_breach', 'level_1');
+            // Store discovery in memory with reason
+            localStorage.setItem(SECURITY_KEY, "discovered");
+            localStorage.setItem('security_breach', 'interest_shown');
             localStorage.setItem('breach_timestamp', Date.now().toString());
             localStorage.setItem('breach_count', (parseInt(localStorage.getItem('breach_count') || '0') + 1).toString());
             localStorage.setItem('breach_reason', reason);
 
-            // Log to Firestore (The Sentinel - Evidence Collection)
-            try {
-                if (window.firebaseDB && window.firebaseAddDoc && window.firebaseCollection && window.firebaseServerTimestamp) {
-                    await window.firebaseAddDoc(
-                        window.firebaseCollection(window.firebaseDB, 'security_logs'),
-                        {
-                            ip: 'anonymous', // Could be enhanced with actual IP detection
-                            timestamp: window.firebaseServerTimestamp(),
-                            violationType: reason,
-                            userAgent: navigator.userAgent,
-                            url: window.location.href,
-                            breachCount: parseInt(localStorage.getItem('breach_count') || '0')
-                        }
-                    );
-                }
-            } catch (error) {
-                console.warn('Firestore logging failed:', error);
-            }
+            // Logging disabled - local only curiosity tracking
+            console.log('Curiosity noted:', reason);
 
-            // A. Visual Chaos
-            document.body.classList.add('system-breach');
-
-            // B. Create/Show the Overlay Warning
+            // Show the Polite Overlay
             let overlay = document.getElementById('glitch-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
                 overlay.id = 'glitch-overlay';
-                overlay.className = 'glitch-overlay';
+                overlay.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; color:white; font-family:sans-serif; text-align:center; padding-top:20%;';
                 document.body.appendChild(overlay);
             }
             overlay.style.display = 'block';
             overlay.innerHTML = `
-                <h1 style="color: red; font-size: 3rem; margin-bottom: 20px;">⚠ INTRUSION DETECTED ⚠</h1>
-                <p style="color: #ff4444; font-size: 1.5rem; margin: 10px 0;">UNAUTHORIZED ACCESS DETECTED</p>
-                <p style="color: #ff6666; font-size: 1.2rem; margin: 10px 0;">${reason}</p>
-                <p style="color: #ff8888; font-size: 1rem; margin: 20px 0;">YOUR IP HAS BEEN LOGGED.</p>
-                <p style="color: #ffaaaa; font-size: 1rem;">DO NOT RESIST.</p>
-                <button onclick="closeGlitchOverlay()" style="margin-top: 30px; padding: 15px 30px; background: red; color: white; border: none; font-size: 1rem; cursor: pointer; border-radius: 5px;">ACKNOWLEDGE</button>
+                <div style="max-width: 500px; margin: 0 auto; background: #18181b; border: 1px solid #3f3f46; padding: 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                    <h1 style="color: white; font-size: 2rem; margin-bottom: 20px;">Hello Explorer!</h1>
+                    <p style="color: #a1a1aa; font-size: 1.1rem; margin: 10px 0;">We noticed you're checking out how things work.</p>
+                    <p style="color: #71717a; font-size: 0.9rem; margin: 20px 0;">It's great to see curiosity, but we'd love for you to experience the app as intended. If you're a developer, we hope you find the code interesting!</p>
+                    <button onclick="closeGlitchOverlay()" style="margin-top: 10px; padding: 12px 24px; background: white; color: black; border: none; font-size: 1rem; cursor: pointer; border-radius: 8px; font-weight: bold;">CONTINUE EXPLORING</button>
+                </div>
             `;
 
-            // C. Play Sound
-            initBreachAudio();
-
-            // D. Console scare
-            console.clear();
-            console.log("%c STOP! ", "color: red; font-size: 50px; font-weight: bold;");
-            console.log("%c System has recorded your intrusion attempt.", "color: red; font-size: 16px;");
-            console.log("%c Reason: " + reason, "color: orange; font-size: 14px;");
-
-            // Remove glitch after 5 seconds
+            // Reset after a delay
             setTimeout(() => {
-                document.body.classList.remove('system-breach');
                 breachDetected = false;
             }, 5000);
         }
@@ -1973,24 +2157,23 @@
             if (overlay) {
                 overlay.style.display = 'none';
             }
-            document.body.classList.remove('system-breach');
         }
 
-        // Update checkMemory to use new security key
+        // Update checkMemory to use new security key (SOFTENED)
         function checkMemory() {
             const breach = localStorage.getItem(SECURITY_KEY) || localStorage.getItem('security_breach');
             const breachCount = parseInt(localStorage.getItem('breach_count') || '0');
 
-            if (breach === 'level_1' || breach === 'breached') {
-                // Show memory warning with breach count
+            if (breach === 'level_1' || breach === 'breached' || breach === 'interest_shown' || breach === 'discovered') {
+                // Show friendly welcome back with interest noted
                 setTimeout(() => {
                     const modal = document.getElementById('memory-warning-modal');
                     if (modal) {
                         const warningText = document.getElementById('memory-warning-text');
                         if (warningText && breachCount > 1) {
-                            warningText.innerHTML = `You tried to break me ${breachCount} time${breachCount > 1 ? 's' : ''} before.<br><span class="text-amber-400 font-bold">DO NOT ATTEMPT TO BREACH ME AGAIN.</span>`;
+                            warningText.innerHTML = `We noticed you've visited us ${breachCount} time${breachCount > 1 ? 's' : ''} and are quite curious about our code.<br><span class="text-zinc-400 font-bold">Enjoy your stay!</span>`;
                         } else if (warningText) {
-                            warningText.innerHTML = 'DO NOT ATTEMPT TO BREACH ME AGAIN.';
+                            warningText.innerHTML = 'Welcome back! Feel free to explore.';
                         }
                         modal.classList.remove('hidden');
                     }
@@ -2003,38 +2186,20 @@
         let rightClickResetTimeout = null;
         const RIGHT_CLICK_THRESHOLD = 10;
 
-        // Update trigger functions to use new system
+        // Context menu handling - RESTORED SECURITY BLOCK
         document.addEventListener('contextmenu', function (e) {
             // Check if clicking on memory warning modal - allow dismiss
             const memoryModal = document.getElementById('memory-warning-modal');
             if (memoryModal && !memoryModal.classList.contains('hidden') && window.getComputedStyle(memoryModal).display !== 'none') {
-                // Right-click on memory modal dismisses it
                 if (typeof closeMemoryWarning === 'function') {
                     closeMemoryWarning();
                 }
                 e.preventDefault();
-                e.stopPropagation();
                 return false;
             }
 
-            // Increment right-click counter
-            rightClickCount++;
-
-            // Reset counter after 3 seconds of no right-clicks
-            if (rightClickResetTimeout) {
-                clearTimeout(rightClickResetTimeout);
-            }
-            rightClickResetTimeout = setTimeout(() => {
-                rightClickCount = 0;
-            }, 3000);
-
-            // Only trigger breach after 10 consecutive right-clicks
-            if (rightClickCount >= RIGHT_CLICK_THRESHOLD) {
-                triggerSecurityBreach("Right Click Attempt (10+ times)");
-                rightClickCount = 0; // Reset after triggering
-            }
-
-            // Always prevent right-click menu (but don't trigger breach until threshold)
+            // Block all right-clicks to protect source keys
+            triggerSecurityBreach("Right-Click attempt blocked");
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -2042,6 +2207,7 @@
         }, true);
 
         document.addEventListener('keydown', function (e) {
+            // Keyboard shortcut monitoring - BLOCKED FOR SECURITY
             let shouldTrigger = false;
             let reason = '';
 
@@ -2053,28 +2219,13 @@
                 shouldTrigger = true;
                 reason = "DevTools Shortcut (Ctrl+Shift+I)";
             }
-            else if (e.ctrlKey && e.shiftKey && (e.keyCode == 'C'.charCodeAt(0) || e.key === 'C' || e.key === 'c')) {
-                shouldTrigger = true;
-                reason = "Inspect Element Shortcut (Ctrl+Shift+C)";
-            }
-            else if (e.ctrlKey && e.shiftKey && (e.keyCode == 'J'.charCodeAt(0) || e.key === 'J' || e.key === 'j')) {
-                shouldTrigger = true;
-                reason = "Console Shortcut (Ctrl+Shift+J)";
-            }
             else if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.key === 'U' || e.key === 'u')) {
                 shouldTrigger = true;
-                reason = "Source Code Theft Attempt (Ctrl+U)";
-            }
-            else if (e.ctrlKey && e.shiftKey && (e.keyCode == 'K'.charCodeAt(0) || e.key === 'K' || e.key === 'k')) {
-                shouldTrigger = true;
-                reason = "Firefox Console Shortcut";
-            }
-            else if (e.ctrlKey && e.shiftKey && (e.keyCode == 'E'.charCodeAt(0) || e.key === 'E' || e.key === 'e')) {
-                shouldTrigger = true;
-                reason = "Chrome Network Panel";
+                reason = "Source View (Ctrl+U)";
             }
 
             if (shouldTrigger) {
+                // Show the modal and block the keyboard action
                 triggerSecurityBreach(reason);
                 e.preventDefault();
                 e.stopPropagation();
@@ -2083,7 +2234,7 @@
             }
         }, true);
 
-        // Backup prevention
+        // Backup prevention (RESTORED)
         document.onkeydown = function (e) {
             if (e.keyCode == 123 ||
                 (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'K'.charCodeAt(0) || e.keyCode == 'E'.charCodeAt(0))) ||
@@ -2504,11 +2655,11 @@
                 const btn = document.getElementById(`btn-nav-${t}`);
                 if (!btn) return;
                 if (t === 'sonic') {
-                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1";
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-cyan-500 hover:text-cyan-300 border border-transparent hover:border-cyan-900/50 flex items-center gap-1 nav-item-hover";
                 } else if (t === 'ghost') {
-                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-emerald-500 hover:text-emerald-300 border border-transparent hover:border-emerald-900/50 flex items-center gap-1";
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-emerald-500 hover:text-emerald-300 border border-transparent hover:border-emerald-900/50 flex items-center gap-1 nav-item-hover";
                 } else {
-                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300";
+                    btn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all text-zinc-500 hover:text-zinc-300 nav-item-hover";
                 }
             });
 
@@ -2521,10 +2672,11 @@
                 activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-amber-950 text-amber-500 border border-amber-900 shadow-[0_0_15px_rgba(245,158,11,0.2)]";
                 stopVisualizer(); // Stop visualizer when switching away
             } else {
-                activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all bg-zinc-800 text-white shadow-lg";
+                activeBtn.className = "px-5 py-1.5 rounded-full text-xs font-medium transition-all nav-active-glow text-white shadow-lg";
                 stopVisualizer(); // Stop visualizer when switching away
             }
         }
+
         function toggleMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
         // --- COMMON UTILS ---
@@ -2574,36 +2726,23 @@
             }, 1000);
         }
 
-        // --- 2. CRYPTER LOGIC (Restored Complex Version) ---
-        const SALT = "POSTMORTEM_KEY_X9";
+        // --- 2. CRYPTER LOGIC (AES-256-GCM + PBKDF2) ---
         const DELIMITER = "|||";
-        const PASS_MARKER = "LOCKED::";
         const TIME_MARKER = "_TIME_";
+        const V2_MARKER = "V2::"; // Marker for new AES-GCM encrypted payloads
         let currentMode = 'encrypt';
         let hiddenTargetUrls = [];
 
-        function complexEncrypt(text) {
-            if (!text) return '';
-            try {
-                let result = btoa(text);
-                let shifted = '';
-                for (let i = 0; i < result.length; i++) {
-                    shifted += String.fromCharCode(result.charCodeAt(i) + 5);
-                }
-                const salted = shifted.split('').reverse().join('') + `_SALT_${btoa(SALT)}`;
-                return btoa(salted);
-            } catch (e) {
-                return "Error: Invalid input";
-            }
-        }
+        // --- Legacy support (old Base64 obfuscation) ---
+        const LEGACY_SALT = "POSTMORTEM_KEY_X9";
+        const LEGACY_PASS_MARKER = "LOCKED::";
 
-        function complexDecrypt(text) {
+        function legacyDecrypt(text) {
             if (!text) return null;
             try {
                 let salted = atob(text);
-                const saltMarker = `_SALT_${btoa(SALT)}`;
+                const saltMarker = `_SALT_${btoa(LEGACY_SALT)}`;
                 if (!salted.includes(saltMarker)) return null;
-
                 let rawShifted = salted.replace(saltMarker, '');
                 let unreversed = rawShifted.split('').reverse().join('');
                 let unshifted = '';
@@ -2611,26 +2750,96 @@
                     unshifted += String.fromCharCode(unreversed.charCodeAt(i) - 5);
                 }
                 return atob(unshifted);
-            } catch (e) {
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
-        function wrapWithPass(payload, pass) {
-            let signature = btoa(pass).substring(0, 8);
-            return PASS_MARKER + signature + "::" + complexEncrypt(payload);
-        }
-
-        function unwrapPass(payload, pass) {
-            if (!payload.startsWith(PASS_MARKER)) return null;
+        function legacyUnwrapPass(payload, pass) {
+            if (!payload.startsWith(LEGACY_PASS_MARKER)) return null;
             const parts = payload.split('::');
             if (parts.length < 3) return null;
             const signature = parts[1];
             const content = parts[2];
             const attemptSignature = btoa(pass).substring(0, 8);
             if (signature !== attemptSignature) return "WRONG_PASS";
-            return complexDecrypt(content);
+            return legacyDecrypt(content);
         }
+
+        // --- AES-256-GCM Encryption Engine ---
+        const PBKDF2_ITERATIONS = 100000;
+        const AES_KEY_BITS = 256;
+
+        // Base64url encode/decode (compact, URL-safe)
+        function toBase64url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function fromBase64url(str) {
+            let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4) base64 += '=';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return bytes.buffer;
+        }
+
+        // Derive AES key from password using PBKDF2
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: AES_KEY_BITS },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // AES-GCM Encrypt: returns compact "V2::salt.iv.ciphertext" string
+        async function aesEncrypt(plaintext, password) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveKey(password, salt);
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                enc.encode(plaintext)
+            );
+            // Pack: salt(16B) + iv(12B) + ciphertext into one compact string
+            return V2_MARKER + toBase64url(salt) + '.' + toBase64url(iv) + '.' + toBase64url(ciphertext);
+        }
+
+        // AES-GCM Decrypt: parses "V2::salt.iv.ciphertext" and decrypts
+        async function aesDecrypt(payload, password) {
+            if (!payload.startsWith(V2_MARKER)) return null;
+            try {
+                const data = payload.slice(V2_MARKER.length);
+                const [saltB64, ivB64, cipherB64] = data.split('.');
+                if (!saltB64 || !ivB64 || !cipherB64) return null;
+                const salt = new Uint8Array(fromBase64url(saltB64));
+                const iv = new Uint8Array(fromBase64url(ivB64));
+                const ciphertext = fromBase64url(cipherB64);
+                const key = await deriveKey(password, salt);
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
+                return new TextDecoder().decode(decrypted);
+            } catch (e) {
+                return "WRONG_PASS"; // Decryption failure = wrong password
+            }
+        }
+
+        // Default key for password-less encryption (still AES-GCM, just with a fixed key)
+        const DEFAULT_KEY = "postmortem-default-v2-key";
+
 
         // Check if a string is a URL/link
         function isUrl(str) {
@@ -2674,7 +2883,7 @@
             document.getElementById('result-launch').classList.add('hidden');
 
             if (mode === 'encrypt') {
-                btnEncrypt.className = "p-1.5 rounded-md transition-all bg-zinc-700 text-white";
+                btnEncrypt.className = "p-1.5 rounded-md transition-all bg-rose-600/20 text-rose-400 border border-rose-600/30";
                 btnDecrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
                 input.placeholder = "Paste text or link(s) here. For multiple links, put each on a new line...";
                 actionText.innerText = "Encrypt Payload";
@@ -2683,7 +2892,7 @@
                 if (expiryContainer) expiryContainer.style.display = 'block';
                 document.getElementById('crypto-pass').placeholder = "Optional PIN";
             } else {
-                btnDecrypt.className = "p-1.5 rounded-md transition-all bg-zinc-700 text-white";
+                btnDecrypt.className = "p-1.5 rounded-md transition-all bg-emerald-600/20 text-emerald-400 border border-emerald-600/30";
                 btnEncrypt.className = "p-1.5 rounded-md transition-all text-zinc-600 hover:text-zinc-400";
                 input.placeholder = "Paste encrypted string...";
                 actionText.innerText = "Decrypt & Verify";
@@ -2694,12 +2903,14 @@
             }
         }
 
-        function handleCryptoProcess() {
+
+        async function handleCryptoProcess() {
             const inputVal = document.getElementById('crypto-input').value.trim();
             const passVal = document.getElementById('crypto-pass').value.trim();
             const expiryVal = parseInt(document.getElementById('crypto-expiry').value);
             const resultBox = document.getElementById('result-text');
             const emptyBox = document.getElementById('result-empty');
+            const actionBtn = document.getElementById('action-text');
 
             if (!inputVal) return;
 
@@ -2707,102 +2918,133 @@
             resultBox.classList.remove('hidden');
             document.getElementById('btn-copy').classList.remove('hidden');
 
-            if (currentMode === 'encrypt') {
-                const lines = inputVal.split(/\r?\n/).filter(line => line.trim() !== '');
-                if (lines.length === 0) return;
-                let payload = lines.join(DELIMITER);
+            // Show processing state
+            const originalBtnText = actionBtn.innerText;
+            actionBtn.innerText = "Processing...";
 
-                if (expiryVal > 0) {
-                    const expiryTime = Date.now() + (expiryVal * 60 * 1000);
-                    payload += TIME_MARKER + expiryTime;
-                }
+            try {
+                if (currentMode === 'encrypt') {
+                    const lines = inputVal.split(/\r?\n/).filter(line => line.trim() !== '');
+                    if (lines.length === 0) return;
+                    let payload = lines.join(DELIMITER);
 
-                let finalOutput;
-                if (passVal) {
-                    finalOutput = wrapWithPass(payload, passVal);
-                } else {
-                    finalOutput = complexEncrypt(payload);
-                }
-
-                resultBox.className = "break-all font-mono text-sm text-emerald-400";
-                resultBox.innerText = finalOutput;
-            } else {
-                let decrypted = null;
-
-                if (inputVal.startsWith(PASS_MARKER)) {
-                    if (!passVal) {
-                        resultBox.innerText = "Error: This payload is locked. Please enter the passcode.";
-                        resultBox.className = "text-red-500";
-                        return;
+                    if (expiryVal > 0) {
+                        const expiryTime = Date.now() + (expiryVal * 60 * 1000);
+                        payload += TIME_MARKER + expiryTime;
                     }
-                    const unlockResult = unwrapPass(inputVal, passVal);
-                    if (unlockResult === "WRONG_PASS") {
-                        resultBox.innerText = "Error: Invalid Passcode.";
-                        resultBox.className = "text-red-500";
-                        return;
-                    }
-                    decrypted = unlockResult;
+
+                    // Always use AES-GCM now — password or default key
+                    const password = passVal || DEFAULT_KEY;
+                    const finalOutput = await aesEncrypt(payload, password);
+
+                    resultBox.className = "break-all font-mono text-sm text-emerald-400";
+                    resultBox.innerText = finalOutput;
                 } else {
-                    decrypted = complexDecrypt(inputVal);
-                }
+                    let decrypted = null;
 
-                if (decrypted) {
-                    if (decrypted.includes(TIME_MARKER)) {
-                        const parts = decrypted.split(TIME_MARKER);
-                        const content = parts[0];
-                        const expiry = parseInt(parts[1]);
-
-                        if (Date.now() > expiry) {
-                            resultBox.innerHTML = "STATUS: <b>DECEASED</b><br>This payload has expired and has been purged.";
+                    // V2 payload (AES-GCM)
+                    if (inputVal.startsWith(V2_MARKER)) {
+                        const password = passVal || DEFAULT_KEY;
+                        const result = await aesDecrypt(inputVal, password);
+                        if (result === "WRONG_PASS") {
+                            if (passVal) {
+                                resultBox.innerText = "Error: Invalid Passcode. The password is incorrect.";
+                            } else {
+                                resultBox.innerText = "Error: This payload is password-protected. Enter the passcode.";
+                            }
                             resultBox.className = "text-red-500";
+                            actionBtn.innerText = originalBtnText;
                             return;
                         }
-                        decrypted = content;
+                        decrypted = result;
+                    }
+                    // Legacy password-protected payload
+                    else if (inputVal.startsWith(LEGACY_PASS_MARKER)) {
+                        if (!passVal) {
+                            resultBox.innerText = "Error: This is a legacy locked payload. Please enter the passcode.";
+                            resultBox.className = "text-red-500";
+                            actionBtn.innerText = originalBtnText;
+                            return;
+                        }
+                        const unlockResult = legacyUnwrapPass(inputVal, passVal);
+                        if (unlockResult === "WRONG_PASS") {
+                            resultBox.innerText = "Error: Invalid Passcode.";
+                            resultBox.className = "text-red-500";
+                            actionBtn.innerText = originalBtnText;
+                            return;
+                        }
+                        decrypted = unlockResult;
+                    }
+                    // Legacy unprotected payload
+                    else {
+                        decrypted = legacyDecrypt(inputVal);
                     }
 
-                    // Check if decrypted content contains URLs
-                    const parts = decrypted.split(DELIMITER);
-                    const hasUrls = parts.some(part => isUrl(part.trim()));
+                    if (decrypted) {
+                        if (decrypted.includes(TIME_MARKER)) {
+                            const parts = decrypted.split(TIME_MARKER);
+                            const content = parts[0];
+                            const expiry = parseInt(parts[1]);
 
-                    if (hasUrls) {
-                        // Contains URLs - show launch buttons
-                        hiddenTargetUrls = parts.filter(part => {
-                            const trimmed = part.trim();
-                            return trimmed && isUrl(trimmed);
-                        });
-
-                        const container = document.getElementById('launch-buttons-container');
-                        container.innerHTML = '';
-
-                        hiddenTargetUrls.forEach((url, index) => {
-                            let safeUrl = url.trim();
-                            if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
-                                safeUrl = 'https://' + safeUrl;
+                            if (Date.now() > expiry) {
+                                resultBox.innerHTML = "STATUS: <b>DECEASED</b><br>This payload has expired and has been purged.";
+                                resultBox.className = "text-red-500";
+                                actionBtn.innerText = originalBtnText;
+                                return;
                             }
+                            decrypted = content;
+                        }
 
-                            const btn = document.createElement('button');
-                            btn.type = "button";
-                            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
-                            btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
-                            btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
-                            container.appendChild(btn);
-                        });
+                        // Check if decrypted content contains URLs
+                        const parts = decrypted.split(DELIMITER);
+                        const hasUrls = parts.some(part => isUrl(part.trim()));
 
-                        lucide.createIcons();
-                        document.getElementById('result-launch').classList.remove('hidden');
-                        resultBox.innerText = decrypted;
+                        if (hasUrls) {
+                            // Contains URLs - show launch buttons
+                            hiddenTargetUrls = parts.filter(part => {
+                                const trimmed = part.trim();
+                                return trimmed && isUrl(trimmed);
+                            });
+
+                            const container = document.getElementById('launch-buttons-container');
+                            container.innerHTML = '';
+
+                            hiddenTargetUrls.forEach((url, index) => {
+                                let safeUrl = url.trim();
+                                if (safeUrl && !safeUrl.match(/^https?:\/\//i)) {
+                                    safeUrl = 'https://' + safeUrl;
+                                }
+
+                                const btn = document.createElement('button');
+                                btn.type = "button";
+                                btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-full flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] w-full justify-center shrink-0 mb-2";
+                                btn.innerHTML = `Launch Target ${hiddenTargetUrls.length > 1 ? index + 1 : ''} <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>`;
+                                btn.onclick = () => window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                                container.appendChild(btn);
+                            });
+
+                            lucide.createIcons();
+                            document.getElementById('result-launch').classList.remove('hidden');
+                            resultBox.innerText = decrypted;
+                        } else {
+                            // Plain text - display directly
+                            document.getElementById('result-launch').classList.add('hidden');
+                            resultBox.className = "break-all font-mono text-sm text-emerald-400";
+                            resultBox.innerText = decrypted;
+                        }
                     } else {
-                        // Plain text - display directly
-                        document.getElementById('result-launch').classList.add('hidden');
-                        resultBox.className = "break-all font-mono text-sm text-emerald-400";
-                        resultBox.innerText = decrypted;
+                        resultBox.innerText = "Error: Decryption failed. Invalid or corrupted payload.";
+                        resultBox.className = "text-red-500";
                     }
-                } else {
-                    resultBox.innerText = "Error: Decryption failed. Invalid signature or corrupted string.";
-                    resultBox.className = "text-red-500";
                 }
+            } catch (err) {
+                resultBox.innerText = "Error: Encryption/Decryption failed. " + err.message;
+                resultBox.className = "text-red-500";
+            } finally {
+                actionBtn.innerText = originalBtnText;
             }
         }
+
 
         // --- 3. STEGO LOGIC (Restored Full Logic) ---
         let generatedCarrierBlob = null;
